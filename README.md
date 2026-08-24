@@ -1,4 +1,6 @@
-# CVG SA/MA Thesis Template
+# polygraph-thesis
+
+Master's thesis report, based on the [CVG SA/MA Thesis Template](https://github.com/cvg/CVG-Thesis-Template).
 
 This is the official SA/MA Thesis template of the Computer Vision and Geometry Group (CVG) at ETH Zurich. Please use this to initialize the LaTeX project of your thesis.
 
