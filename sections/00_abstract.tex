@@ -8,16 +8,61 @@
 \vspace{3cm}
 
 \chapter*{Abstract}
-\noindent The abstract gives a concise overview of the work you have done. The reader should be able to decide whether the work that has been done is interesting for him by reading the abstract. Provide a brief account of the following questions:
+\noindent
+Robots, vehicles, and wearable devices that repeatedly traverse the same environment ---
+a mapping robot's daily rounds, a fleet of cars driving through the same city, or a person
+wearing an AR headset through the same building over many days --- each produce their own
+trajectory estimate from onboard visual or visual-inertial odometry. These per-session
+trajectories are locally consistent but drift over time and live in unrelated,
+session-specific coordinate frames. Turning many such independent, drifting trajectories
+into one globally consistent set of trajectories, wherever different sessions revisit the
+same place, is the multi-session trajectory fusion problem this thesis addresses.
 
-\begin{itemize}
- \item What is the problem you worked on? (Introduction)
- \item What are the shortcomings of existing solutions? (Technical Gap)
- \item How did you tackle the problem? (Method)
- \item What were your results and findings? (Experiments)
- \item Why are your findings significant? (Conclusion)
-\end{itemize}
+\noindent
+Existing solutions to this problem largely operate offline: every session's data must be
+collected and available up front, one session is often designated in advance as a fixed
+reference frame, and only then is a single fused pose graph solved for. This assumption
+breaks down for a continuously operating deployment, where sessions arrive one at a time and
+there is no way to know in advance which one will end up anchoring the rest.
 
-\noindent The abstract should approximately cover half of a page, and does generally not contain citations.
+\noindent
+This thesis presents Polygraph, a multi-session trajectory fusion pipeline that processes
+sessions online, one keyframe and one closed spatial cluster at a time, without assuming
+that all sessions are available up front or that any one session is a pre-designated
+reference. Each session's odometry keyframes are grouped into local spatial clusters; when a
+cluster closes, its keyframes are matched via learned image retrieval against every other
+session's keyframes, and candidate cross-session pairs are verified through sparse feature
+matching, monocular metric depth lifting, and robust pose estimation. A two-tier consensus
+gate admits a cross-session loop-closure edge into the shared pose graph only once
+independent evidence corroborates it, guarding against a single spurious match corrupting
+the whole graph, while the graph itself is kept up to date through a cheap incremental solve
+after every cluster and periodically refined through a robust, outlier-pruning batch solve.
 
+\noindent
+We evaluate Polygraph across three capture setups chosen to be as different from one another
+as possible --- stereo-camera outdoor driving (KITTI), HoloLens visual-inertial indoor
+walking, and Boston Dynamics Spot visual-inertial indoor legged locomotion --- with the two
+indoor deployments built from existing localization/mapping benchmarks, CroCoDL and LaMAR
+respectively, neither previously used to evaluate multi-session pose-graph fusion. On the one
+hardware-matched, head-to-head comparison against the closest prior work we could run
+(KITTI-00, identical RTX 4090), Polygraph runs about 2.9$\times$ faster (134.3s vs.\ 387.16s,
+a real-time factor of 28.5\%), a real, honestly-reported trade-off: on that same sequence, it
+currently commits fewer loop-closure edges than the prior work (142 vs.\ 517) --- a genuine,
+unresolved gap this thesis surfaces and investigates rather than hides. We further evaluate on
+Oxford RobotCar with RTK-verified ground truth, using a paired easy/hard session split ---
+sharing all but one session, with the hard split adding a night traversal --- to test both
+single- and multi-session performance under real day/night appearance change; results are
+being finalized at the time of writing. \textbf{[TODO: report RobotCar headline numbers once
+finalized.]} Together, these results show that robust multi-session trajectory fusion
+is achievable in a genuinely online setting, without dense 3D reconstruction, across a
+substantially wider range of real-world conditions than previously demonstrated.
 
+% REVIEW NOTE (not rendered): numbers above (2.9x, 134.3s/387.16s, 28.5% RTF, 142/517 edges)
+% are pulled from polygraph/docs/report.html's Motivation section (last updated 2026-08-23);
+% re-check once final results lock in. RobotCar split description (shared sessions, hard adds
+% a night traversal) is from docs/robotcar.md's 2026-08-23 entry -- re-check that file too,
+% since the exact session set has changed more than once already. EuRoC intentionally left out
+% of the headline claims here -- its Atlas-comparison results (ORB-SLAM3 backbone, MH/V1/V2)
+% are done per docs/next_experiments.md item 5, but VINS-Fusion-on-EuRoC is still open and you
+% said yourself you're not sure of its overall state -- add a EuRoC sentence once you're ready
+% to commit to a specific claim about it.

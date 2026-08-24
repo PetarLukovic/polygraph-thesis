@@ -5,10 +5,241 @@
 %% ----------------------------------------------------------------------------
 \newpage
 \chapter{Method}
-The objectives of the Method section are the following: 
+\label{chap:method}
+
+% REVIEW NOTE (not rendered): this is a SKELETON, not prose -- structure and figure
+% placement only, so we can agree on the shape before writing real paragraphs. Each section
+% below has (a) one placeholder sentence describing what it will cover, (b) a \pgfig{} figure
+% placeholder pointing at the image we already have (or a note that a new one is needed), and
+% (c) a bullet list of the concrete facts/parameter values from polygraph/docs/method.md that
+% the real prose will need to hit. Nothing here is final text.
+%
+% Image folders already created under images/03_method/<NN_stage>/, one per section below,
+% matching what we agreed on ("subfolder per part"). Existing polygraph/docs/images/*.png
+% explainer figures are copied in as starting points where we have one; 02_odometry is empty
+% -- no existing figure for keyframing, we'll need to sketch a new one together.
+%
+% \pgfig is a placeholder macro defined below (not in macros.sty) purely for this skeleton, so
+% every figure block is visually obvious and one-line to swap for a real \figure environment
+% later. DELETE this \newcommand once real figures replace the placeholders.
+\newcommand{\pgfig}[2]{%
+  \begin{center}
+  \fbox{\parbox{0.85\textwidth}{\centering\vspace{0.3cm}
+  \textbf{[FIGURE PLACEHOLDER]}\\[2pt]
+  \texttt{#1}\\[4pt]
+  \small #2
+  \vspace{0.3cm}}}
+  \end{center}
+}
+
+Section-by-section shape of this chapter, mirroring the pipeline's own stages: problem
+statement and overview first, then one section per stage in the order data actually flows
+through Polygraph, ending with the two-tier gate and pose-graph optimization that turn
+verified candidate matches into the final result.
+
+\section{Problem Statement and Pipeline Overview}
+\label{sec:method-overview}
+
+\emph{Placeholder}: formalize the multi-session trajectory fusion problem --- $N$ sessions,
+each a stream of raw per-frame poses in its own local frame; goal is one pose per keyframe per
+session in a single shared frame, wherever sessions overlap; no assumption that sessions are
+known up front or that one is a designated reference. State the online constraint explicitly
+(processed one keyframe/cluster at a time, per session).
+
+\pgfig{images/03_method/01_overview/pipeline_overview.png}{Existing overview figure (from
+polygraph/docs/images/polygraph.png) --- the 4-box pipeline diagram: Clustering $\to$ Cluster
+Matching $\to$ Joint Pose Estimation $\to$ Pose Graph Optimization. Good as the chapter's
+opening figure largely as-is; may want a thesis-formatted redraw (fonts/labels) rather than
+reusing the report's own styling verbatim.}
+
 \begin{itemize}
- 
- \item \textit{What problem are you solving?} Give a clear, formalized statement of the problem you are solving, \ie which inputs are given, which assumptions you make, and what is the desired output (goal).
- \item \textit{What are the preliminaries of your work?} Introduce the environment in which your work has taken place - this can be a software package, a device, or a system description. Ensure sufficiently detailed descriptions of the algorithms and concepts (e.g. math) you used.
- \item \textit{What is your work?} Describe the key component of your work, e.g. an algorithm or software framework you have developed.
+  \item One high-level figure here, then each box becomes its own section below.
+  \item Emphasize up front: no dense reconstruction, ever -- everything is keyframe-level
+    sparse geometry.
 \end{itemize}
+
+\section{Device Odometry and Keyframing}
+\label{sec:method-odometry}
+
+\emph{Placeholder}: input is raw per-frame poses from any single-session visual(-inertial)
+odometry backbone (ORB-SLAM3, VINS-Fusion, or a device's own onboard VIO --- HoloLens,
+Spot); drifting, local-frame-only. Define keyframe selection.
+
+\pgfig{images/03_method/02_odometry/(new figure needed)}{No existing figure for this stage.
+Candidate: a simple trajectory strip with keyframe markers dropped at the
+translation/rotation threshold, maybe showing one accepted vs.\ one skipped frame. This is one
+we sketch together.}
+
+\begin{itemize}
+  \item Keyframe trigger: \texttt{trans\_th\_m=5.0}m OR \texttt{rot\_th\_deg=28.6\textdegree}
+    since the last keyframe.
+  \item Everything downstream operates at keyframe granularity only, never raw per-frame.
+\end{itemize}
+
+\section{Online Clustering}
+\label{sec:method-clustering}
+
+\emph{Placeholder}: each session's own \texttt{ClusterBuilder} groups its keyframe stream
+into spatially bounded clusters online, purely from travel distance off the cluster's own
+start pose. Also where the per-keyframe global descriptor (MegaLoc) gets computed, since it's
+needed by the next section.
+
+\pgfig{images/03_method/03_clustering/clustering_explainer.png}{Existing figure (from
+polygraph/docs/images/clustering\_explainer.png) --- likely usable close to as-is; check
+whether it already shows the overlap-keyframe chaining between consecutive clusters, or if
+that needs a small addition/second panel.}
+
+\begin{itemize}
+  \item Cluster closes once \(\ge\) \texttt{min\_kf} (6) keyframes AND (\(>\)\texttt{d\_max\_m}
+    (10m) travelled OR \texttt{max\_kf} (15) keyframes reached).
+  \item Last \texttt{overlap\_kf} (2) keyframes seed the next cluster --- no gaps between
+    consecutive clusters.
+  \item Output: closed clusters, each with member keyframes + one MegaLoc descriptor per
+    keyframe.
+\end{itemize}
+
+\section{Cluster Matching (Retrieval)}
+\label{sec:method-cluster-matching}
+
+\emph{Placeholder}: when a cluster closes, its keyframes vote against a retrieval index built
+from every other eligible session's keyframe descriptors; votes pooled and normalized per
+candidate cluster; adjacency guard excludes a cluster's own last two same-session clusters.
+Output is unverified candidate cluster pairs, not confirmed matches.
+
+\pgfig{images/03_method/04_cluster_matching/cluster_matching_explainer.png}{Existing figure
+(from polygraph/docs/images/cluster\_matching\_explainer.png) --- shows the "pool of keyframes
+a new cluster is voted against" (box 1 vs.\ box 2 from the overview figure). Likely usable
+close to as-is.}
+
+\begin{itemize}
+  \item Each keyframe casts a vote for its \texttt{top\_k} (5) nearest-neighbour clusters.
+  \item Top \texttt{top\_k\_clusters} (2) candidates per other session survive, subject to a
+    minimum-agreement (survival-rate) floor.
+\end{itemize}
+
+\section{Joint Pose Estimation}
+\label{sec:method-pose-estimation}
+
+\emph{Placeholder}: for one candidate cluster pair, an MST over cross keyframe-pair descriptor
+similarity selects \texttt{top\_k\_pairs} (10) diverse pairs to actually verify. Each pair:
+sparse matching $\to$ essential-matrix RANSAC $\to$ triangulation $\to$ monocular metric depth
+lift $\to$ scale-consistency filter $\to$ PnP. Surviving estimates go through
+translation-consensus voting into one confirmed edge.
+
+\pgfig{images/03_method/05_pose_estimation/pose_estimation_explainer.png}{Existing figure
+(from polygraph/docs/images/pose\_estimation\_explainer.png) --- the "box 3" detail view
+(keyframe pairs matched + reduced by consensus voting, kept vs.\ outlier). Likely the
+chapter's most figure-dense section given how many sub-steps there are (matching, RANSAC,
+triangulation, depth lift, scale filter, PnP) --- may want to split this single existing
+figure into 2-3 smaller ones, one per sub-step, rather than one dense panel.}
+
+\begin{itemize}
+  \item Pipeline per pair: XFeat+LightGlue $\to$ essential-matrix RANSAC (poselib) $\to$ DLT
+    triangulation $\to$ Metric3D depth-lift $\to$ scale-consistency filter $\to$ PnP (poselib).
+  \item Rejected unless \(\ge\) \texttt{min\_valid\_points} (150), \(\ge\)
+    \texttt{abs\_min\_inlier\_ratio} (0.80), \(\le\) \texttt{abs\_max\_ransac\_score} (0.05).
+  \item Translation-consensus: estimates agree within 1.5m; largest mutually-agreeing subset
+    averaged (chordal SE3 mean) into one confirmed edge; needs \(\ge\) \texttt{min\_kf\_pairs}
+    (2) agreeing pairs.
+  \item \texttt{multi\_edge\_consensus} (on): every agreeing estimate also added as its own
+    extra graph edge, not just the averaged one.
+\end{itemize}
+
+\section{The Two-Tier Consensus Gate}
+\label{sec:method-gate}
+
+\emph{Placeholder}: this is the section that most needs careful, possibly multi-figure
+treatment --- it's the least visual of the pipeline stages (no images/geometry to show
+directly, it's a decision procedure over accumulating edges) but the most conceptually
+important for the "online, no pre-designated reference" contribution claim made in the
+Introduction. Cover: same-session edges bypass the gate entirely; cross-session edges go
+through anchor/query assignment, then either Tier 1 (CorroborationPool) or Tier 2
+(PendingQueue) depending on whether the query session already has a live cross-session edge.
+Strongly consider walking through the worked three-edge example from
+\texttt{polygraph/docs/method.md} \S5 directly, since it's already written clearly and
+concretely.
+
+\pgfig{images/03_method/06_gate/pose_consensus_plot.png}{Existing figure (from
+polygraph/docs/images/pose\_consensus\_plot.png) --- not yet confirmed this is the right
+figure for this section (name suggests it may actually belong with \S3.5's pose-estimation
+consensus voting, not the graph-level gate). Needs a real diagram of its own: a
+state-diagram-style figure showing Tier 1 vs.\ Tier 2 routing (disconnected session $\to$
+CorroborationPool; already-anchored session $\to$ PendingQueue $\to$ commit/reject) would
+likely communicate this better than any existing image does. This is a "sketch together"
+figure, not a reuse.}
+
+\begin{itemize}
+  \item Same-session (intra) edges: always bypass the gate, commit straight to the graph.
+  \item Anchor/query: whichever session has more live cross-session edges is anchor; ties
+    keep one side arbitrarily but deterministically.
+  \item Tier 1 (CorroborationPool, query has 0 live cross edges): candidates pooled per target
+    session; commit together once \(\ge\) \texttt{min\_corroborating\_matches} (2) mutually
+    agree (within 2.0m/10.0\textdegree) and are independent (\(\ge\)
+    \texttt{min\_independent\_cluster\_gap} (3) clusters apart on the anchor side); otherwise
+    ages out after \texttt{max\_age\_s} (1 day).
+  \item Tier 2 (PendingQueue, query has \(\ge\)1 live cross edge): checked immediately against
+    the query's live estimate (10.0m/20.0\textdegree, tightens as edges accumulate); on
+    failure, re-checked on every later full update until it passes, hits \texttt{max\_rejects}
+    (3), or ages out.
+  \item Worked example (method.md \S5.1): three cross-session candidates walking through both
+    tiers, including the "can a session end up with exactly 1 live edge?" edge case.
+\end{itemize}
+
+\section{Pose Graph Optimization}
+\label{sec:method-graph}
+
+\emph{Placeholder}: every session starts as its own graph component with its own gauge-fixing
+prior; first surviving cross-session edge merges two components. Fast update (iSAM2,
+incremental, every closed cluster) vs.\ Full update (batch, every
+\texttt{slow\_update\_every\_n\_clusters} (10) clusters, prunes residual outliers). End-of-run
+sequence: unconditional final full update $\to$ drain pending queue $\to$
+\texttt{inter\_cluster\_pair\_consensus} $\to$ \texttt{final\_gnc\_solve}.
+
+\pgfig{images/03_method/07_graph/graph_edges_before.png +
+images/03_method/07_graph/graph_edges_after.png +
+images/03_method/07_graph/graph_solve.png +
+images/03_method/07_graph/slow_update_outliers.png}{Four existing figures, likely one of the
+best-covered sections image-wise --- before/after edge pruning, the solve itself, and the
+slow-update outlier plot (32 kept / 21 pruned example from a real KITTI session). Need to
+decide layout: four separate figures across the section vs.\ one composite
+before/after-pruning figure plus the outlier plot as a second.}
+
+\begin{itemize}
+  \item Fast update: iSAM2 incremental solve, every closed cluster.
+  \item Full update: batch least-squares, every 10 clusters; prunes edges whose residual
+    exceeds \texttt{outlier\_sigma} (3\(\times\)) their own group's median (intra/cross judged
+    separately).
+  \item \texttt{inter\_cluster\_pair\_consensus}: cross-checks session pairs' independent
+    edges against each other using pre-fusion local poses --- catches mutually
+    self-consistent outlier groups that residual-based pruning is structurally blind to.
+    Explain \emph{why} it's blind (least-squares bends to satisfy the majority) --- this is a
+    genuinely subtle point worth its own paragraph and maybe its own small illustrative
+    figure.
+  \item \texttt{final\_gnc\_solve}: GNC-TLS robust pass over the complete graph (including
+    already-pruned edges), final pose estimate.
+\end{itemize}
+
+\section{Summary}
+\label{sec:method-summary}
+
+\emph{Placeholder}: one short paragraph closing the loop back to \mysecref{sec:method-overview}'s
+problem statement --- output is one pose graph spanning every session shown, with
+corroborated evidence, to revisit another; built incrementally, no requirement that every
+session be collected before processing starts.
+
+% REVIEW NOTE (not rendered): open structural questions for us to settle before writing real
+% prose --
+% (1) is 7 sections (+ overview + summary = 9 total) the right granularity, or should some
+%     merge? Cluster Matching (3.4) is fairly short relative to the others -- could fold into
+%     3.3 (Clustering) as one "Clustering and Retrieval" section if you'd rather;
+% (2) the Two-Tier Gate section (3.6) has no strong existing figure candidate and is the most
+%     conceptually dense section -- probably deserves the most of our joint figure-sketching
+%     time;
+% (3) pose_consensus_plot.png's actual subject needs confirming (gate-level consensus, or
+%     pose-estimation-level translation-consensus voting from 3.5?) before it's placed;
+% (4) all \label{}s here match what Related Work already references via \mysecref except
+%     sec:method-cluster-matching, which Related Work doesn't currently point at directly --
+%     harmless, just noting it;
+% (5) once we're happy with this skeleton, next step per section is: write real prose, then
+%     replace \pgfig{} with a real \begin{figure}...\end{figure} + \includegraphics + caption
+%     + \label, sized/cropped/relabeled together.

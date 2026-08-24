@@ -4,13 +4,111 @@
 % Created 03/08/2024 by Tobias Fischer
 %% ----------------------------------------------------------------------------
 
-
 \chapter{Introduction}
-Give an introduction to the topic you have worked on:
+\label{chap:intro}
 
+\section{Motivation}
+
+Many robots, vehicles, and wearable devices do not see an environment once --- they see it
+repeatedly. A delivery robot drives the same warehouse floor every day; a fleet of survey
+vehicles maps the same city over months; a person wearing an AR headset walks through the
+same building on many separate occasions. Each of these passes through the environment ---
+each \emph{session} --- is tracked independently by the device's own onboard visual or
+visual-inertial odometry. Within a session, this odometry is locally accurate but
+accumulates drift over time, and, critically, every session's trajectory is expressed in its
+own local coordinate frame with no inherent relationship to any other session's frame: two
+sessions that physically revisit the same corridor or intersection have no way, from
+odometry alone, of knowing that they did.
+
+Recovering that relationship --- detecting where sessions overlap and using those overlaps
+to correct each session's drift and place every session into one shared, globally consistent
+frame --- is the multi-session trajectory fusion problem. Solving it well is what turns a
+pile of independent, drifting trajectory logs into a single coherent map of an environment,
+and it is a prerequisite for any system that wants to accumulate knowledge about a place
+across repeated visits rather than starting from zero every time.
+
+\section{Technical Gap}
+
+The classical way to detect that two sessions overlap is to also build and match dense 3D
+scene geometry between them, as in multi-map SLAM systems such as ORB-SLAM3's Atlas
+\cite{campos2021orbslam3}. Dense reconstruction gives strong evidence for a match, but it is
+compute- and storage-heavy: keeping and matching dense maps across many long sessions scales
+poorly, which limits deployments to a bounded number of sessions or a bounded environment
+size.
+
+A recent line of work sidesteps dense reconstruction entirely. Lim et al.'s 2GO
+\cite{lim2025twogo}
+represents each session only as a sparse, keyframed pose graph: cross-session overlap is
+established with learned image retrieval and two-view geometry --- sparse feature matching
+lifted to metric scale with a monocular depth prior, rather than any dense map --- and
+fused directly into the pose graph. This is substantially lighter-weight than dense
+reconstruction and is the closest prior work to this thesis.
+
+2GO, however, is built around an offline, batch setting: every session's data is assumed
+collected and available before fusion starts, and its formulation designates one session in
+advance as the fixed reference frame the rest are fused into. Neither assumption holds for a
+system meant to run continuously: sessions arrive one at a time, with no way to know in
+advance which one --- if any single one at all --- should anchor the others. A genuinely
+online multi-session system also has to decide, incrementally and without hindsight, how
+much evidence is enough before it trusts that two sessions actually overlap; committing a
+single spurious cross-session match into a shared pose graph can distort every trajectory
+fused into it, not just the two sessions involved.
+
+\section{This Work}
+
+This thesis presents \textbf{Polygraph}, a multi-session trajectory fusion pipeline that
+targets this online setting directly. Polygraph processes each session's odometry keyframes
+incrementally, grouping them into local spatial clusters as they arrive; whenever a cluster
+closes, it is matched against every other session's keyframes through learned retrieval, and
+candidate cross-session matches are verified with the same sparse-matching-plus-monocular-depth
+approach as 2GO. The key difference is architectural: Polygraph makes no assumption that all
+sessions are known up front and designates no reference session in advance --- every session
+starts as its own independent graph component, and cross-session edges merge components
+together only once a two-tier consensus gate has corroborated them with independent evidence,
+whether that session is being anchored into the graph for the first time or is already
+connected. The shared pose graph is kept current online through a cheap incremental solve
+after every closed cluster, and is periodically re-solved and pruned of outlier edges through
+a robust batch optimization pass.
+
+Concretely, this thesis contributes:
 \begin{itemize}
- \item \textit{What is the rationale for your work?} Motivate the problem, \eg with a general description of the problem setting, narrowing down to the particular problem you have been working on in your thesis. Allow the reader to understand the problem setting. 
- \item \textit{What is the technical gap in existing work?} Briefly outline how this problem has been tackled before, and what the shortcomings of the existing solutions are.
- \item \textit{What is your work doing to fix it?} Given the above background, state briefly the focus of the work. 
+  \item An online reformulation of sparse, retrieval-driven multi-session pose-graph fusion
+    that removes the offline, pre-designated-reference-session assumption of the closest
+    prior work, so that sessions can be processed incrementally as they are collected.
+  \item An evaluation spanning KITTI; two indoor multi-session deployments built from the
+    CroCoDL \cite{blum2025crocodl} and LaMAR \cite{sarlin2022lamar} benchmarks (captured on a
+    HoloLens and a Boston Dynamics Spot respectively); and Oxford RobotCar with RTK ground
+    truth, using a paired easy/hard session split --- sharing all but one session, with the
+    hard split adding a night traversal --- to test both single- and multi-session performance
+    under real day/night appearance change. None of these settings are covered by the closest
+    prior work's own published evaluation.
+  \item A direct, hardware-matched comparison against that prior work's published numbers,
+    reporting honestly where Polygraph is faster and where an open gap in loop-closure recall
+    remains, rather than only reporting favorable comparisons.
 \end{itemize}
 
+\section{Thesis Outline}
+
+\mychapterref{chap:relatedwork} situates Polygraph against prior work in visual SLAM,
+place recognition, learned two-view geometry, and multi-session mapping, with particular
+attention to 2GO as the closest prior system. \mychapterref{chap:method} describes
+Polygraph's pipeline in detail, stage by stage: keyframing, online clustering, retrieval-based
+cluster matching, joint pose estimation, the two-tier consensus gate, and pose-graph
+optimization. \mychapterref{chap:experiments} presents the experimental setup and results
+across all evaluated datasets. \mychapterref{chap:discussion} discusses limitations,
+including the open loop-closure-recall gap identified against 2GO, and design trade-offs made
+along the way. \mychapterref{chap:conclusion} summarizes the thesis's contributions and
+outlines directions for future work.
+
+% REVIEW NOTE (not rendered): \mychapterref{} calls above assume \label{chap:relatedwork},
+% \label{chap:method}, \label{chap:experiments}, \label{chap:discussion}, and
+% \label{chap:conclusion} get added to the corresponding chapter headings in
+% 02_relatedwork.tex .. 06_conclusion.tex (mirroring \label{chap:intro} above) -- currently
+% only this chapter has one, so those refs will show as "??" until then.
+%
+% Also: RobotCar's results are being finalized (run overnight per our last conversation) --
+% the contributions bullet above describes the *setup* (paired easy/hard split, day/night,
+% single/multi-session), not results, which is safe regardless of how the numbers land. EuRoC
+% is deliberately left out of this bullet -- its Atlas-comparison results (ORB-SLAM3 backbone)
+% are done per docs/next_experiments.md item 5, but VINS-Fusion-on-EuRoC is still open and its
+% overall place in the thesis narrative isn't settled yet; add it once that's decided.

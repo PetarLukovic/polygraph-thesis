@@ -6,12 +6,132 @@
 
 \newpage
 \chapter{Related Work}
+\label{chap:relatedwork}
 
-The related work section has the following purposes: 
+\section{Visual(-Inertial) Odometry and Single-Session SLAM}
 
-\begin{itemize}
- \item \textit{Is the overview concise?} Give an overview of the most relevant work to the needed extent. Make sure the reader can understand your work without referring to other literature.
- \item \textit{Does the compilation of work help to define the ``niche'' you are working in?} Another purpose of this section is to lay the groundwork for showing that you did significant work. The selection and presentation of the related work should enable you to name the implications, differences, and similarities sufficiently in the discussion section.
-\end{itemize}
+Polygraph is built on top of, rather than instead of, single-session visual and
+visual-inertial SLAM. Systems such as ORB-SLAM3 \cite{campos2021orbslam3} and VINS-Fusion
+\cite{qin2019vinsfusionlocal,qin2019vinsfusionglobal} track a single session's camera (optionally fused with IMU
+measurements) in real time, producing a locally accurate but drift-affected trajectory
+together with intra-session loop closures. This thesis treats such a system's raw per-frame
+pose stream as Polygraph's input odometry (\mysecref{sec:method-odometry}) and does not
+modify it; Polygraph's contribution begins where single-session tracking ends, at the
+problem of relating \emph{different} sessions' independently-tracked trajectories to one
+another. The incremental smoothing formulation these systems' backends use for pose-graph
+optimization --- most directly iSAM2 \cite{kaess2012isam2}, built on the factor-graph
+formulation underlying GTSAM --- is also what Polygraph's own online graph solve
+(\mysecref{sec:method-graph}) is built on.
 
+\section{Visual Place Recognition for Loop Closure}
 
+Deciding \emph{which} pair of keyframes might correspond to the same physical place, before
+any geometric verification is attempted, is a visual place recognition (retrieval) problem:
+each image is embedded into a global descriptor, and nearest-neighbor search over previously
+seen descriptors proposes revisit candidates. NetVLAD \cite{arandjelovic2016netvlad}
+established the learned aggregation approach this line of work builds on; more recent
+descriptors such as SALAD \cite{izquierdo2024salad}, BoQ \cite{alibey2024boq}, and MegaLoc
+\cite{berton2025megaloc} improve retrieval accuracy and robustness to viewpoint and
+appearance change. Polygraph uses one such descriptor (\mysecref{sec:method-clustering}) to
+cast votes between clusters of keyframes across sessions; unlike single-session loop closure,
+where the retrieval index only ever needs to answer queries against one session's own past,
+Polygraph's retrieval index spans every other session concurrently and must scale as new
+sessions --- not just new keyframes within a session --- are added online.
+
+\section{Learned Two-View Matching and Metric Pose Recovery}
+
+A retrieval hit is only a hypothesis; Polygraph verifies each candidate keyframe pair
+geometrically before it is allowed to become a graph edge
+(\mysecref{sec:method-pose-estimation}). Sparse feature matching between the two images uses
+XFeat \cite{potje2024xfeat} for feature extraction and LightGlue \cite{lindenberger2023lightglue}
+for matching; the overall recipe of sparse matching lifted to metric scale with a monocular
+depth prior matches 2GO's own default (``CL-Absolute'') variant \cite{lim2025twogo}. Because
+two-view matching alone only recovers relative pose up to an unknown scale, Polygraph lifts matched
+keypoints to metric 3D with a monocular metric depth estimator, Metric3D
+\cite{yin2023metric3d}, and checks that the resulting metric estimate agrees with the
+scale-free triangulated one before accepting a match --- avoiding the need for a second,
+overlapping camera or a dense stereo/LiDAR sensor purely to resolve scale. At the pose-graph
+level, once candidate edges are admitted, Polygraph's final robust solve uses Graduated
+Non-Convexity with a truncated least-squares cost (GNC-TLS) \cite{yang2020gnc} to down-weight
+or reject edges that remain outliers even after the gating described in
+\mysecref{sec:method-gate}.
+
+\section{Multi-Session and Lifelong Mapping}
+
+Fusing more than one session's map is a long-standing problem beyond single-session SLAM.
+Systems that maintain dense or semi-dense multi-map representations, such as ORB-SLAM3's
+Atlas \cite{campos2021orbslam3}, merge sessions by matching and aligning their dense maps
+directly, which gives strong geometric evidence for a match but ties the cost of fusion to
+the cost of maintaining dense geometry across every session. Polygraph instead follows the
+sparse, pose-graph-only line of work described next, trading some of that direct geometric
+evidence for a representation whose cost scales with the number of keyframes and sessions,
+not with scene density.
+
+\section{2GO: Sparse Multi-Session Pose-Graph Fusion}
+\label{sec:relatedwork-2go}
+
+The closest prior work to this thesis is 2GO \cite{lim2025twogo}, which fuses multiple
+sessions' odometry into one pose graph using exactly the ingredients described above:
+retrieval-based candidate proposal, sparse matching with a monocular depth prior for metric
+scale, and a two-tier gate that only admits a cross-session edge once it is corroborated ---
+first against other pending candidates for a session with no prior anchor, then against the
+graph's live estimate once a session has one. Several components of Polygraph's own gating
+and consistency-checking logic (\mysecref{sec:method-gate}) directly mirror 2GO's, including
+its per-session-count consistency thresholds and its optional multi-edge consensus scheme,
+ported from 2GO's own published parameterization rather than independently re-derived here.
+
+Where Polygraph departs from 2GO is architectural. 2GO's formulation assumes every session is
+available before fusion begins and designates one session in advance as the graph's fixed
+reference frame; Polygraph removes both assumptions, giving every session its own
+independent graph component with its own gauge-fixing prior at creation time, so that
+sessions can be processed one at a time, in any order, as they are collected
+(\mysecref{sec:method-graph}). 2GO's own published evaluation is on KITTI, the VBR benchmark
+\cite{brizi2024vbr}, and a self-recorded indoor session captured with a Boston Dynamics Spot
+robot; it does not cover the CroCoDL- and LaMAR-derived indoor deployments or the RTK-verified
+Oxford RobotCar sessions this thesis evaluates on (\mychapterref{chap:experiments}), none of
+which --- to the best of our knowledge --- any prior multi-session pose-graph fusion system
+has been evaluated against.
+\mysecref{sec:experiments-2go-comparison} reports a direct, hardware-matched comparison
+against 2GO's own published KITTI numbers, including an open gap in loop-closure recall that
+this thesis surfaces rather than resolves.
+
+\section{Datasets for Multi-Session Evaluation}
+
+KITTI \cite{geiger2012kitti} is a standard, widely used outdoor driving benchmark, used here
+in its multi-sequence form to construct multi-session fusion scenarios. Oxford RobotCar
+\cite{maddern2017robotcar}, with the later RTK-based ground truth release
+\cite{maddern2020rtk}, provides repeated traversals of the same route recorded months apart
+under different weather, season, and lighting; this thesis draws a paired easy/hard session
+split from it --- sharing all but one session between the two, with the hard split adding a
+night traversal --- specifically to test single- and multi-session performance under real
+day/night appearance change, an axis prior work on this dataset has approached from other
+angles, including radar-based SLAM \cite{radarslam2021}, direct sparse odometry with
+omnidirectional cameras \cite{matsuki2018omnidso}, and a systematic evaluation of visual
+odometry robustness in rain \cite{tan2023voautorain}, but never for multi-session pose-graph
+fusion. The two indoor deployments evaluated in this thesis are built from existing
+localization/mapping benchmarks rather than newly captured: HGE from CroCoDL
+\cite{blum2025crocodl}, a cross-device dataset combining HoloLens and legged-robot recordings,
+and HYDRO from LaMAR \cite{sarlin2022lamar}, a benchmark for AR localization and mapping
+across long, unconstrained indoor/outdoor trajectories --- neither previously used to evaluate
+multi-session pose-graph fusion. All three are introduced together with the rest of the
+experimental setup in \mychapterref{chap:experiments}; EuRoC \cite{burri2016euroc} is also
+part of the broader experimental campaign (\mysecref{sec:experiments-euroc}) but is not
+treated as a headline dataset in this chapter, since its evaluation is still evolving.
+
+% REVIEW NOTE (not rendered): a few things still worth a final check --
+% (1) 2GO's own published datasets (KITTI, VBR, a self-recorded Spot session) are from a
+%     direct read of arXiv:2503.16275's experiments section via a fetched HTML rendering, not
+%     the PDF itself -- you said you'd check 2GO yourself, so treat this as needing that
+%     confirmation pass;
+% (2) RobotCar split description (shared sessions, hard adds one night traversal) is from
+%     docs/robotcar.md's 2026-08-23 entry; results themselves are still being finalized
+%     (run overnight per our last conversation) -- this section only describes the *setup*,
+%     which should be safe regardless of how the numbers land, but double check before this is
+%     final;
+% (3) EuRoC's actual state: per docs/next_experiments.md item 5, the ORB-SLAM3-backbone Atlas
+%     comparison (ref-anchored accuracy on MH/V1/V2) is done with real numbers in hand, but
+%     VINS-Fusion-on-EuRoC is explicitly left open/deferred, and you said you're not sure of
+%     its overall state -- \mysecref{sec:experiments-euroc} doesn't exist yet, and how much
+%     weight EuRoC gets in the final narrative is still an open call for us to make together;
+% (4) \label{chap:experiments} / \label{chap:method} referenced above via \mychapterref
+%     don't exist yet -- added when we draft those chapters.
