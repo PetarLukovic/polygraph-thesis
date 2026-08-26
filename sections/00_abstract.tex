@@ -19,13 +19,3 @@ This thesis presents Polygraph, a multi-session trajectory optimization pipeline
 \noindent
 We evaluate Polygraph across multiple different setups chosen to be as different from one another as possible. Stereo-camera outdoor driving (KITTI \cite{geiger2012kitti}), HoloLens visual inertial indoor traversal (LaMAR \cite{sarlin2022lamar}), iPad visual inertial indoor traversal (LaMAR \cite{sarlin2022lamar}), Boston Dynamics Spot visual-inertial indoor legged locomotion (CroCoDL \cite{blum2025crocodl})and more. On the one hardware matched, head-to-head comparison against the closest prior work we could run (KITTI-00 \cite{geiger2012kitti} session using RTX 4090), Polygraph runs about 3$\times$ faster (134.3s vs.\ 387.16s, a real-time factor of 28.5\%). On that same sequence, our method commits fewer loop-closure edges than the prior work \cite{lim2025twogo} (142 vs.\ 517) while achieving same or better accuracy. We test multi-device multi-session capabilities with further experiments and show algorithm robustness to different viewpoints, internal algorithm parameters and different camera setups. Together, these results show that robust multi-session trajectory optimization is achievable in a genuinely online setting, without dense 3D reconstruction, across a
 substantially wider range of real-world conditions than previously demonstrated.
-
-% REVIEW NOTE (not rendered): numbers above (2.9x, 134.3s/387.16s, 28.5% RTF, 142/517 edges)
-% are pulled from polygraph/docs/report.html's Motivation section (last updated 2026-08-23);
-% re-check once final results lock in. RobotCar split description (shared sessions, hard adds
-% a night traversal) is from docs/robotcar.md's 2026-08-23 entry -- re-check that file too,
-% since the exact session set has changed more than once already. EuRoC intentionally left out
-% of the headline claims here -- its Atlas-comparison results (ORB-SLAM3 backbone, MH/V1/V2)
-% are done per docs/next_experiments.md item 5, but VINS-Fusion-on-EuRoC is still open and you
-% said yourself you're not sure of its overall state -- add a EuRoC sentence once you're ready
-% to commit to a specific claim about it.
