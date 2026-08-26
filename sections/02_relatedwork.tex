@@ -110,11 +110,12 @@ angles, including radar-based SLAM \cite{radarslam2021}, direct sparse odometry 
 omnidirectional cameras \cite{matsuki2018omnidso}, and a systematic evaluation of visual
 odometry robustness in rain \cite{tan2023voautorain}, but never for multi-session pose-graph
 fusion. The two indoor deployments evaluated in this thesis are built from existing
-localization/mapping benchmarks rather than newly captured: HGE from CroCoDL
-\cite{blum2025crocodl}, a cross-device dataset combining HoloLens and legged-robot recordings,
-and HYDRO from LaMAR \cite{sarlin2022lamar}, a benchmark for AR localization and mapping
-across long, unconstrained indoor/outdoor trajectories --- neither previously used to evaluate
-multi-session pose-graph fusion. All three are introduced together with the rest of the
+localization/mapping benchmarks rather than newly captured: HGE (both a HoloLens and an iPad
+capture) from LaMAR \cite{sarlin2022lamar}, a benchmark for AR localization and mapping across
+long, unconstrained indoor/outdoor trajectories, and HYDRO (a Boston Dynamics Spot capture)
+from CroCoDL \cite{blum2025crocodl}, a cross-device dataset combining HoloLens and legged-robot
+recordings --- neither previously used to evaluate multi-session pose-graph fusion. Both are
+introduced together with the rest of the
 experimental setup in \mychapterref{chap:experiments}; EuRoC \cite{burri2016euroc} is also
 part of the broader experimental campaign (\mysecref{sec:experiments-euroc}) but is not
 treated as a headline dataset in this chapter, since its evaluation is still evolving.
