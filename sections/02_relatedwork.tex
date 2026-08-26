@@ -43,9 +43,11 @@ sessions --- not just new keyframes within a session --- are added online.
 A retrieval hit is only a hypothesis; Polygraph verifies each candidate keyframe pair
 geometrically before it is allowed to become a graph edge
 (\mysecref{sec:method-pose-estimation}). Sparse feature matching between the two images uses
-XFeat \cite{potje2024xfeat} for feature extraction and LightGlue \cite{lindenberger2023lightglue}
-for matching; the overall recipe of sparse matching lifted to metric scale with a monocular
-depth prior matches 2GO's own default (``CL-Absolute'') variant \cite{lim2025twogo}. Because
+XFeat \cite{potje2024xfeat} for feature extraction and LighterGlue for matching --- a lighter,
+faster retraining of LightGlue \cite{lindenberger2023lightglue} distributed as part of the
+XFeat project \cite{potje2024xfeat}; the overall recipe of sparse matching lifted to metric
+scale with a monocular depth prior matches 2GO's own default (``CL-Absolute'') variant
+\cite{lim2025twogo}. Because
 two-view matching alone only recovers relative pose up to an unknown scale, Polygraph lifts matched
 keypoints to metric 3D with a monocular metric depth estimator, Metric3D
 \cite{yin2023metric3d}, and checks that the resulting metric estimate agrees with the

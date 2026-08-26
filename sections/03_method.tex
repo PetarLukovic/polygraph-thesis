@@ -7,239 +7,523 @@
 \chapter{Method}
 \label{chap:method}
 
-% REVIEW NOTE (not rendered): this is a SKELETON, not prose -- structure and figure
-% placement only, so we can agree on the shape before writing real paragraphs. Each section
-% below has (a) one placeholder sentence describing what it will cover, (b) a \pgfig{} figure
-% placeholder pointing at the image we already have (or a note that a new one is needed), and
-% (c) a bullet list of the concrete facts/parameter values from polygraph/docs/method.md that
-% the real prose will need to hit. Nothing here is final text.
+% REVIEW NOTE (not rendered): this is now full prose, not a skeleton. Two sections
+% (Odometry/Keyframing, Two-Tier Gate) still have no real figure -- they use a
+% self-contained boxed placeholder (\missingfig, defined below) instead of \includegraphics,
+% specifically so the document keeps compiling cleanly in Overleaf until we sketch those two
+% together. The other five sections point at the real images already sitting under
+% images/03_method/<stage>/ -- replace/adjust those freely, the \includegraphics paths don't
+% need to change if you just edit the PNGs in place.
 %
-% Image folders already created under images/03_method/<NN_stage>/, one per section below,
-% matching what we agreed on ("subfolder per part"). Existing polygraph/docs/images/*.png
-% explainer figures are copied in as starting points where we have one; 02_odometry is empty
-% -- no existing figure for keyframing, we'll need to sketch a new one together.
-%
-% \pgfig is a placeholder macro defined below (not in macros.sty) purely for this skeleton, so
-% every figure block is visually obvious and one-line to swap for a real \figure environment
-% later. DELETE this \newcommand once real figures replace the placeholders.
-\newcommand{\pgfig}[2]{%
+% A second flag: a few equations below FORMALIZE a prose description from
+% polygraph/docs/method.md into notation (survival-rate score in 3.4, the scale-consistency
+% filter in 3.5, MST edge weights in 3.5) rather than being read directly off the exact source
+% formula in code -- I only had verified exact code for the *thresholds/values*, not every
+% underlying formula's precise form. Worth a direct check against
+% src/retrieval/cluster_index.py and src/pose_estimation/edge_estimator.py before this is
+% final, flagged again inline where it matters.
+\newcommand{\missingfig}[1]{%
   \begin{center}
   \fbox{\parbox{0.85\textwidth}{\centering\vspace{0.3cm}
-  \textbf{[FIGURE PLACEHOLDER]}\\[2pt]
-  \texttt{#1}\\[4pt]
-  \small #2
+  \textbf{[FIGURE NEEDED --- sketch together]}\\[4pt]
+  \small #1
   \vspace{0.3cm}}}
   \end{center}
 }
 
-Section-by-section shape of this chapter, mirroring the pipeline's own stages: problem
-statement and overview first, then one section per stage in the order data actually flows
-through Polygraph, ending with the two-tier gate and pose-graph optimization that turn
-verified candidate matches into the final result.
+This chapter describes Polygraph, the multi-session trajectory fusion pipeline this thesis
+presents. \mysecref{sec:method-overview} states the problem formally and walks through, at a
+high level, what happens to one keyframe and one cluster as they move through the pipeline.
+\mysecref{sec:method-odometry}--\ref{sec:method-graph} then cover each pipeline stage in turn,
+in the order data actually flows: keyframing, clustering, cluster matching, pose estimation,
+the two-tier gate, and pose-graph optimization.
 
 \section{Problem Statement and Pipeline Overview}
 \label{sec:method-overview}
 
-\emph{Placeholder}: formalize the multi-session trajectory fusion problem --- $N$ sessions,
-each a stream of raw per-frame poses in its own local frame; goal is one pose per keyframe per
-session in a single shared frame, wherever sessions overlap; no assumption that sessions are
-known up front or that one is a designated reference. State the online constraint explicitly
-(processed one keyframe/cluster at a time, per session).
+\subsection{Notation and Problem Statement}
 
-\pgfig{images/03_method/01_overview/pipeline_overview.png}{Existing overview figure (from
-polygraph/docs/images/polygraph.png) --- the 4-box pipeline diagram: Clustering $\to$ Cluster
-Matching $\to$ Joint Pose Estimation $\to$ Pose Graph Optimization. Good as the chapter's
-opening figure largely as-is; may want a thesis-formatted redraw (fonts/labels) rather than
-reusing the report's own styling verbatim.}
+Let $S = \{1, \dots, N\}$ index the $N$ sessions to be fused. Each session $s \in S$ is
+tracked independently by a single-session visual(-inertial) odometry backbone
+(\mychapterref{chap:relatedwork} discusses several), producing a stream of raw per-frame poses
+$T^{\mathrm{raw}}_{s,i} \in \SE{3}$, $i = 1, \dots, F_s$, expressed purely in session $s$'s own
+local frame $\mathcal{F}_s$ --- drifting over time, and with no inherent relationship to any
+other session's frame. \mysecref{sec:method-odometry} selects a keyframe subsequence
+$K_s = (k_1 < k_2 < \dots < k_{|K_s|}) \subseteq \{1,\dots,F_s\}$; write $T_{s,j} :=
+T^{\mathrm{raw}}_{s,k_j}$ for session $s$'s $j$-th keyframe pose. Everything downstream of
+\mysecref{sec:method-odometry} operates purely at keyframe granularity.
 
+Define a graph $G = (V, E)$ with one vertex per keyframe across every session,
+$V = \{ (s,j) : s \in S,\ j = 1,\dots,|K_s| \}$, and edges $E = E_{\mathrm{intra}} \cup
+E_{\mathrm{cross}}$ of two kinds:
 \begin{itemize}
-  \item One high-level figure here, then each box becomes its own section below.
-  \item Emphasize up front: no dense reconstruction, ever -- everything is keyframe-level
-    sparse geometry.
+  \item \textbf{Intra-session edges} $E_{\mathrm{intra}}$: one per consecutive keyframe pair
+    $(s,j),(s,j{+}1)$ within a session, with measurement $z_{(s,j),(s,j+1)} = T_{s,j}^{-1}
+    T_{s,j+1}$ taken directly from the (trusted, drift-affected) raw odometry.
+  \item \textbf{Cross-session edges} $E_{\mathrm{cross}}$: between keyframes of two
+    \emph{different} sessions, added only once a candidate match survives verification
+    (\mysecref{sec:method-pose-estimation}) and is admitted by the gate
+    (\mysecref{sec:method-gate}); measurement $\hat{z}_{(s,j),(s',j')} \in \SE{3}$ is the
+    estimated relative pose between the two keyframes.
 \end{itemize}
+The connected components of $G$ partition $V$ into groups of sessions confirmed, with
+corroborated evidence, to revisit one another; sessions in different components have no
+established relative pose. For every vertex $v = (s,j) \in V$, let $X_v \in \SE{3}$ be its
+pose in its own component's shared frame. The goal is to estimate $\{X_v\}_{v \in V}$, for
+every component, by solving
+\begin{equation}
+  \label{eq:method-pgo-objective}
+  \min_{\{X_v\}_{v \in V}} \;
+  \sum_{(u,v) \in E} \rho_{uv}\!\Big( r(X_u, X_v, z_{uv});\, \Sigma_{uv} \Big)
+  \;+\; \sum_{v \in V_0} \big\| X_v \ominus p_v \big\|^2_{\Sigma_{\mathrm{prior}}},
+\end{equation}
+where $r(X_u,X_v,z) = \mathrm{Log}\!\big(z^{-1} X_u^{-1} X_v\big) \in \mathbb{R}^6$ is the
+$\SE{3}$ residual under the standard Lie-algebra logarithm map, $\Sigma_{uv}$ is the edge's
+noise covariance, $\rho_{uv}$ a robust loss (identity for intra-session edges; a Cauchy
+$M$-estimator or, in the final archival pass, a GNC-TLS weight for cross-session edges --- see
+\mysecref{sec:method-graph}), and $V_0 \subseteq V$ is the set of per-component gauge-fixing
+anchor vertices, one per session, each with prior pose $p_v$.
+
+Two properties of \eqref{eq:method-pgo-objective} are what distinguish Polygraph from an
+offline formulation of the same problem (\mysecref{sec:relatedwork-2go}): first, $V$ and $E$
+grow monotonically \emph{online}, one keyframe and one confirmed edge at a time, with no
+assumption that $S$ or any session's full trajectory is known in advance; second, $V_0$ is
+never fixed up front --- every session receives its own gauge-fixing prior the moment it
+starts (as its own, momentarily disconnected, single-vertex component), and components merge,
+but never split, only when a cross-session edge survives verification and the gate.
+
+\subsection{Pipeline Walkthrough}
+
+Before the detailed, per-stage treatment in the rest of this chapter, it is worth tracing what
+actually happens to one keyframe and one cluster as they move through Polygraph, end to end.
+
+A session's raw odometry stream is thinned to keyframes as it arrives
+(\mysecref{sec:method-odometry}). Each new keyframe is appended to that session's own
+currently-open \emph{cluster} --- a short, spatially bounded run of keyframes
+(\mysecref{sec:method-clustering}). Clusters, not individual keyframes, are the unit
+everything downstream reasons about: a cluster only becomes visible to the rest of the
+pipeline once it \emph{closes}, at which point every one of its member keyframes has already
+been assigned a global image descriptor.
+
+The moment a cluster closes, it is matched against every other session's already-closed
+clusters through image retrieval (\mysecref{sec:method-cluster-matching}): its keyframes vote
+for their nearest neighbours elsewhere, and a short list of candidate cluster pairs falls out
+--- unverified hypotheses, not yet trusted. Each candidate pair is then checked geometrically
+(\mysecref{sec:method-pose-estimation}): a handful of keyframe pairs from the two clusters are
+matched, triangulated, lifted to metric scale with a monocular depth prior, and cross-checked
+against each other; a pair that survives this becomes one \emph{confirmed edge} --- a single
+metric relative pose between two keyframes, one in each cluster.
+
+A confirmed edge is not yet allowed into the shared pose graph unconditionally. If both
+clusters belong to the same session, it commits immediately --- that session's own position
+is already fully known from its own sequential odometry, so this is just corroborating
+evidence. If the two clusters belong to different sessions, the edge instead passes through
+the two-tier consensus gate (\mysecref{sec:method-gate}), which decides, based on how much
+prior cross-session evidence that session already has, whether this single piece of evidence
+is enough to trust on its own or needs to be corroborated by another before it is allowed to
+merge two sessions' components together.
+
+Every edge that is ultimately admitted --- intra- or cross-session --- becomes a factor in the
+pose graph of \eqref{eq:method-pgo-objective}, kept current by a cheap incremental solve after
+every closed cluster and periodically refined by a more expensive batch solve that also prunes
+edges that turn out to be outliers (\mysecref{sec:method-graph}). The result, once every
+session has been processed, is one pose graph spanning every session shown, with corroborated
+evidence, to revisit another --- each session's own trajectory corrected wherever it overlaps
+with the rest.
+
+\begin{figure}[htb]
+  \centering
+  \includegraphics[width=\textwidth]{images/03_method/01_overview/pipeline_overview.png}
+  \caption{Left to right: each session's raw per-frame odometry is grouped online into
+    spatially bounded clusters (Clustering). When a cluster closes, its keyframes vote against
+    a retrieval index built from every other session's keyframes (Cluster Matching). A
+    candidate pair then goes through joint pose estimation: keyframe pairs are matched and
+    reduced by translation-consensus voting into one confirmed edge. Pose graph optimization
+    adds every confirmed edge as a loop closure: a cheap incremental Fast update runs
+    continuously, and a periodic Full update re-solves the whole graph and prunes outlier
+    edges. \textit{Figure reused from the polygraph project report; consider a
+    thesis-formatted redraw of labels/fonts before submission.}}
+  \label{fig:method-overview}
+\end{figure}
+
+Unless stated otherwise, every numeric threshold quoted in this chapter is the production
+configuration used to generate this thesis's KITTI multi-session results
+(\texttt{configs/kitti/kitti\_orb\_full.yaml}), not necessarily the pipeline's own built-in
+code defaults, which are in several places more conservative --- every threshold remains
+freely configurable per dataset.
 
 \section{Device Odometry and Keyframing}
 \label{sec:method-odometry}
 
-\emph{Placeholder}: input is raw per-frame poses from any single-session visual(-inertial)
-odometry backbone (ORB-SLAM3, VINS-Fusion, or a device's own onboard VIO --- HoloLens,
-Spot); drifting, local-frame-only. Define keyframe selection.
+Polygraph does not track cameras itself: its input is the raw per-frame pose stream
+$T^{\mathrm{raw}}_{s,i} \in \SE{3}$ produced by an off-the-shelf single-session
+visual(-inertial) odometry backbone --- ORB-SLAM3 \cite{campos2021orbslam3}, VINS-Fusion
+\cite{qin2019vinsfusionlocal,qin2019vinsfusionglobal}, or a device's own onboard visual-inertial
+odometry (a HoloLens or a Boston Dynamics Spot robot, for the indoor deployments in
+\mychapterref{chap:experiments}). This stream is locally accurate but drifts over time, and is
+expressed only in session $s$'s own local frame $\mathcal{F}_s$, with no relationship to any
+other session's frame.
 
-\pgfig{images/03_method/02_odometry/(new figure needed)}{No existing figure for this stage.
-Candidate: a simple trajectory strip with keyframe markers dropped at the
-translation/rotation threshold, maybe showing one accepted vs.\ one skipped frame. This is one
-we sketch together.}
+A raw frame becomes a keyframe once it has moved far enough from the previous keyframe.
+Writing $t_{s,i}, R_{s,i}$ for the translation and rotation components of
+$T^{\mathrm{raw}}_{s,i}$, and $j$ for the index of the most recently selected keyframe, frame
+$i$ becomes the next keyframe the first time
+\begin{equation}
+  \label{eq:method-keyframe-trigger}
+  \big\| t_{s,i} - t_{s,k_j} \big\| \;>\; \tau_{\mathrm{trans}}
+  \quad\text{or}\quad
+  \angle\!\big(R_{s,k_j}^{-1} R_{s,i}\big) \;>\; \tau_{\mathrm{rot}},
+\end{equation}
+where $\angle(R)$ denotes the rotation angle of $R \in \SO{3}$. The production values used for
+this thesis's KITTI results are $\tau_{\mathrm{trans}} = 5.0$m and $\tau_{\mathrm{rot}} =
+28.6°$; every subsequent stage of the pipeline operates purely on the resulting keyframe
+subsequence $K_s$, never on raw per-frame poses.
 
-\begin{itemize}
-  \item Keyframe trigger: \texttt{trans\_th\_m=5.0}m OR \texttt{rot\_th\_deg=28.6\textdegree}
-    since the last keyframe.
-  \item Everything downstream operates at keyframe granularity only, never raw per-frame.
-\end{itemize}
+\missingfig{A trajectory strip with keyframe markers dropped at the translation/rotation
+threshold from \eqref{eq:method-keyframe-trigger}, ideally showing one accepted and one
+skipped candidate frame to make the trigger condition concrete.}
 
 \section{Online Clustering}
 \label{sec:method-clustering}
 
-\emph{Placeholder}: each session's own \texttt{ClusterBuilder} groups its keyframe stream
-into spatially bounded clusters online, purely from travel distance off the cluster's own
-start pose. Also where the per-keyframe global descriptor (MegaLoc) gets computed, since it's
-needed by the next section.
+Each session's own \texttt{ClusterBuilder} groups its keyframe stream into spatially bounded
+\emph{clusters}, entirely online and using only that session's own travel distance --- no
+global trajectory or cross-session information is needed at this stage. A cluster
+$C = (k_{j_1}, \dots, k_{j_2})$ starts at keyframe $k_{j_1}$ and closes at the first later
+keyframe $k_{j_2}$ satisfying both
+\begin{equation}
+  \label{eq:method-cluster-close}
+  j_2 - j_1 + 1 \;\ge\; n_{\min}
+  \quad\text{and}\quad
+  \Big( \big\| t_{s,j_2} - t_{s,j_1} \big\| \;>\; d_{\max} \;\;\text{or}\;\; j_2 - j_1 + 1 =
+  n_{\max} \Big),
+\end{equation}
+i.e.\ the cluster needs at least $n_{\min}$ keyframes \emph{and} either to have travelled more
+than $d_{\max}$ from its own start pose or to have reached $n_{\max}$ keyframes outright.
+Once $C$ closes, its own last $n_{\mathrm{ov}}$ keyframes seed the next cluster's initial
+members, so consecutive clusters share keyframes and chain with no coverage gap between them.
+The production values are $n_{\min}=6$, $d_{\max}=10$m, $n_{\max}=15$, $n_{\mathrm{ov}}=2$.
 
-\pgfig{images/03_method/03_clustering/clustering_explainer.png}{Existing figure (from
-polygraph/docs/images/clustering\_explainer.png) --- likely usable close to as-is; check
-whether it already shows the overlap-keyframe chaining between consecutive clusters, or if
-that needs a small addition/second panel.}
+Every keyframe, at the moment it is added to a cluster, is also assigned one global image
+descriptor $d_{s,k} = f_{\mathrm{MegaLoc}}(I_{s,k}) \in \mathbb{R}^D$
+\cite{berton2025megaloc}, needed by cluster matching (\mysecref{sec:method-cluster-matching})
+the moment the cluster closes. The output of this stage is a growing, per-session sequence of
+closed clusters, each with its member keyframes and their descriptors.
 
-\begin{itemize}
-  \item Cluster closes once \(\ge\) \texttt{min\_kf} (6) keyframes AND (\(>\)\texttt{d\_max\_m}
-    (10m) travelled OR \texttt{max\_kf} (15) keyframes reached).
-  \item Last \texttt{overlap\_kf} (2) keyframes seed the next cluster --- no gaps between
-    consecutive clusters.
-  \item Output: closed clusters, each with member keyframes + one MegaLoc descriptor per
-    keyframe.
-\end{itemize}
+\begin{figure}[htb]
+  \centering
+  \includegraphics[width=0.85\textwidth]{images/03_method/03_clustering/clustering_explainer.png}
+  \caption{Online clustering: keyframes accumulate into a cluster until the closing condition
+    of \eqref{eq:method-cluster-close} is met; the cluster's last $n_{\mathrm{ov}}$ keyframes
+    seed the next one. \textit{Placeholder caption --- confirm this figure actually shows the
+    overlap-keyframe chaining between consecutive clusters once we look at it together; if
+    not, that may be worth a small addition.}}
+  \label{fig:method-clustering}
+\end{figure}
 
 \section{Cluster Matching (Retrieval)}
 \label{sec:method-cluster-matching}
 
-\emph{Placeholder}: when a cluster closes, its keyframes vote against a retrieval index built
-from every other eligible session's keyframe descriptors; votes pooled and normalized per
-candidate cluster; adjacency guard excludes a cluster's own last two same-session clusters.
-Output is unverified candidate cluster pairs, not confirmed matches.
+When a cluster $C$ closes, it is matched against every other eligible session's already-closed
+clusters through learned image retrieval, before any geometric verification is attempted. Each
+member keyframe $k \in C$ queries a retrieval index of other sessions' keyframe descriptors and
+casts one vote for the parent cluster of each of its $k_{\mathrm{top}}$ nearest neighbours (by
+cosine similarity of MegaLoc descriptors). Votes are pooled per candidate cluster $C'$ and
+normalized into a \emph{survival rate}
+\begin{equation}
+  \label{eq:method-survival-rate}
+  \sigma(C, C') \;=\; \frac{\#\{\, k \in C : C' \text{ received a vote from } k \,\}}{|C|},
+\end{equation}
+the fraction of $C$'s own keyframes that voted for $C'$ at all; a candidate must clear a
+minimum survival-rate floor to be considered further. $C$'s own last two same-session clusters
+are excluded from candidacy by construction (an adjacency guard) --- they share keyframes with
+$C$ by construction, not because of a genuine revisit. Subject to the survival floor, the
+$k_{\mathrm{clusters}}$ highest-scoring candidates per other session survive. Production values
+are $k_{\mathrm{top}} = 5$, $k_{\mathrm{clusters}} = 2$. The output of this stage is a short
+list of candidate cluster pairs $(C, C')$ --- unverified hypotheses, not confirmed matches.
 
-\pgfig{images/03_method/04_cluster_matching/cluster_matching_explainer.png}{Existing figure
-(from polygraph/docs/images/cluster\_matching\_explainer.png) --- shows the "pool of keyframes
-a new cluster is voted against" (box 1 vs.\ box 2 from the overview figure). Likely usable
-close to as-is.}
-
-\begin{itemize}
-  \item Each keyframe casts a vote for its \texttt{top\_k} (5) nearest-neighbour clusters.
-  \item Top \texttt{top\_k\_clusters} (2) candidates per other session survive, subject to a
-    minimum-agreement (survival-rate) floor.
-\end{itemize}
+\begin{figure}[htb]
+  \centering
+  \includegraphics[width=0.85\textwidth]{images/03_method/04_cluster_matching/cluster_matching_explainer.png}
+  \caption{Cluster matching: a newly closed cluster's keyframes vote against the pool of
+    already-closed clusters from every other eligible session, producing a short list of
+    candidate cluster pairs.}
+  \label{fig:method-cluster-matching}
+\end{figure}
 
 \section{Joint Pose Estimation}
 \label{sec:method-pose-estimation}
 
-\emph{Placeholder}: for one candidate cluster pair, an MST over cross keyframe-pair descriptor
-similarity selects \texttt{top\_k\_pairs} (10) diverse pairs to actually verify. Each pair:
-sparse matching $\to$ essential-matrix RANSAC $\to$ triangulation $\to$ monocular metric depth
-lift $\to$ scale-consistency filter $\to$ PnP. Surviving estimates go through
-translation-consensus voting into one confirmed edge.
+Cluster matching only proposes candidate pairs; this stage verifies them geometrically, and is
+the only stage that actually looks at image content and produces metric poses.
 
-\pgfig{images/03_method/05_pose_estimation/pose_estimation_explainer.png}{Existing figure
-(from polygraph/docs/images/pose\_estimation\_explainer.png) --- the "box 3" detail view
-(keyframe pairs matched + reduced by consensus voting, kept vs.\ outlier). Likely the
-chapter's most figure-dense section given how many sub-steps there are (matching, RANSAC,
-triangulation, depth lift, scale filter, PnP) --- may want to split this single existing
-figure into 2-3 smaller ones, one per sub-step, rather than one dense panel.}
+\subsection{Keyframe-Pair Selection}
 
-\begin{itemize}
-  \item Pipeline per pair: XFeat+LightGlue $\to$ essential-matrix RANSAC (poselib) $\to$ DLT
-    triangulation $\to$ Metric3D depth-lift $\to$ scale-consistency filter $\to$ PnP (poselib).
-  \item Rejected unless \(\ge\) \texttt{min\_valid\_points} (150), \(\ge\)
-    \texttt{abs\_min\_inlier\_ratio} (0.80), \(\le\) \texttt{abs\_max\_ransac\_score} (0.05).
-  \item Translation-consensus: estimates agree within 1.5m; largest mutually-agreeing subset
-    averaged (chordal SE3 mean) into one confirmed edge; needs \(\ge\) \texttt{min\_kf\_pairs}
-    (2) agreeing pairs.
-  \item \texttt{multi\_edge\_consensus} (on): every agreeing estimate also added as its own
-    extra graph edge, not just the averaged one.
-\end{itemize}
+Checking every keyframe in $C$ against every keyframe in $C'$ would be wasteful and
+overly redundant. Instead, every cross keyframe-pair $(k,k') \in C \times C'$ is weighted by
+descriptor similarity, and a maximum-spanning-tree (MST) over this complete bipartite
+similarity graph selects the $k_{\mathrm{pairs}}$ highest-similarity, spatially diverse pairs to
+actually verify. The MST property guarantees that every selected pair covers at least one
+keyframe no earlier selected pair did, so the selected pairs spread across the cluster instead
+of collapsing onto one dominant viewpoint. Production value: $k_{\mathrm{pairs}} = 10$.
+
+\subsection{Per-Pair Verification}
+
+Each selected pair $(k, k')$ goes through the same six-step verification:
+\begin{enumerate}
+  \item \textbf{Sparse matching}: XFeat feature extraction \cite{potje2024xfeat} followed by
+    LighterGlue matching --- a lighter, faster retraining of LightGlue
+    \cite{lindenberger2023lightglue} distributed as part of the XFeat project --- giving a
+    correspondence set $M$.
+  \item \textbf{Essential-matrix RANSAC} (via poselib) on $M$, giving a scale-free relative
+    rotation $\hat{R}$ and translation direction $\hat{t}$ (unit norm) plus an inlier subset
+    $M_{\mathrm{in}} \subseteq M$.
+  \item \textbf{Triangulation} (DLT) of $M_{\mathrm{in}}$ under $(\hat{R}, \hat{t})$, giving
+    scale-free 3D points $\{X_i^{\mathrm{tri}}\}$, correct only up to one unknown global scale.
+  \item \textbf{Monocular metric depth lift}: Metric3D \cite{yin2023metric3d} predicts a
+    metric depth map for both images; back-projecting each matched keypoint through its own
+    image's depth map and camera intrinsics gives metric 3D points $\{X_i^{\mathrm{depth}}\}$.
+  \item \textbf{Scale-consistency filter}: for each correspondence $i$, the implied per-point
+    scale $\hat{s}_i = \|X_i^{\mathrm{depth}}\| / \|X_i^{\mathrm{tri}}\|$ should agree across
+    genuinely correct correspondences (which share one true global scale); correspondences
+    whose $\hat{s}_i$ is inconsistent with the rest are discarded, keeping only points where
+    the scale-free triangulated position and the metric depth-lifted position agree up to a
+    consistent per-point scale.
+  \item \textbf{PnP} (via poselib) of the surviving depth-lifted (metric) 3D points against
+    their 2D correspondences in the other image, giving a metric relative pose
+    $\hat{T}_{k,k'} \in \SE{3}$.
+\end{enumerate}
+A pair is rejected outright unless it clears $\ge n_{\mathrm{valid}} = 150$ scale-consistent
+points, $\ge \rho_{\mathrm{inlier}} = 0.80$ RANSAC inlier ratio, and $\le
+\epsilon_{\mathrm{ransac}} = 0.05$ RANSAC score.
+
+% REVIEW NOTE (not rendered): step 5's exact formula (the ratio s_i and how "inconsistent" is
+% decided) formalizes method.md's qualitative description -- confirm against the real
+% scale-consistency-filter code in src/pose_estimation/ (edge_estimator.py or pose_estimator.py)
+% before treating \eqref{eq:method-survival-rate}-style precision here as final; same caveat
+% for the MST edge-weight definition just above (descriptor similarity is stated qualitatively
+% in method.md, not given as an exact formula).
+
+\subsection{Translation-Consensus Voting}
+
+The surviving per-pair estimates $\{\hat{T}_1, \dots, \hat{T}_m\}$ (of the up to
+$k_{\mathrm{pairs}}$ attempted) are combined by a translation-consensus vote rather than
+trusted individually. Two estimates \emph{agree} if their implied translations differ by less
+than $\tau_{\mathrm{vote}} = 1.5$m; the largest mutually agreeing subset (a maximum clique in
+the pairwise-agreement graph) is averaged into one confirmed edge measurement $\hat{z}$ via a
+chordal $\SE{3}$ mean --- translations averaged arithmetically, rotations averaged by
+projecting their arithmetic mean onto $\SO{3}$ (via SVD). A candidate pair of clusters only
+becomes a confirmed edge once at least $n_{\mathrm{vote}} = 2$ independent per-pair estimates
+agree; one uncorroborated estimate is never enough, and the candidate is otherwise dropped.
+When multi-edge consensus is enabled (the production setting used throughout this thesis),
+every individual agreeing estimate is \emph{also} added as its own extra graph edge alongside
+the averaged one, giving the optimizer more redundant evidence per confirmed match.
+
+\begin{figure}[htb]
+  \centering
+  \includegraphics[width=0.85\textwidth]{images/03_method/05_pose_estimation/pose_estimation_explainer.png}
+  \caption{Per-pair verification: matched keyframe pairs between two candidate clusters go
+    through sparse matching, RANSAC, triangulation, metric depth lift, and PnP.}
+  \label{fig:method-pose-estimation}
+\end{figure}
+
+\begin{figure}[htb]
+  \centering
+  \includegraphics[width=0.85\textwidth]{images/03_method/05_pose_estimation/pose_consensus_plot.png}
+  \caption{Translation-consensus voting on one real KITTI candidate pair: each of the five
+    MST-selected keyframe pairs is either a failed estimate or a translation distance along the
+    corridor; the real \texttt{\_aggregate()} vote separates agreeing (kept) from
+    disagreeing (outlier) estimates, and the dashed line marks the final chordal-mean edge.}
+  \label{fig:method-pose-consensus}
+\end{figure}
 
 \section{The Two-Tier Consensus Gate}
 \label{sec:method-gate}
 
-\emph{Placeholder}: this is the section that most needs careful, possibly multi-figure
-treatment --- it's the least visual of the pipeline stages (no images/geometry to show
-directly, it's a decision procedure over accumulating edges) but the most conceptually
-important for the "online, no pre-designated reference" contribution claim made in the
-Introduction. Cover: same-session edges bypass the gate entirely; cross-session edges go
-through anchor/query assignment, then either Tier 1 (CorroborationPool) or Tier 2
-(PendingQueue) depending on whether the query session already has a live cross-session edge.
-Strongly consider walking through the worked three-edge example from
-\texttt{polygraph/docs/method.md} \S5 directly, since it's already written clearly and
-concretely.
+A confirmed edge from \mysecref{sec:method-pose-estimation} is not admitted into the shared
+pose graph unconditionally. This section describes the gate that decides whether, and when, it
+is.
 
-\pgfig{images/03_method/06_gate/pose_consensus_plot.png}{Existing figure (from
-polygraph/docs/images/pose\_consensus\_plot.png) --- not yet confirmed this is the right
-figure for this section (name suggests it may actually belong with \S3.5's pose-estimation
-consensus voting, not the graph-level gate). Needs a real diagram of its own: a
-state-diagram-style figure showing Tier 1 vs.\ Tier 2 routing (disconnected session $\to$
-CorroborationPool; already-anchored session $\to$ PendingQueue $\to$ commit/reject) would
-likely communicate this better than any existing image does. This is a "sketch together"
-figure, not a reuse.}
+\subsection{Same-Session Edges Bypass the Gate}
 
-\begin{itemize}
-  \item Same-session (intra) edges: always bypass the gate, commit straight to the graph.
-  \item Anchor/query: whichever session has more live cross-session edges is anchor; ties
-    keep one side arbitrarily but deterministically.
-  \item Tier 1 (CorroborationPool, query has 0 live cross edges): candidates pooled per target
-    session; commit together once \(\ge\) \texttt{min\_corroborating\_matches} (2) mutually
-    agree (within 2.0m/10.0\textdegree) and are independent (\(\ge\)
-    \texttt{min\_independent\_cluster\_gap} (3) clusters apart on the anchor side); otherwise
-    ages out after \texttt{max\_age\_s} (1 day).
-  \item Tier 2 (PendingQueue, query has \(\ge\)1 live cross edge): checked immediately against
-    the query's live estimate (10.0m/20.0\textdegree, tightens as edges accumulate); on
-    failure, re-checked on every later full update until it passes, hits \texttt{max\_rejects}
-    (3), or ages out.
-  \item Worked example (method.md \S5.1): three cross-session candidates walking through both
-    tiers, including the "can a session end up with exactly 1 live edge?" edge case.
-\end{itemize}
+An edge whose two clusters both belong to the same session commits directly to the graph,
+no check required: that session's own position is already fully determined by its own
+sequential odometry chain (\mysecref{sec:method-overview}'s $E_{\mathrm{intra}}$), so a
+same-session loop closure is simply extra corroborating evidence, not new placement
+information.
+
+\subsection{Anchor/Query Assignment}
+
+For a confirmed cross-session edge between session $s$ and session $s'$, let $n(s)$ denote the
+number of currently live (unpruned) cross-session edges already incident on $s$. The session
+with more live cross-session edges plays \emph{anchor} --- its current pose estimate is treated
+as the trusted reference for this check --- and the other plays \emph{query}, the side being
+tested; ties (including neither session having any live edges yet) are broken arbitrarily but
+deterministically. Whether the query session already has at least one live cross-session edge
+decides which of the two tiers below the candidate is routed through.
+
+\subsection{Tier 1 --- Corroboration Pool}
+
+If the query session is still fully disconnected ($n(\text{query}) = 0$), there is no live
+estimate yet worth checking a single candidate against. Instead, candidates targeting that
+session are pooled, and checked only against each other: once a subset of at least
+$m_{\mathrm{corrob}} = 2$ pooled candidates mutually agree --- their implied world poses within
+$\tau_{\mathrm{pool}} = 2.0$m / $10.0°$ of one another --- \emph{and} are independent (their
+source clusters on the anchor side at least $g_{\min} = 3$ clusters apart, so two candidates
+are not simply the same retrieval mistake repeated), they commit together as a group and
+jointly establish that session's first anchor, arriving at $\ge 2$ live cross-session edges at
+once, never at exactly one. A candidate that never finds enough agreeing peers is dropped once
+it has sat in the pool longer than $t_{\max} = 1$ day.
+
+\subsection{Tier 2 --- Pending Queue}
+
+If the query session already has at least one live cross-session edge, the candidate is
+checked immediately against the query's current live pose estimate, rather than queued first.
+The consistency threshold depends on how much existing evidence that session already has:
+\begin{equation}
+  \label{eq:method-consistency-table}
+  \big(\tau_{\mathrm{trans}}(n), \tau_{\mathrm{rot}}(n)\big) \;=\;
+  \begin{cases}
+    (\infty, \infty) & n = 0 \quad\text{(bootstrap row --- unreachable in Tier 2 by
+      construction)} \\
+    (10.0\text{m}, 20.0°) & n \ge 1,
+  \end{cases}
+\end{equation}
+where $n = n(\text{query})$. If the pose the candidate implies is consistent with the query's
+current estimate under \eqref{eq:method-consistency-table}, it commits immediately and never
+touches the queue. If it fails, it is placed in the pending queue and re-checked against the
+graph's estimate at every later full update (\mysecref{sec:method-graph}) until it either
+passes, accumulates $r_{\max} = 3$ rejections, or ages out past $t_{\max}$ --- whichever comes
+first --- at which point it is dropped for good.
+
+\subsection{Worked Example}
+
+Consider three cross-session candidates between sessions A and B, arriving in order. Both
+sessions start with $n(\cdot) = 0$, so edge 1 (A$\leftrightarrow$B) ties for anchor, A wins
+arbitrarily, B is query with $n(\mathrm{B})=0$ --- Tier 1. Its corroboration pool for B now has
+one entry, below $m_{\mathrm{corrob}}=2$; nothing commits yet. Edge 2 (a different A cluster
+$\leftrightarrow$ B cluster) routes the same way, and the pool for B now has two entries: if
+they agree and are independent, both commit together right now, and B jumps straight to $2$
+live cross-session edges. If they disagree, both stay pooled, waiting for a future third
+candidate to pair with one of them --- if none ever arrives, both simply age out and B is never
+anchored via this pair. Assuming edges 1 and 2 did corroborate, a third A$\leftrightarrow$B
+candidate (edge 3) now finds $n(\mathrm{B}) \ge 1$ --- Tier 2 --- and is checked immediately
+against B's live estimate under the $10.0$m/$20.0°$ bound of
+\eqref{eq:method-consistency-table}: if consistent, it commits immediately (B now grows one
+edge at a time, never in pairs again); if not, it lands in the pending queue for a later
+re-check.
+
+\missingfig{A state-diagram-style figure: disconnected query session $\to$ Corroboration Pool
+$\to$ joint commit; already-anchored query session $\to$ immediate consistency check $\to$
+commit or Pending Queue $\to$ commit/reject on re-check. This is the chapter's most
+conceptually dense, least visual section --- worth the most joint sketching time.}
 
 \section{Pose Graph Optimization}
 \label{sec:method-graph}
 
-\emph{Placeholder}: every session starts as its own graph component with its own gauge-fixing
-prior; first surviving cross-session edge merges two components. Fast update (iSAM2,
-incremental, every closed cluster) vs.\ Full update (batch, every
-\texttt{slow\_update\_every\_n\_clusters} (10) clusters, prunes residual outliers). End-of-run
-sequence: unconditional final full update $\to$ drain pending queue $\to$
-\texttt{inter\_cluster\_pair\_consensus} $\to$ \texttt{final\_gnc\_solve}.
+Every admitted edge --- intra-session, and cross-session once past the gate --- becomes a
+factor in \eqref{eq:method-pgo-objective}. When a session starts, it becomes its own connected
+component with its own gauge-fixing prior vertex in $V_0$; the first cross-session edge that
+survives the gate merges its two components (rebasing the smaller component's frame into the
+surviving one).
 
-\pgfig{images/03_method/07_graph/graph_edges_before.png +
-images/03_method/07_graph/graph_edges_after.png +
-images/03_method/07_graph/graph_solve.png +
-images/03_method/07_graph/slow_update_outliers.png}{Four existing figures, likely one of the
-best-covered sections image-wise --- before/after edge pruning, the solve itself, and the
-slow-update outlier plot (32 kept / 21 pruned example from a real KITTI session). Need to
-decide layout: four separate figures across the section vs.\ one composite
-before/after-pruning figure plus the outlier plot as a second.}
+\subsection{Fast and Full Updates}
 
+Two solves keep the graph current, at different costs and cadences:
 \begin{itemize}
-  \item Fast update: iSAM2 incremental solve, every closed cluster.
-  \item Full update: batch least-squares, every 10 clusters; prunes edges whose residual
-    exceeds \texttt{outlier\_sigma} (3\(\times\)) their own group's median (intra/cross judged
-    separately).
-  \item \texttt{inter\_cluster\_pair\_consensus}: cross-checks session pairs' independent
-    edges against each other using pre-fusion local poses --- catches mutually
-    self-consistent outlier groups that residual-based pruning is structurally blind to.
-    Explain \emph{why} it's blind (least-squares bends to satisfy the majority) --- this is a
-    genuinely subtle point worth its own paragraph and maybe its own small illustrative
-    figure.
-  \item \texttt{final\_gnc\_solve}: GNC-TLS robust pass over the complete graph (including
-    already-pruned edges), final pose estimate.
+  \item \textbf{Fast update}: an incremental Bayes-tree solve (iSAM2 \cite{kaess2012isam2}),
+    folding in every new keyframe vertex and every newly admitted edge after each closed
+    cluster.
+  \item \textbf{Full update}: a batch nonlinear least-squares solve over the whole graph,
+    run every $n_{\mathrm{slow}} = 10$ closed clusters. For every loop-closure edge $e$
+    (intra- or cross-session), let $r_e$ be its residual under
+    \eqref{eq:method-pgo-objective}; $e$ is pruned if
+    \begin{equation}
+      \label{eq:method-outlier-prune}
+      r_e \;>\; \kappa \cdot \mathrm{median}\big(\{ r_{e'} : e' \text{ same group as } e \}\big),
+    \end{equation}
+    with $\kappa = 3$ and \emph{group} meaning intra-session edges are judged against their own
+    median, cross-session edges against theirs --- so one session's tighter loop closures
+    cannot drag down the bar for everyone else's. This step also drains the pending queue
+    (\mysecref{sec:method-gate}) against the freshly re-solved estimate.
 \end{itemize}
+
+\subsection{End-of-Run Finalization}
+
+Once every frame across every session has been processed, one more full update runs
+unconditionally --- not gated by the cluster-count trigger like the periodic ones --- and
+drains the pending queue once more. Only then do two final passes run, once each, over the
+complete graph:
+\begin{enumerate}
+  \item \textbf{Inter-cluster pair consensus}: every session pair's independent edges are
+    cross-checked against each other using each edge's \emph{pre-fusion local pose} --- the
+    raw odometry-derived pose captured when the edge was created, never touched by any
+    optimization pass --- rather than the graph's current estimate. This is deliberate:
+    \eqref{eq:method-outlier-prune} is structurally blind to a group of edges that are
+    individually plausible \emph{and} mutually self-consistent, since least-squares optimization
+    simply bends the graph to satisfy the majority, producing small residuals against the
+    graph's own (possibly wrong) current estimate no matter how wrong that estimate collectively
+    is. Comparing against each edge's fixed, un-warped local pose instead gives a reference the
+    group could not have already corrupted.
+  \item \textbf{Final GNC-TLS solve}: one archival Graduated Non-Convexity truncated
+    least-squares pass \cite{yang2020gnc} over the \emph{complete} graph, including edges
+    already pruned by the full update, giving every loop-closure edge one last principled
+    outlier weight and producing the pipeline's final pose estimate. It inherits the same
+    blind spot as \eqref{eq:method-outlier-prune} for the same reason --- it is still only
+    weighting by residual against the graph's own current solve --- which is exactly why the
+    inter-cluster pair consensus step above has to run first.
+\end{enumerate}
+The end-of-run order is therefore fixed: full update (removes obvious single-edge outliers)
+$\to$ drain the pending queue (last chance for anything still waiting) $\to$ inter-cluster pair
+consensus (catches hidden, mutually self-consistent outlier groups) $\to$ final GNC-TLS solve
+(final weights for everything that survives).
+
+\begin{figure}[htb]
+  \centering
+  \includegraphics[width=0.48\textwidth]{images/03_method/07_graph/graph_edges_before.png}
+  \hfill
+  \includegraphics[width=0.48\textwidth]{images/03_method/07_graph/graph_edges_after.png}
+  \caption{One real KITTI session's cross-session loop-closure edges before and after a full
+    update's outlier pruning (\eqref{eq:method-outlier-prune}): 32 kept, 21 pruned.}
+  \label{fig:method-graph-edges}
+\end{figure}
+
+\begin{figure}[htb]
+  \centering
+  \includegraphics[width=0.7\textwidth]{images/03_method/07_graph/graph_solve.png}
+  \caption{The pose graph solve itself.}
+  \label{fig:method-graph-solve}
+\end{figure}
+
+\begin{figure}[htb]
+  \centering
+  \includegraphics[width=0.85\textwidth]{images/03_method/07_graph/slow_update_outliers.png}
+  \caption{Residuals of every loop-closure edge at one full update, relative to
+    \eqref{eq:method-outlier-prune}'s per-group median threshold --- the same 32 kept / 21
+    pruned split as \myfigref{fig:method-graph-edges}.}
+  \label{fig:method-graph-outliers}
+\end{figure}
 
 \section{Summary}
 \label{sec:method-summary}
 
-\emph{Placeholder}: one short paragraph closing the loop back to \mysecref{sec:method-overview}'s
-problem statement --- output is one pose graph spanning every session shown, with
-corroborated evidence, to revisit another; built incrementally, no requirement that every
-session be collected before processing starts.
+Returning to \mysecref{sec:method-overview}'s problem statement: the output of this pipeline
+is one pose graph spanning every session that has been shown, with corroborated evidence, to
+revisit another, with each session's own trajectory corrected wherever it overlaps with the
+rest. It is built up incrementally, one keyframe and one closed cluster at a time, with no
+requirement that every session be collected before processing starts, and no session ever
+designated a fixed reference in advance. \mychapterref{chap:experiments} evaluates this
+pipeline across the datasets introduced in \mysecref{sec:relatedwork-2go}.
 
-% REVIEW NOTE (not rendered): open structural questions for us to settle before writing real
-% prose --
-% (1) is 7 sections (+ overview + summary = 9 total) the right granularity, or should some
-%     merge? Cluster Matching (3.4) is fairly short relative to the others -- could fold into
-%     3.3 (Clustering) as one "Clustering and Retrieval" section if you'd rather;
-% (2) the Two-Tier Gate section (3.6) has no strong existing figure candidate and is the most
-%     conceptually dense section -- probably deserves the most of our joint figure-sketching
-%     time;
-% (3) pose_consensus_plot.png's actual subject needs confirming (gate-level consensus, or
-%     pose-estimation-level translation-consensus voting from 3.5?) before it's placed;
-% (4) all \label{}s here match what Related Work already references via \mysecref except
-%     sec:method-cluster-matching, which Related Work doesn't currently point at directly --
-%     harmless, just noting it;
-% (5) once we're happy with this skeleton, next step per section is: write real prose, then
-%     replace \pgfig{} with a real \begin{figure}...\end{figure} + \includegraphics + caption
-%     + \label, sized/cropped/relabeled together.
+% REVIEW NOTE (not rendered): a few open items --
+% (1) two figures still needed (\missingfig above, sections 3.2 and 3.6) -- these are the
+%     ones most worth sketching together, per your plan to add/adjust images yourself now
+%     that the prose is in place;
+% (2) \eqref{eq:method-pgo-objective}'s master objective is referenced back into from 3.6/3.7
+%     (rho_uv, Sigma_uv) -- if this gets restructured, check those back-references still read
+%     correctly;
+% (3) the two formalized-not-verified spots flagged inline (survival-rate formula in 3.4,
+%     scale-consistency filter + MST edge weight in 3.5) are the ones most likely to need a
+%     small correction once checked against src/retrieval/cluster_index.py and
+%     src/pose_estimation/edge_estimator.py directly;
+% (4) \label{chap:experiments} referenced in the closing line doesn't exist yet.
