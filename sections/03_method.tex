@@ -208,10 +208,28 @@ $i$ becomes the next keyframe the first time
   \quad\text{or}\quad
   \angle\!\big(R_{s,k_j}^{-1} R_{s,i}\big) \;>\; \tau_{\mathrm{rot}},
 \end{equation}
-where $\angle(R)$ denotes the rotation angle of $R \in \SO{3}$. The production values used for
-this thesis's KITTI results are $\tau_{\mathrm{trans}} = 5.0$m and $\tau_{\mathrm{rot}} =
-28.6°$; every subsequent stage of the pipeline operates purely on the resulting keyframe
-subsequence $K_s$, never on raw per-frame poses.
+where $\angle(R)$ denotes the rotation angle of $R \in \SO{3}$. Every subsequent stage of the
+pipeline operates purely on the resulting keyframe subsequence $K_s$, never on raw per-frame
+poses.
+
+\begin{table}[htb]
+  \centering
+  \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}} lllp{7cm}}
+  \hline
+  \textbf{Symbol} & \textbf{Name} & \textbf{Value} & \textbf{Role} \\
+  \hline
+  $\tau_{\mathrm{trans}}$ & translation threshold & $5.0$m &
+    minimum translation from the last keyframe before a new one is triggered
+    (\eqref{eq:method-keyframe-trigger}) \\
+  $\tau_{\mathrm{rot}}$ & rotation threshold & $28.6°$ &
+    minimum rotation from the last keyframe before a new one is triggered, checked alongside
+    $\tau_{\mathrm{trans}}$ (\eqref{eq:method-keyframe-trigger}) \\
+  \hline
+  \end{tabular*}
+  \caption{Keyframing thresholds, and the production values used to generate this thesis's
+    KITTI results.}
+  \label{tab:method-odometry-thresholds}
+\end{table}
 
 \begin{figure}[htb]
   \centering
@@ -242,10 +260,32 @@ i.e.\ the cluster needs at least $n_{\min}$ keyframes \emph{and} either to have 
 than $d_{\max}$ from its own start pose or to have reached $n_{\max}$ keyframes outright.
 Once $C$ closes, its own last $n_{\mathrm{ov}}$ keyframes seed the next cluster's initial
 members, so consecutive clusters share keyframes and chain with no coverage gap between them.
-The production values are $n_{\min}=6$, $d_{\max}=10$m, $n_{\max}=15$, $n_{\mathrm{ov}}=2$.
+
+\begin{table}[htb]
+  \centering
+  \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}} lllp{7cm}}
+  \hline
+  \textbf{Symbol} & \textbf{Name} & \textbf{Value} & \textbf{Role} \\
+  \hline
+  $n_{\min}$ & minimum cluster size & $6$ keyframes &
+    a cluster cannot close before reaching this many keyframes, regardless of distance
+    travelled (\eqref{eq:method-cluster-close}) \\
+  $d_{\max}$ & closing distance & $10$m &
+    once $n_{\min}$ is met, travelling this far from the cluster's own start pose closes it \\
+  $n_{\max}$ & maximum cluster size & $15$ keyframes &
+    closes the cluster outright once reached, even if $d_{\max}$ was never crossed \\
+  $n_{\mathrm{ov}}$ & overlap keyframes & $2$ keyframes &
+    how many of a closing cluster's own last keyframes seed the next cluster, so consecutive
+    clusters chain with no coverage gap \\
+  \hline
+  \end{tabular*}
+  \caption{Online clustering thresholds, and the production values used to generate this
+    thesis's KITTI results.}
+  \label{tab:method-clustering-thresholds}
+\end{table}
 
 Every keyframe, at the moment it is added to a cluster, is also assigned one global image
-descriptor $d_{s,k} = f_{\mathrm{retreival \_ method}}(I_{s,k}) \in \mathbb{R}^D$
+descriptor $d_{s,k} = f_{\mathrm{retrieval\_method}}(I_{s,k}) \in \mathbb{R}^D$
 \cite{berton2025megaloc}, needed by cluster matching (\mysecref{sec:method-cluster-matching})
 the moment the cluster closes. The output of this stage is a growing, per-session sequence of
 closed clusters, each with its member keyframes and their descriptors.
