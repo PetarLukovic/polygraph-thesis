@@ -112,6 +112,20 @@ but never split, only when a cross-session edge survives verification and the ga
 
 \subsection{Pipeline Walkthrough}
 
+\begin{figure}[htb]
+  \centering
+  \includegraphics[width=\textwidth]{images/03_method/01_overview/pipeline_overview.png}
+  \caption{Left to right: each session's raw per frame odometry is grouped online into
+    spatially bounded clusters (Clustering). When a cluster closes, its keyframes vote against
+    a retrieval index built from every other session's keyframes (Cluster Matching). A
+    candidate pair then goes through joint pose estimation. Keyframe pairs are matched and
+    reduced by translation-consensus voting into one confirmed edge. Pose graph optimization
+    adds every confirmed edge as a loop closure: a cheap incremental Fast update runs
+    continuously, and a periodic Full update re-solves the whole graph and prunes outlier
+    edges.}
+  \label{fig:method-overview}
+\end{figure}
+
 Before the detailed, per-stage treatment in the rest of this chapter, it is worth tracing what
 actually happens to one keyframe and one cluster as they move through Polygraph, end to end.
 
@@ -143,19 +157,6 @@ session has been processed, is one pose graph spanning every session shown, with
 evidence, to revisit another, each session's own trajectory corrected wherever it overlaps
 with the rest.
 
-\begin{figure}[htb]
-  \centering
-  \includegraphics[width=\textwidth]{images/03_method/01_overview/pipeline_overview.png}
-  \caption{Left to right: each session's raw per frame odometry is grouped online into
-    spatially bounded clusters (Clustering). When a cluster closes, its keyframes vote against
-    a retrieval index built from every other session's keyframes (Cluster Matching). A
-    candidate pair then goes through joint pose estimation. Keyframe pairs are matched and
-    reduced by translation-consensus voting into one confirmed edge. Pose graph optimization
-    adds every confirmed edge as a loop closure: a cheap incremental Fast update runs
-    continuously, and a periodic Full update re-solves the whole graph and prunes outlier
-    edges.}
-  \label{fig:method-overview}
-\end{figure}
 
 Unless stated otherwise, every numeric threshold quoted in this chapter is the production configuration used to generate this thesis's KITTI multi-session results, not necessarily the pipeline's own built-in code defaults, which are in several places more conservative; every threshold remains freely configurable per dataset. 
 
@@ -170,21 +171,6 @@ odometry (a HoloLens or a Boston Dynamics Spot robot, for the indoor deployments
 \mychapterref{chap:experiments}). This stream is locally accurate but drifts over time, and is
 expressed only in session $s$'s own local frame $\mathcal{F}_s$, with no relationship to any
 other session's frame.
-
-A raw frame becomes a keyframe once it has moved far enough from the previous keyframe.
-Writing $t_{s,i}, R_{s,i}$ for the translation and rotation components of
-$T^{\mathrm{raw}}_{s,i}$, and $j$ for the index of the most recently selected keyframe, frame
-$i$ becomes the next keyframe the first time
-\begin{equation}
-  \label{eq:method-keyframe-trigger}
-  \big\| t_{s,i} - t_{s,k_j} \big\| \;>\; \tau_{\mathrm{trans}}
-  \quad\text{or}\quad
-  \angle\!\big(R_{s,k_j}^{-1} R_{s,i}\big) \;>\; \tau_{\mathrm{rot}},
-\end{equation}
-where $\angle(R)$ denotes the rotation angle of $R \in \SO{3}$. The production values used for
-this thesis's KITTI results are $\tau_{\mathrm{trans}} = 5.0$m and $\tau_{\mathrm{rot}} =
-28.6°$; every subsequent stage of the pipeline operates purely on the resulting keyframe
-subsequence $K_s$, never on raw per-frame poses.
 
 \begin{figure}[htb]
   \centering
@@ -201,6 +187,21 @@ subsequence $K_s$, never on raw per-frame poses.
     are not natively expressed in the same frame.}
   \label{fig:method-odometry}
 \end{figure}
+
+A raw frame becomes a keyframe once it has moved far enough from the previous keyframe.
+Writing $t_{s,i}, R_{s,i}$ for the translation and rotation components of
+$T^{\mathrm{raw}}_{s,i}$, and $j$ for the index of the most recently selected keyframe, frame
+$i$ becomes the next keyframe the first time
+\begin{equation}
+  \label{eq:method-keyframe-trigger}
+  \big\| t_{s,i} - t_{s,k_j} \big\| \;>\; \tau_{\mathrm{trans}}
+  \quad\text{or}\quad
+  \angle\!\big(R_{s,k_j}^{-1} R_{s,i}\big) \;>\; \tau_{\mathrm{rot}},
+\end{equation}
+where $\angle(R)$ denotes the rotation angle of $R \in \SO{3}$. The production values used for
+this thesis's KITTI results are $\tau_{\mathrm{trans}} = 5.0$m and $\tau_{\mathrm{rot}} =
+28.6°$; every subsequent stage of the pipeline operates purely on the resulting keyframe
+subsequence $K_s$, never on raw per-frame poses.
 
 \begin{figure}[htb]
   \centering
@@ -234,7 +235,7 @@ members, so consecutive clusters share keyframes and chain with no coverage gap 
 The production values are $n_{\min}=6$, $d_{\max}=10$m, $n_{\max}=15$, $n_{\mathrm{ov}}=2$.
 
 Every keyframe, at the moment it is added to a cluster, is also assigned one global image
-descriptor $d_{s,k} = f_{\mathrm{MegaLoc}}(I_{s,k}) \in \mathbb{R}^D$
+descriptor $d_{s,k} = f_{\mathrm{retreival \_ method}}(I_{s,k}) \in \mathbb{R}^D$
 \cite{berton2025megaloc}, needed by cluster matching (\mysecref{sec:method-cluster-matching})
 the moment the cluster closes. The output of this stage is a growing, per-session sequence of
 closed clusters, each with its member keyframes and their descriptors.
@@ -260,16 +261,16 @@ closed clusters, each with its member keyframes and their descriptors.
 When a cluster $C$ closes, it is matched against every other eligible session's already-closed
 clusters through learned image retrieval, before any geometric verification is attempted. Each
 member keyframe $k \in C$ queries a retrieval index of other sessions' keyframe descriptors and
-casts one vote for the parent cluster of each of its $k_{\mathrm{top}}$ nearest neighbours (by
-cosine similarity of MegaLoc descriptors). Votes are pooled per candidate cluster $C'$ and
-normalized into a \emph{survival rate}
+casts one vote for the parent cluster of each of its $k_{\mathrm{top}}$ nearest neighbors (by
+cosine similarity of retrieval descriptors). Votes are pooled per candidate cluster $C'$ and
+normalized to a survival rate
 \begin{equation}
   \label{eq:method-survival-rate}
   \sigma(C, C') \;=\; \frac{\#\{\, k \in C : C' \text{ received a vote from } k \,\}}{|C|},
 \end{equation}
 the fraction of $C$'s own keyframes that voted for $C'$ at all; a candidate must clear a
 minimum survival-rate floor to be considered further. $C$'s own last two same-session clusters
-are excluded from candidacy by construction (an adjacency guard): they share keyframes with
+are excluded from candidacy by construction (an adjacency guard). They share keyframes with
 $C$ by construction, not because of a genuine revisit. Subject to the survival floor, the
 $k_{\mathrm{clusters}}$ highest-scoring candidates per other session survive. Production values
 are $k_{\mathrm{top}} = 5$, $k_{\mathrm{clusters}} = 2$. The output of this stage is a short
