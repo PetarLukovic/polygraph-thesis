@@ -22,15 +22,11 @@
 % src/retrieval/cluster_index.py and src/pose_estimation/edge_estimator.py before this is
 % final, flagged again inline where it matters.
 %
-% Also fixed this pass: the clustering and overview figures previously had an editorial note
-% (mine) leaked directly into their rendered \caption{} text ("Placeholder caption -- confirm
-% this figure actually shows...", "Figure reused from the polygraph project report; consider a
-% thesis-formatted redraw..."). Moved both notes here instead -- (a) confirm the clustering
-% figure (images/03_method/03_clustering/clustering_explainer.png) actually shows the
-% overlap-keyframe chaining between consecutive clusters, add a small second panel if not; (b)
-% the overview figure (images/03_method/01_overview/pipeline_overview.png) is reused as-is from
-% the polygraph project report -- consider a thesis-formatted redraw of its labels/fonts before
-% submission.
+% The clustering figure (3.3) now uses three real clusters.jpg outputs (KITTI/HGE-HoloLens/
+% HGE-iOS) straight from polygraph's own src/visualization/clusters.py -- real data, not a
+% schematic, confirmed to be genuine pipeline output before copying in. The overview figure
+% (images/03_method/01_overview/pipeline_overview.png) is still reused as-is from the polygraph
+% project report -- consider a thesis-formatted redraw of its labels/fonts before submission.
 \newcommand{\missingfig}[1]{%
   \begin{center}
   \fbox{\parbox{0.85\textwidth}{\centering\vspace{0.3cm}
@@ -228,10 +224,16 @@ closed clusters, each with its member keyframes and their descriptors.
 
 \begin{figure}[htb]
   \centering
-  \includegraphics[width=0.85\textwidth]{images/03_method/03_clustering/clustering_explainer.png}
-  \caption{Online clustering: keyframes accumulate into a cluster until the closing condition
-    of \eqref{eq:method-cluster-close} is met; the cluster's last $n_{\mathrm{ov}}$ keyframes
-    seed the next one.}
+  \includegraphics[width=0.32\textwidth]{images/03_method/03_clustering/clusters_kitti_00.jpg}
+  \hfill
+  \includegraphics[width=0.32\textwidth]{images/03_method/03_clustering/clusters_hge_hololens.jpg}
+  \hfill
+  \includegraphics[width=0.32\textwidth]{images/03_method/03_clustering/clusters_hge_ios.jpg}
+  \caption{Real clustering output across three very different capture settings: KITTI sequence
+    00 (stereo, outdoor driving, 172 clusters), an HGE session captured on a HoloLens (indoor
+    walking, 28 clusters), and an HGE session captured on an iPad (indoor walking, 33
+    clusters). Each color segment is one cluster, closing according to
+    \eqref{eq:method-cluster-close}.}
   \label{fig:method-clustering}
 \end{figure}
 
