@@ -403,8 +403,7 @@ candidate just for existing in a session with few plausible alternatives to comp
     how many of $s'$'s remaining candidates, at most, are carried forward (step 6) \\
   \hline
   \end{tabular}
-  \caption[Cluster-matching thresholds]{Every threshold used in cluster matching, the production values used throughout
-    this thesis, and exactly which step of the per-session procedure each one gates.}
+  \caption[Cluster-matching thresholds]{Every threshold used in cluster matching, with example values for KITTI \cite{geiger2012kitti} dataset, and exactly which step of the per-session procedure each one gates.}
   \label{tab:method-cluster-matching-thresholds}
 \end{table}
 
@@ -463,27 +462,21 @@ pose graph through actual geometric verification, which is exactly what
 \section{Joint Pose Estimation}
 \label{sec:method-pose-estimation}
 
-Cluster matching only proposes candidate pairs; this stage verifies them geometrically, and is
+Cluster matching only proposes candidate pairs. This stage verifies them geometrically and is
 the only stage that actually looks at image content and produces metric poses.
 
 \subsection{Keyframe-Pair Selection}
 
-Checking every keyframe in $C$ against every keyframe in $C'$ would be wasteful and
-overly redundant. Instead, every cross keyframe-pair $(k,k') \in C \times C'$ is weighted by
-descriptor similarity, and a maximum-spanning-tree (MST) over this complete bipartite
-similarity graph selects the $k_{\mathrm{pairs}}$ highest-similarity, spatially diverse pairs to
-actually verify. The MST property guarantees that every selected pair covers at least one
-keyframe no earlier selected pair did, so the selected pairs spread across the cluster instead
-of collapsing onto one dominant viewpoint. Production value: $k_{\mathrm{pairs}} = 10$.
+The check of every keyframe in $C$ against every keyframe in $C'$ would be wasteful and redundant. Instead, every cross keyframe-pair $(k,k') \in C \times C'$ is weighted by descriptor similarity, and a maximum-spanning tree (MST) over this complete bipartite similarity graph selects the spatially diverse pairs $k_{\mathrm{pairs}}$ highest-similarity to actually verify. The MST property guaranties that every selected pair covers at least one keyframe, which no earlier selected pair did, so the selected pairs spread across the cluster instead of collapsing onto one dominant viewpoint. Production value: $k_{\mathrm{pairs}} = 10$.
 
 \subsection{Per-Pair Verification}
 
 Each selected pair $(k, k')$ goes through the same six-step verification:
 \begin{enumerate}
-  \item \textbf{Sparse matching}: XFeat feature extraction \cite{potje2024xfeat} followed by
+  \item \textbf{Sparse matching}: extraction of XFeat features \cite{potje2024xfeat} followed by
     LighterGlue matching, a lighter, faster retraining of LightGlue
     \cite{lindenberger2023lightglue} distributed as part of the XFeat project, giving a
-    correspondence set $M$.
+ set of correspondences $M$.
   \item \textbf{Essential-matrix RANSAC} (via poselib) on $M$, giving a scale-free relative
     rotation $\hat{R}$ and translation direction $\hat{t}$ (unit norm) plus an inlier subset
     $M_{\mathrm{in}} \subseteq M$. The pair is already rejected outright here, before
@@ -507,13 +500,13 @@ Each selected pair $(k, k')$ goes through the same six-step verification:
     three coordinate axes, of the depth-lifted point's coordinates divided by the triangulated
     point's coordinates,
     $\hat{s}_i = \mathrm{mean}\big(X_i^{\mathrm{depth}} \oslash X_i^{\mathrm{tri}}\big)$ (with
-    $\oslash$ elementwise division); scaling the triangulated point by $\hat{s}_i$ and
+    $\oslash$ elementwise division). Scaling the triangulated point by $\hat{s}_i$ and
     comparing it directly against the depth-lifted point gives a residual
-    $r_i = \| X_i^{\mathrm{depth}} - \hat{s}_i X_i^{\mathrm{tri}} \|$, in metres. Correspondence
-    $i$ is kept only if $r_i$ clears the scale-consistency floor $\tau_{\mathrm{scale}}$
+    $r_i = \| X_i^{\mathrm{depth}} - \hat{s}_i X_i^{\mathrm{tri}} \|$, in metres. The
+    correspondence $i$ is kept only if $r_i$ clears the scale-consistency floor $\tau_{\mathrm{scale}}$
     (production value $0.2$m). Intuitively, a genuinely correct correspondence's triangulated
     and depth-lifted positions should point in the same direction and differ by one consistent
-    scale across all three axes; if they do, a single per-point scale factor explains the
+    scale across all three axes. If they do, a single per-point scale factor explains the
     difference well and the residual is small. A bad triangulation or a mismatched
     correspondence instead tends to disagree with itself internally, its own per-axis ratios
     do not agree on one consistent scale, so forcing a single mean scale factor onto it and
@@ -634,40 +627,38 @@ confirmed match.
 \section{The Two-Tier Consensus Gate}
 \label{sec:method-gate}
 
-A confirmed edge from \mysecref{sec:method-pose-estimation} is not admitted into the shared
-pose graph unconditionally. This section describes the gate that decides whether, and when, it
-is.
+A confirmed edge from \mysecref{sec:method-pose-estimation} is not unconditionally admitted to the shared
+pose graph. This section describes the gate that decides whether it is or when.
 
 \subsection{Same-Session Edges Bypass the Gate}
 
 An edge whose two clusters both belong to the same session commits directly to the graph,
 no check required: that session's own position is already fully determined by its own
 sequential odometry chain (\mysecref{sec:method-overview}'s $E_{\mathrm{odom}}$), so a
-same-session loop closure ($E_{\mathrm{intra}}$) is simply extra corroborating evidence, not
+same session loop closure ($E_{\mathrm{intra}}$) is simply extra corroborating evidence, not
 new placement information.
 
 \subsection{Anchor/Query Assignment}
 
-For a confirmed cross-session edge between session $s$ and session $s'$, let $n(s)$ denote the
-number of currently live (unpruned) cross-session edges already incident on $s$. The session
-with more live cross-session edges plays \emph{anchor} (its current pose estimate is treated
-as the trusted reference for this check), and the other plays \emph{query}, the side being
-tested; ties (including neither session having any live edges yet) are broken arbitrarily but
-deterministically. Whether the query session already has at least one live cross-session edge
-decides which of the two tiers below the candidate is routed through.
+Before a confirmed cross-session edge between session $s$ and session $s'$ can be checked at all, the gate first has to decide which of the two sessions to trust. One side plays anchor, meaning its current pose estimate is treated as fixed and correct for this check, and the other plays query, meaning it is the side actually being tested against that fixed reference.
+
+That choice is made purely by how well-established each session is already. Let $n(s)$ denote the number of currently live (unpruned) cross-session edges already incident on session $s$, a simple proxy for how much prior cross-session evidence already supports that session's position. Whichever of $s$, $s'$ has the larger $n(\cdot)$ becomes anchor, the other becomes query. If $n(s) = n(s')$, most commonly because neither session has any live cross-session edges yet (two sessions meeting for the first time), the tie is broken with no real criterion at all, whichever session happened to be listed first internally keeps the anchor role. This is arbitrary in that sense, but still deterministic, the same tie always resolves the same way, so re-running the pipeline on the same data reproduces the same assignment. This particular tie case is harmless. When neither session has any live edges, the candidate is routed to Tier 1 below, which never actually leans on either side's pose estimate, it only checks whether several independent candidates agree with each other, so it does not matter which of the two was labeled anchor.
+
+The query session's own edge count then decides how the candidate is checked: whether it already has at least one live cross-session edge selects which of the two tiers below it is routed through.
+
 
 \subsection{Tier 1: Corroboration Pool}
 
-If the query session is still fully disconnected ($n(\text{query}) = 0$), there is no live
-estimate yet worth checking a single candidate against. Instead, candidates targeting that
-session are pooled, and checked only against each other: once a subset of at least
+If the query session is still fully disconnected ($n(\text{query}) = 0$), there is yet no live
+estimate worth checking against a single candidate. Instead, candidates targeting that
+session are pooled, and checked only against each other. Once a subset of at least
 $m_{\mathrm{corrob}} = 2$ pooled candidates mutually agree (their implied world poses within
 $\tau_{\mathrm{pool}} = 2.0$m / $10.0°$ of one another) \emph{and} are independent (their
 source clusters on the anchor side at least $g_{\min} = 3$ clusters apart, so two candidates
 are not simply the same retrieval mistake repeated), they commit together as a group and
 jointly establish that session's first anchor, arriving at $\ge 2$ live cross-session edges at
 once, never at exactly one. A candidate that never finds enough agreeing peers is dropped once
-it has sat in the pool longer than $t_{\max} = 1$ day.
+it has sat in the pool longer than $t_{\max} = 1$ day. This parameter was never actually hit in our testing, but we left it in for completeness.
 
 \subsection{Tier 2: Pending Queue}
 
@@ -693,34 +684,46 @@ first), at which point it is dropped for good.
 \subsection{Worked Example}
 
 Consider three cross-session candidates between sessions A and B, arriving in order. Both
-sessions start with $n(\cdot) = 0$, so edge 1 (A$\leftrightarrow$B) ties for anchor, A wins
-arbitrarily, B is query with $n(\mathrm{B})=0$: Tier 1. Its corroboration pool for B now has
-one entry, below $m_{\mathrm{corrob}}=2$; nothing commits yet. Edge 2 (a different A cluster
-$\leftrightarrow$ B cluster) routes the same way, and the pool for B now has two entries: if
-they agree and are independent, both commit together right now, and B jumps straight to $2$
-live cross-session edges. If they disagree, both stay pooled, waiting for a future third
-candidate to pair with one of them; if none ever arrives, both simply age out and B is never
-anchored via this pair. Assuming edges 1 and 2 did corroborate, a third A$\leftrightarrow$B
-candidate (edge 3) now finds $n(\mathrm{B}) \ge 1$ (Tier 2) and is checked immediately
-against B's live estimate under the $10.0$m/$20.0°$ bound of
-\eqref{eq:method-consistency-table}: if consistent, it commits immediately (B now grows one
-edge at a time, never in pairs again); if not, it lands in the pending queue for a later
-re-check.
+sessions start with $n(\cdot) = 0$, so edge 1 (A$\leftrightarrow$B) ties for anchor. A wins
+arbitrarily, and B is query with $n(\mathrm{B})=0$: Tier 1. Its corroboration pool for B now
+has one entry, below $m_{\mathrm{corrob}}=2$, so nothing is committed yet. Edge 2 (a different A
+cluster $\leftrightarrow$ B cluster) runs in the same way, and the pool for B now holds two
+entries. If they agree and are independent, both commit together right now, and A and B 
+jump straight to $2$ live cross-session edges, the count is symmetric, and the committed edge is
+incident on both of its sessions, not only the query side. If they disagree, both stay pooled,
+waiting for a future third candidate to pair with one of them; if none ever arrives, both
+simply age out, and B is never anchored via this pair.
 
-\missingfig{A state-diagram-style figure: disconnected query session $\to$ Corroboration Pool
-$\to$ joint commit; already-anchored query session $\to$ immediate consistency check $\to$
-commit or Pending Queue $\to$ commit/reject on re-check. This is the chapter's most
-conceptually dense, least visual section, worth the most joint sketching time.}
+Assuming that edges 1 and 2 corroborated, a third candidate A$\leftrightarrow$ B (edge 3) now
+finds $n(\mathrm{B}) \ge 1$ (Tier 2) and is checked immediately against the live estimate of B under
+the $10.0$m / $20.0°$ limit of \eqref{eq:method-consistency-table}. If consistent, it commits
+immediately, and B (and A) grow one edge at a time from here on, never in pairs again; if not,
+it lands in the pending queue for a later re-check.
+
+\begin{figure}[htb]
+  \centering
+  \includegraphics[width=0.48\textwidth]{images/03_method/07_graph/graph_edges_before.png}
+  \hfill
+  \includegraphics[width=0.48\textwidth]{images/03_method/07_graph/graph_edges_after.png}
+  \caption[Loop-closure edges before/after pruning]{One real KITTI session's cross-session loop-closure edges before and after a full
+    update's outlier pruning (\eqref{eq:method-outlier-prune}): 32 kept, 21 pruned.}
+  \label{fig:method-graph-edges}
+\end{figure}
 
 \section{Pose Graph Optimization}
 \label{sec:method-graph}
 
-Every admitted edge (the sequential odometry chain, same-session loop closures, and
-cross-session loop closures once past the gate) becomes a factor in
-\eqref{eq:method-pgo-objective}. When a session starts, it becomes its own connected
-component with its own gauge-fixing prior vertex in $V_0$; the first cross-session edge that
-survives the gate merges its two components (rebasing the smaller component's frame into the
-surviving one).
+Every admitted edge (the sequential odometry chain, loop closures in the same-session, and loop closures in
+the cross-session once past the gate) becomes a factor in \eqref{eq:method-pgo-objective}. When a session starts, it becomes its own connected component with its own gauge fixing prior vertex in $V_0$. The first cross-session edge that survives the gate merges its two components (rebasing the smaller component's frame into thesurviving one).
+
+\begin{figure}[htb]
+  \centering
+  \includegraphics[width=0.95\textwidth]{images/03_method/07_graph/slow_update_outliers.png}
+  \caption[Full-update residuals]{Residuals of every loop-closure edge at one full update, relative to
+    \eqref{eq:method-outlier-prune}'s per-group median threshold: the same 32 kept / 21
+    pruned split as \myfigref{fig:method-graph-edges}.}
+  \label{fig:method-graph-outliers}
+\end{figure}
 
 \subsection{Fast and Full Updates}
 
@@ -746,22 +749,22 @@ Two solves keep the graph current, at different costs and cadences:
 \subsection{End-of-Run Finalization}
 
 Once every frame across every session has been processed, one more full update runs
-unconditionally, not gated by the cluster-count trigger like the periodic ones, and
+unconditionally, not gated by the cluster count trigger like the periodic ones, and
 drains the pending queue once more. Only then do two final passes run, once each, over the
 complete graph:
 \begin{enumerate}
   \item \textbf{Inter-cluster pair consensus}: every session pair's independent edges are
-    cross-checked against each other using each edge's \emph{pre-fusion local pose} (the
-    raw odometry-derived pose captured when the edge was created, never touched by any
+    cross checked against each other using each edge's pre fusion local pose (the
+    raw odometry derived pose captured when the edge was created, never touched by any
     optimization pass) rather than the graph's current estimate. This is deliberate:
     \eqref{eq:method-outlier-prune} is structurally blind to a group of edges that are
-    individually plausible \emph{and} mutually self-consistent, since least-squares optimization
+    individually plausible and mutually self-consistent, since least-squares optimization
     simply bends the graph to satisfy the majority, producing small residuals against the
     graph's own (possibly wrong) current estimate no matter how wrong that estimate collectively
     is. Comparing against each edge's fixed, un-warped local pose instead gives a reference the
     group could not have already corrupted.
   \item \textbf{Final GNC-TLS solve}: one archival Graduated Non-Convexity truncated
-    least-squares pass \cite{yang2020gnc} over the \emph{complete} graph, including edges
+    least-squares pass \cite{yang2020gnc} over the complete graph, including edges
     already pruned by the full update, giving every loop-closure edge one last principled
     outlier weight and producing the pipeline's final pose estimate. It inherits the same
     blind spot as \eqref{eq:method-outlier-prune} for the same reason (it is still only
@@ -769,56 +772,25 @@ complete graph:
     inter-cluster pair consensus step above has to run first.
 \end{enumerate}
 The end-of-run order is therefore fixed: full update (removes obvious single-edge outliers)
-$\to$ drain the pending queue (last chance for anything still waiting) $\to$ inter-cluster pair
+$\to$ drain the pending queue (last chance for anything still waiting) $\to$ inter cluster pair
 consensus (catches hidden, mutually self-consistent outlier groups) $\to$ final GNC-TLS solve
 (final weights for everything that survives).
 
-\begin{figure}[htb]
-  \centering
-  \includegraphics[width=0.48\textwidth]{images/03_method/07_graph/graph_edges_before.png}
-  \hfill
-  \includegraphics[width=0.48\textwidth]{images/03_method/07_graph/graph_edges_after.png}
-  \caption[Loop-closure edges before/after pruning]{One real KITTI session's cross-session loop-closure edges before and after a full
-    update's outlier pruning (\eqref{eq:method-outlier-prune}): 32 kept, 21 pruned.}
-  \label{fig:method-graph-edges}
-\end{figure}
 
 \begin{figure}[htb]
   \centering
-  \includegraphics[width=0.7\textwidth]{images/03_method/07_graph/graph_solve.png}
+  \includegraphics[width=0.9\textwidth]{images/03_method/07_graph/graph_solve.png}
   \caption[Pose graph solve]{The pose graph solve itself.}
   \label{fig:method-graph-solve}
-\end{figure}
-
-\begin{figure}[htb]
-  \centering
-  \includegraphics[width=0.85\textwidth]{images/03_method/07_graph/slow_update_outliers.png}
-  \caption[Full-update residuals]{Residuals of every loop-closure edge at one full update, relative to
-    \eqref{eq:method-outlier-prune}'s per-group median threshold: the same 32 kept / 21
-    pruned split as \myfigref{fig:method-graph-edges}.}
-  \label{fig:method-graph-outliers}
 \end{figure}
 
 \section{Summary}
 \label{sec:method-summary}
 
-Returning to \mysecref{sec:method-overview}'s problem statement: the output of this pipeline
+Return to \mysecref{sec:method-overview}'s problem statement. The output of this pipeline
 is one pose graph spanning every session that has been shown, with corroborated evidence, to
 revisit another, with each session's own trajectory corrected wherever it overlaps with the
 rest. It is built up incrementally, one keyframe and one closed cluster at a time, with no
 requirement that every session be collected before processing starts, and no session ever
 designated a fixed reference in advance. \mychapterref{chap:experiments} evaluates this
 pipeline across the datasets introduced in \mysecref{sec:relatedwork-2go}.
-
-% REVIEW NOTE (not rendered): a few open items --
-% (1) two figures still needed (\missingfig above, sections 3.2 and 3.6) -- these are the
-%     ones most worth sketching together, per your plan to add/adjust images yourself now
-%     that the prose is in place;
-% (2) \eqref{eq:method-pgo-objective}'s master objective is referenced back into from 3.6/3.7
-%     (rho_uv, Sigma_uv) -- if this gets restructured, check those back-references still read
-%     correctly;
-% (3) the two formalized-not-verified spots flagged inline (survival-rate formula in 3.4,
-%     scale-consistency filter + MST edge weight in 3.5) are the ones most likely to need a
-%     small correction once checked against src/retrieval/cluster_index.py and
-%     src/pose_estimation/edge_estimator.py directly;
-% (4) \label{chap:experiments} referenced in the closing line doesn't exist yet.
