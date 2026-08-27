@@ -446,10 +446,15 @@ pose graph through actual geometric verification, which is exactly what
 
 \begin{figure}[htb]
   \centering
-  \includegraphics[width=0.85\textwidth]{images/03_method/04_cluster_matching/cluster_matching_explainer.png}
-  \caption{Cluster matching: a newly closed cluster's keyframes vote against the pool of
-    already-closed clusters from every other eligible session, producing a short list of
-    candidate cluster pairs.}
+  \includegraphics[width=0.95\textwidth]{images/03_method/04_cluster_matching/cluster_matching_hydro.jpg}
+  \caption{One real cluster-matching event from HYDRO: all five sessions' trajectories are
+    shown in grey for context, with the newly closed cluster ($C$, green) and the four
+    candidate clusters it was proposed against ($C'$, red) highlighted. Each dashed edge is
+    labeled with that candidate's real vote share (\eqref{eq:method-vote-share}); note that
+    two of the four candidates come from the same other session
+    (\mysecref{sec:method-cluster-matching}'s per-session $k_{\mathrm{clusters}}=2$ cap), and
+    the other two come from two further sessions entirely, illustrating that this cluster was
+    matched against every eligible session, not just one.}
   \label{fig:method-cluster-matching}
 \end{figure}
 
@@ -485,12 +490,24 @@ Each selected pair $(k, k')$ goes through the same six-step verification:
   \item \textbf{Monocular metric depth lift}: Metric3D v2 \cite{hu2024metric3dv2} predicts a
     metric depth map for both images; back-projecting each matched keypoint through its own
     image's depth map and camera intrinsics gives metric 3D points $\{X_i^{\mathrm{depth}}\}$.
-  \item \textbf{Scale-consistency filter}: for each correspondence $i$, the implied per-point
-    scale $\hat{s}_i = \|X_i^{\mathrm{depth}}\| / \|X_i^{\mathrm{tri}}\|$ should agree across
-    genuinely correct correspondences (which share one true global scale); correspondences
-    whose $\hat{s}_i$ is inconsistent with the rest are discarded, keeping only points where
-    the scale-free triangulated position and the metric depth-lifted position agree up to a
-    consistent per-point scale.
+  \item \textbf{Scale-consistency filter}: this check looks at each correspondence entirely on
+    its own, not against any other correspondence. For correspondence $i$, a per-point scale
+    factor $\hat{s}_i$ is estimated as the mean, over the three coordinate axes, of the
+    depth-lifted point's coordinates divided by the triangulated point's coordinates,
+    $\hat{s}_i = \mathrm{mean}\big(X_i^{\mathrm{depth}} \oslash X_i^{\mathrm{tri}}\big)$ (with
+    $\oslash$ elementwise division); scaling the triangulated point by $\hat{s}_i$ and
+    comparing it directly against the depth-lifted point gives a residual
+    $r_i = \| X_i^{\mathrm{depth}} - \hat{s}_i X_i^{\mathrm{tri}} \|$, in metres. Correspondence
+    $i$ is kept only if $r_i$ clears the scale-consistency floor $\tau_{\mathrm{scale}}$
+    (production value $0.2$m). Intuitively, a genuinely correct correspondence's triangulated
+    and depth-lifted positions should point in the same direction and differ by one consistent
+    scale across all three axes; if they do, a single per-point scale factor explains the
+    difference well and the residual is small. A bad triangulation or a mismatched
+    correspondence instead tends to disagree with itself internally, its own per-axis ratios
+    do not agree on one consistent scale, so forcing a single mean scale factor onto it and
+    comparing back leaves a large residual. This is what the filter actually catches: internal
+    inconsistency within one correspondence, not disagreement between different
+    correspondences.
   \item \textbf{PnP} (via poselib) of the surviving depth-lifted (metric) 3D points against
     their 2D correspondences in the other image, giving a metric relative pose
     $\hat{T}_{k,k'} \in \SE{3}$.
@@ -499,19 +516,25 @@ A pair is rejected outright unless it clears $\ge n_{\mathrm{valid}} = 150$ scal
 points, $\ge \rho_{\mathrm{inlier}} = 0.80$ RANSAC inlier ratio, and $\le
 \epsilon_{\mathrm{ransac}} = 0.05$ RANSAC score.
 
-% REVIEW NOTE (not rendered): step 5's exact formula (the ratio s_i and how "inconsistent" is
-% decided) formalizes method.md's qualitative description -- confirm against the real
-% scale-consistency-filter code in src/pose_estimation/ (edge_estimator.py or pose_estimator.py)
-% before treating \eqref{eq:method-vote-share}-style precision here as final; same caveat
-% for the MST edge-weight definition just above (descriptor similarity is stated qualitatively
-% in method.md, not given as an exact formula).
+% REVIEW NOTE (not rendered, 2026-08-27): both flagged-as-unverified formulas in this section
+% are now resolved. (1) The scale-consistency filter (step 5) WAS wrong -- checked directly
+% against src/pose_estimation/pose_estimator.py's real _scale_consistent (~line 322): it's a
+% per-point-only check (elementwise-mean scale ratio, then a fixed 0.2m residual floor
+% tau_scale, scale_consistency_th_m in code), not a cross-point consensus/outlier-rejection
+% step the way the old text implied. Rewritten above to match. (2) The MST edge-weight formula
+% (start of this section, "Keyframe-Pair Selection") was already accurate -- confirmed against
+% the real src/pose_estimation/mst_selector.py: a full bipartite cosine-similarity graph,
+% networkx maximum_spanning_tree, top_k_pairs highest-similarity MST edges kept. No change
+% needed there. Also fixed a real symbol collision this same pass: tau_vote meant two different
+% things in 3.4 (per-vote similarity floor, 0.28) and 3.5 (translation-consensus agreement
+% threshold, 1.5m) -- the 3.5 one is now tau_agree.
 
 \subsection{Translation-Consensus Voting}
 
 The surviving per-pair estimates $\{\hat{T}_1, \dots, \hat{T}_m\}$ (of the up to
 $k_{\mathrm{pairs}}$ attempted) are combined by a translation-consensus vote rather than
 trusted individually. Two estimates \emph{agree} if their implied translations differ by less
-than $\tau_{\mathrm{vote}} = 1.5$m; the largest mutually agreeing subset (a maximum clique in
+than $\tau_{\mathrm{agree}} = 1.5$m; the largest mutually agreeing subset (a maximum clique in
 the pairwise-agreement graph) is averaged into one confirmed edge measurement $\hat{z}$ via a
 chordal $\SE{3}$ mean: translations averaged arithmetically, rotations averaged by
 projecting their arithmetic mean onto $\SO{3}$ (via SVD). A candidate pair of clusters only
