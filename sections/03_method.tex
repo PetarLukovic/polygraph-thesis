@@ -125,7 +125,7 @@ but never split, only when a cross-session edge survives verification and the ga
 \begin{figure}[htb]
   \centering
   \includegraphics[width=\textwidth]{images/03_method/01_overview/pipeline_overview.png}
-  \caption{Left to right: each session's raw per frame odometry is grouped online into
+  \caption[Pipeline overview]{Left to right: each session's raw per frame odometry is grouped online into
     spatially bounded clusters (Clustering). When a cluster closes, its keyframes vote against
     a retrieval index built from every other session's keyframes (Cluster Matching). A
     candidate pair then goes through joint pose estimation. Keyframe pairs are matched and
@@ -189,7 +189,7 @@ other session's frame.
   \includegraphics[width=0.391\textwidth]{images/03_method/02_odometry/odometry_hge_hololens.jpg}
   \hfill
   \includegraphics[width=0.239\textwidth]{images/03_method/02_odometry/odometry_hge_ios.jpg}
-  \caption{Raw odometry (thin line) against the selected keyframe subsequence (dots), for the
+  \caption[Raw odometry vs.\ selected keyframes]{Raw odometry (thin line) against the selected keyframe subsequence (dots), for the
     same three sessions as \myfigref{fig:method-clustering}: KITTI sequence 00 (4541 raw
     frames $\to$ 690 keyframes), an HGE HoloLens session (1338 $\to$ 632), and an HGE iPad
     session (1503 $\to$ 727). The raw stream is aligned into the keyframe trajectory's own
@@ -226,7 +226,7 @@ poses.
     $\tau_{\mathrm{trans}}$ (\eqref{eq:method-keyframe-trigger}) \\
   \hline
   \end{tabular*}
-  \caption{Keyframing thresholds, and the production values used to generate this thesis's
+  \caption[Keyframing thresholds]{Keyframing thresholds, and the production values used to generate this thesis's
     KITTI results.}
   \label{tab:method-odometry-thresholds}
 \end{table}
@@ -234,7 +234,7 @@ poses.
 \begin{figure}[htb]
   \centering
   \includegraphics[width=0.55\textwidth]{images/03_method/02_odometry/odometry_kitti_00_zoom.jpg}
-  \caption{The keyframe trigger of \eqref{eq:method-keyframe-trigger}, zoomed into 10
+  \caption[Keyframe trigger, zoomed]{The keyframe trigger of \eqref{eq:method-keyframe-trigger}, zoomed into 10
     consecutive raw frames of KITTI sequence 00: most raw frames fall below the
     translation/rotation threshold and are skipped, until one crosses it and is accepted as
     the next keyframe.}
@@ -279,7 +279,7 @@ members, so consecutive clusters share keyframes and chain with no coverage gap 
     clusters chain with no coverage gap \\
   \hline
   \end{tabular*}
-  \caption{Online clustering thresholds, and the production values used to generate this
+  \caption[Clustering thresholds]{Online clustering thresholds, and the production values used to generate this
     thesis's KITTI results.}
   \label{tab:method-clustering-thresholds}
 \end{table}
@@ -297,7 +297,7 @@ closed clusters, each with its member keyframes and their descriptors.
   \includegraphics[width=0.359\textwidth]{images/03_method/03_clustering/clusters_hge_hololens.jpg}
   \hfill
   \includegraphics[width=0.297\textwidth]{images/03_method/03_clustering/clusters_hge_ios.jpg}
-  \caption{Real clustering output across three very different capture settings: KITTI sequence
+  \caption[Real clustering output, three sessions]{Real clustering output across three very different capture settings: KITTI sequence
     00 (stereo, outdoor driving, 172 clusters), an HGE session captured on a HoloLens (indoor
     walking, 28 clusters), and an HGE session captured on an iPad (indoor walking, 33
     clusters). Each color segment is one cluster, closing according to
@@ -401,7 +401,7 @@ candidate just for existing in a session with few plausible alternatives to comp
     how many of $s'$'s remaining candidates, at most, are carried forward (step 6) \\
   \hline
   \end{tabular}
-  \caption{Every threshold used in cluster matching, the production values used throughout
+  \caption[Cluster-matching thresholds]{Every threshold used in cluster matching, the production values used throughout
     this thesis, and exactly which step of the per-session procedure each one gates.}
   \label{tab:method-cluster-matching-thresholds}
 \end{table}
@@ -447,7 +447,7 @@ pose graph through actual geometric verification, which is exactly what
 \begin{figure}[htb]
   \centering
   \includegraphics[width=0.95\textwidth]{images/03_method/04_cluster_matching/cluster_matching_hydro.jpg}
-  \caption{One real cluster-matching event from HYDRO: all five sessions' trajectories are
+  \caption[Real cluster-matching event (HYDRO)]{One real cluster-matching event from HYDRO: all five sessions' trajectories are
     shown in grey for context, with the newly closed cluster ($C$, green) and the four
     candidate clusters it was proposed against ($C'$, red) highlighted. Each dashed edge is
     labeled with that candidate's real vote share (\eqref{eq:method-vote-share}); note that
@@ -547,7 +547,7 @@ the averaged one, giving the optimizer more redundant evidence per confirmed mat
 \begin{figure}[htb]
   \centering
   \includegraphics[width=0.85\textwidth]{images/03_method/05_pose_estimation/pose_estimation_explainer.png}
-  \caption{Per-pair verification: matched keyframe pairs between two candidate clusters go
+  \caption[Per-pair verification pipeline]{Per-pair verification: matched keyframe pairs between two candidate clusters go
     through sparse matching, RANSAC, triangulation, metric depth lift, and PnP.}
   \label{fig:method-pose-estimation}
 \end{figure}
@@ -555,7 +555,7 @@ the averaged one, giving the optimizer more redundant evidence per confirmed mat
 \begin{figure}[htb]
   \centering
   \includegraphics[width=0.85\textwidth]{images/03_method/05_pose_estimation/pose_consensus_plot.png}
-  \caption{Translation-consensus voting on one real KITTI candidate pair: each of the five
+  \caption[Translation-consensus voting]{Translation-consensus voting on one real KITTI candidate pair: each of the five
     MST-selected keyframe pairs is either a failed estimate or a translation distance along the
     corridor; the real \texttt{\_aggregate()} vote separates agreeing (kept) from
     disagreeing (outlier) estimates, and the dashed line marks the final chordal-mean edge.}
@@ -709,7 +709,7 @@ consensus (catches hidden, mutually self-consistent outlier groups) $\to$ final 
   \includegraphics[width=0.48\textwidth]{images/03_method/07_graph/graph_edges_before.png}
   \hfill
   \includegraphics[width=0.48\textwidth]{images/03_method/07_graph/graph_edges_after.png}
-  \caption{One real KITTI session's cross-session loop-closure edges before and after a full
+  \caption[Loop-closure edges before/after pruning]{One real KITTI session's cross-session loop-closure edges before and after a full
     update's outlier pruning (\eqref{eq:method-outlier-prune}): 32 kept, 21 pruned.}
   \label{fig:method-graph-edges}
 \end{figure}
@@ -717,14 +717,14 @@ consensus (catches hidden, mutually self-consistent outlier groups) $\to$ final 
 \begin{figure}[htb]
   \centering
   \includegraphics[width=0.7\textwidth]{images/03_method/07_graph/graph_solve.png}
-  \caption{The pose graph solve itself.}
+  \caption[Pose graph solve]{The pose graph solve itself.}
   \label{fig:method-graph-solve}
 \end{figure}
 
 \begin{figure}[htb]
   \centering
   \includegraphics[width=0.85\textwidth]{images/03_method/07_graph/slow_update_outliers.png}
-  \caption{Residuals of every loop-closure edge at one full update, relative to
+  \caption[Full-update residuals]{Residuals of every loop-closure edge at one full update, relative to
     \eqref{eq:method-outlier-prune}'s per-group median threshold: the same 32 kept / 21
     pruned split as \myfigref{fig:method-graph-edges}.}
   \label{fig:method-graph-outliers}
