@@ -258,23 +258,84 @@ closed clusters, each with its member keyframes and their descriptors.
 \section{Cluster Matching (Retrieval)}
 \label{sec:method-cluster-matching}
 
-When a cluster $C$ closes, it is matched against every other eligible session's already-closed
-clusters through learned image retrieval, before any geometric verification is attempted. Each
-member keyframe $k \in C$ queries a retrieval index of other sessions' keyframe descriptors and
-casts one vote for the parent cluster of each of its $k_{\mathrm{top}}$ nearest neighbors (by
-cosine similarity of retrieval descriptors). Votes are pooled per candidate cluster $C'$ and
-normalized to a survival rate
+Checking a closed cluster against every other cluster in every other session with full
+geometric verification would work, but it would be far too slow to run online: the per-pair
+verification in \mysecref{sec:method-pose-estimation} involves real feature matching, RANSAC,
+and a depth network, and none of that is cheap. Cluster matching exists to avoid doing that
+expensive check on every possible pair. It is a fast, approximate filter, built entirely out
+of image retrieval, whose only job is to narrow a huge field of possible cluster pairs down to
+a short list of candidates worth actually verifying. It is allowed to be wrong sometimes (that
+is exactly what \mysecref{sec:method-pose-estimation} is for), but it has to be cheap enough to
+run every time a cluster closes, for every session, for the whole lifetime of the pipeline.
+
+Concretely, once a cluster $C$ closes, it goes through the following steps:
+\begin{itemize}
+  \item \textbf{Every keyframe queries the retrieval index.} Each member keyframe $k \in C$
+    already has its own global descriptor, computed back in
+    \mysecref{sec:method-clustering} the moment it was added to a cluster. That descriptor is
+    compared, by cosine similarity, against the descriptors of every keyframe belonging to
+    every other eligible session.
+  \item \textbf{Each keyframe votes.} Keyframe $k$ does not just look at its single best
+    match: it takes its $k_{\mathrm{top}}$ nearest neighbours overall, looks up which cluster
+    each of those neighbours belongs to, and casts one vote for each of those parent clusters.
+    A single keyframe can therefore vote for several different candidate clusters at once, or
+    vote more than once for the same cluster if several of its nearest neighbours happen to
+    fall inside it.
+  \item \textbf{Votes are pooled per candidate cluster.} Once every member keyframe of $C$ has
+    voted, the votes are tallied up separately for each candidate cluster $C'$ that received
+    at least one vote.
+  \item \textbf{Pooled votes are turned into a survival rate.} Raw vote counts are not
+    comparable across candidates of different sizes, so they are normalized instead
+    (\eqref{eq:method-survival-rate} below): what matters is not how many individual votes a
+    candidate collected, but what fraction of $C$'s own keyframes agreed on it at all.
+  \item \textbf{The adjacency guard removes trivial self-matches.} $C$'s own last two
+    same-session clusters are excluded from candidacy outright, before survival rate is even
+    considered.
+  \item \textbf{Only the best few candidates per session survive.} Subject to the survival
+    floor, only the $k_{\mathrm{clusters}}$ highest-scoring candidate clusters per other
+    session are kept.
+\end{itemize}
+
+The survival rate itself is defined as
 \begin{equation}
   \label{eq:method-survival-rate}
   \sigma(C, C') \;=\; \frac{\#\{\, k \in C : C' \text{ received a vote from } k \,\}}{|C|},
 \end{equation}
-the fraction of $C$'s own keyframes that voted for $C'$ at all; a candidate must clear a
-minimum survival-rate floor to be considered further. $C$'s own last two same-session clusters
-are excluded from candidacy by construction (an adjacency guard). They share keyframes with
-$C$ by construction, not because of a genuine revisit. Subject to the survival floor, the
-$k_{\mathrm{clusters}}$ highest-scoring candidates per other session survive. Production values
-are $k_{\mathrm{top}} = 5$, $k_{\mathrm{clusters}} = 2$. The output of this stage is a short
-list of candidate cluster pairs $(C, C')$: unverified hypotheses, not confirmed matches.
+the fraction of $C$'s own keyframes that voted for $C'$ at all, regardless of how many times
+each of them voted for it. This is a deliberately conservative way to score a candidate.
+Imagine a cluster with ten keyframes: if only one of them happens to have a noisy,
+coincidentally-similar-looking neighbour in some unrelated candidate cluster, that candidate
+might still pick up a handful of raw votes just from that one keyframe's several nearest
+neighbours all landing in the same place. Survival rate would score that candidate low, at
+$0.1$, since only one out of ten keyframes actually agreed it was relevant. A genuine revisit,
+by contrast, tends to have many of $C$'s keyframes independently pointing at the same
+candidate, since a real repeated visit to the same place looks similar from many nearby
+viewpoints, not just one. A candidate only survives if it clears a minimum floor on this
+fraction, so an isolated coincidence is not enough on its own to keep a candidate alive; it
+still has to be corroborated by a reasonable share of $C$'s own keyframes.
+
+The adjacency guard exists because of how clustering itself works
+(\mysecref{sec:method-clustering}): consecutive clusters in the same session deliberately
+share their last few keyframes, so that clusters chain together with no coverage gap between
+them. Without the guard, a cluster's own immediately preceding or following cluster would
+trivially win every single time, since they overlap in actual keyframes and would score a
+survival rate at or near $1.0$ by construction, not because the session ever revisited
+anything. That is not a real cluster match, it is just the clustering scheme's own stitching
+showing through, so those two neighbouring clusters are removed from candidacy before scoring
+even begins.
+
+The production values used throughout this thesis are $k_{\mathrm{top}} = 5$ and
+$k_{\mathrm{clusters}} = 2$: every keyframe votes for its five nearest neighbours' clusters,
+and at most two surviving candidates per other session are carried forward. The output of this
+whole stage is a short list of candidate cluster pairs $(C, C')$, one list per newly closed
+cluster. It is important to be clear about what that list is, and what it is not: it is a list
+of pairs worth checking, not a list of confirmed matches. Retrieval descriptors are trained to
+recognize that two images look similar, not to prove that they were taken at the same physical
+place; generic-looking scenes, repeated architectural elements, or two genuinely different
+locations that simply resemble each other can all produce a high survival rate without any
+real revisit behind them. Every candidate this stage proposes still has to earn its way into
+the pose graph through actual geometric verification, which is exactly what
+\mysecref{sec:method-pose-estimation} does next.
 
 \begin{figure}[htb]
   \centering
