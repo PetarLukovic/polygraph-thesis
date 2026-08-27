@@ -278,32 +278,13 @@ a short list of candidates worth actually verifying. Sometimes, it is allowed to
 is exactly what \mysecref{sec:method-pose-estimation} is for), but it has to be cheap enough to
 run every time a cluster closes, for every session, for the entire lifetime of the pipeline.
 
-\subsection{The Big Picture: One Session or All of Them?}
-
-Before getting into the mechanics, the most important thing to understand about this stage is
-this: a newly closed cluster $C$ is matched against \emph{every} other eligible session, not
-just one. But it is matched against each of them \emph{separately}. There is no single, giant
-pool combining every other session's keyframes together. Instead, the exact same small
-procedure, described step by step below, is run once per other eligible session, completely
-independently. If there are four other eligible sessions, this procedure runs four separate
-times for this one cluster, once per session, and none of those four runs know anything about
-what happened in the other three. A candidate cluster in session $s'$ is never compared
-against, or ranked against, a candidate cluster in some different session $s''$: they are
-scored on entirely separate scales, using entirely separate vote pools, and the only thing
-that ties the four runs together at the end is that their surviving candidates all get
-collected into one combined shortlist for $C$.
-
-This is why the notation below always talks about ``session $s'$'' as a single, fixed session
-under consideration: everything in this subsection describes what happens for \emph{one} other
-eligible session $s' \in S$ (reusing the session-index notation from
-\mysecref{sec:method-overview}), and that whole description is repeated once per other
-eligible session before their results are pooled together into $C$'s final candidate list.
+Before going into the mechanics, the most important thing to understand about this stage is this: a newly closed cluster $C$ is matched against \emph{every} other eligible session, not just one. A candidate group in session $s'$ is never compared or ranked against a group of candidates in a different session $s''$. In the following explanation, we will use the following convention: $s$ will be used for the session and $C$ for the clusters. Where, $s$ is usually the session in which the current cluster is closed and $s'$ is the session to which we are currently matching and correspondingly for clusters.
 
 \subsection{Step by Step, Within One Session}
 
 For one other eligible session $s'$, in order:
 \begin{enumerate}
-  \item \textbf{Every keyframe of $C$ queries $s'$'s own keyframes.} Each member keyframe
+  \item \textbf{Each keyframe of $C$ queries $s'$'s own keyframes,} and each member keyframe
     $k \in C$ already has its own global descriptor, computed back in
     \mysecref{sec:method-clustering} the moment it was added to a cluster. That descriptor is
     compared, by cosine similarity, against the descriptors of every keyframe belonging to
@@ -318,7 +299,7 @@ For one other eligible session $s'$, in order:
     buy a cluster a vote just by being the least-bad option available in $s'$. Because this
     whole procedure repeats independently for every other eligible session, one keyframe can
     cast up to $k_{\mathrm{top}}$ votes \emph{per session}, not $k_{\mathrm{top}}$ votes in
-    total across the pipeline: with several other eligible sessions, the total number of votes
+    total across the pipeline. With several other eligible sessions, the total number of votes
     one keyframe casts is $k_{\mathrm{top}}$ multiplied by however many other sessions are
     eligible.
   \item \textbf{The adjacency guard removes trivial self-matches, if $s'$ happens to be $C$'s
@@ -336,7 +317,7 @@ For one other eligible session $s'$, in order:
   \item \textbf{Surviving votes are pooled per candidate cluster and turned into a vote
     share.} Assuming $s'$ passed the step above, its votes are tallied up separately for every
     candidate cluster $C'$ that received at least one, and each is scored by
-    \eqref{eq:method-vote-share}: not how many raw votes it collected, but what fraction of
+    \eqref{eq:method-vote-share}. Not how many raw votes it collected, but what fraction of
     \emph{all} the votes cast within $s'$ it collected.
   \item \textbf{Only the best few candidates, above a score floor, survive.} Candidates are
     ranked by vote share, and only those whose share also clears $\tau_{\mathrm{share}}$
@@ -389,35 +370,35 @@ Two of these thresholds are easy to conflate, so it is worth spelling out the di
 directly. The participation floor $n_{\mathrm{part}}$ (step 4) and the vote-share floor
 $\tau_{\mathrm{share}}$ (step 6) answer two different questions, checked at two different
 points, about two different things. The participation floor asks, before any individual
-candidate is even scored: did enough of $C$'s own keyframes find anything worth voting for in
+candidate is even scored, did enough of $C$'s own keyframes find anything worth voting for in
 $s'$ at all? It exists to protect against a mostly irrelevant session sneaking a candidate
 through on the strength of one noisy, coincidentally-similar keyframe pair, when the rest of
 $C$ found nothing there. Its production value is deliberately permissive: $s'$ only needs a
 single one of $C$'s keyframes to have voted for something to stay in play at all, not a
 majority of them. The vote-share floor, by contrast, is only ever checked once a session has
-already passed that first test, and it asks a narrower question about one specific candidate:
+already passed that first test, and it asks a narrower question about one specific candidate,
 given that $s'$ is worth considering at all, is this particular candidate's own share of the
 vote pool high enough on its own?
 
 The adjacency guard (step 3) exists because of how clustering itself works
-(\mysecref{sec:method-clustering}): consecutive clusters in the same session deliberately
+(\mysecref{sec:method-clustering}). Consecutive clusters in the same session deliberately
 share their last few keyframes, so that clusters chain together with no coverage gap between
 them. Without the guard, whenever $s'$ happens to be $C$'s own session, $C$'s immediately
-preceding or following cluster would trivially win every single time: they overlap in actual
+preceding or following cluster would trivially win every single time. They overlap in actual
 keyframes with $C$, so they would collect an outsized share of that session's vote pool by
 construction, not because the session was ever genuinely revisited. That is not a real cluster
 match, it is just the clustering scheme's own stitching showing through, so those two
-neighbouring clusters are removed from candidacy before scoring even begins, and only for
-$C$'s own session; every other eligible session is unaffected by this guard entirely.
+neighbouring clusters are removed from candidacy before scoring even begins. And this is only for
+$C$'s own session, every other eligible session is unaffected by this guard entirely.
 
 Once this whole per-session procedure has run once for every other eligible session, and
 their surviving candidates have been pooled together, the result is the output of this whole
 stage: a short list of candidate cluster pairs $(C, C')$, one list per newly closed cluster,
 pooled across however many other sessions had at least one surviving candidate. It is
-important to be clear about what that list is, and what it is not: it is a list of pairs
+important to be clear about what that list is, and what it is not. It is a list of pairs
 worth checking, not a list of confirmed matches. Retrieval descriptors are trained to
 recognize that two images look similar, not to prove that they were taken at the same physical
-place; generic-looking scenes, repeated architectural elements, or two genuinely different
+place. Generic-looking scenes, repeated architectural elements, or two genuinely different
 locations that simply resemble each other can all produce a high vote share without any real
 revisit behind them. Every candidate this stage proposes still has to earn its way into the
 pose graph through actual geometric verification, which is exactly what
