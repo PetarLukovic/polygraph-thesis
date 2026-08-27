@@ -36,7 +36,7 @@
   \end{center}
 }
 
-This chapter describes Polygraph, the multi-session trajectory fusion pipeline this thesis
+This chapter describes Polygraph, the multi-session trajectory optimization pipeline this thesis
 presents. \mysecref{sec:method-overview} states the problem formally and walks through, at a
 high level, what happens to one keyframe and one cluster as they move through the pipeline.
 \mysecref{sec:method-odometry}--\ref{sec:method-graph} then cover each pipeline stage in turn,
@@ -49,22 +49,22 @@ the two-tier gate, and pose-graph optimization.
 \subsection{Notation and Problem Statement}
 
 Let $S = \{1, \dots, N\}$ index the $N$ sessions to be fused. Each session $s \in S$ is
-tracked independently by a single-session visual(-inertial) odometry backbone
+tracked independently by a single-session visual(inertial) odometry backbone
 (\mychapterref{chap:relatedwork} discusses several), producing a stream of raw per-frame poses
 $T^{\mathrm{raw}}_{s,i} \in \SE{3}$, $i = 1, \dots, F_s$, expressed purely in session $s$'s own
 local frame $\mathcal{F}_s$, drifting over time, and with no inherent relationship to any
 other session's frame. \mysecref{sec:method-odometry} selects a keyframe subsequence
 $K_s = (k_1 < k_2 < \dots < k_{|K_s|}) \subseteq \{1,\dots,F_s\}$; write $T_{s,j} :=
-T^{\mathrm{raw}}_{s,k_j}$ for session $s$'s $j$-th keyframe pose. Everything downstream of
-\mysecref{sec:method-odometry} operates purely at keyframe granularity.
+T^{\mathrm{raw}}_{s,k_j}$ for the pose of the keyframe $s$ of session $j$. Everything downstream of
+\mysecref{sec:method-odometry} operates purely at the granularity of the keyframe.
 
-Define a graph $G = (V, E)$ with one vertex per keyframe across every session,
+Define a graph $G = (V, E)$ with one vertex per keyframe in every session,
 $V = \{ (s,j) : s \in S,\ j = 1,\dots,|K_s| \}$, and edges $E = E_{\mathrm{odom}} \cup
 E_{\mathrm{intra}} \cup E_{\mathrm{cross}}$ of three kinds:
 \begin{itemize}
   \item \textbf{Odometry edges} $E_{\mathrm{odom}}$: one per consecutive keyframe pair
     $(s,j),(s,j{+}1)$ within a session, with measurement $z_{(s,j),(s,j+1)} = T_{s,j}^{-1}
-    T_{s,j+1}$ taken directly from the (trusted, drift-affected) raw odometry; never removed
+    T_{s,j+1}$ taken directly from the raw odometry (trusted, affected by drift). Never removed
     by outlier rejection.
   \item \textbf{Intra-session edges} $E_{\mathrm{intra}}$: loop-closure edges between two
     \emph{non-consecutive} keyframes of the \emph{same} session, confirmed by the same
@@ -79,9 +79,9 @@ E_{\mathrm{intra}} \cup E_{\mathrm{cross}}$ of three kinds:
     estimated relative pose between the two keyframes.
 \end{itemize}
 The connected components of $G$ partition $V$ into groups of sessions confirmed, with
-corroborated evidence, to revisit one another; sessions in different components have no
+corroborated evidence, that they would revisit each other. Sessions in different components do not have an
 established relative pose. For every vertex $v = (s,j) \in V$, let $X_v \in \SE{3}$ be its
-pose in its own component's shared frame. The goal is to estimate $\{X_v\}_{v \in V}$, for
+pose in the shared frame of its own component. The goal is to estimate $\{X_v\}_{v \in V}$, for
 every component, by solving
 \begin{equation}
   \label{eq:method-pgo-objective}
@@ -94,15 +94,11 @@ $\SE{3}$ residual under the standard Lie-algebra logarithm map, $\Sigma_{uv}$ is
 noise covariance, $\rho_{uv}$ a robust loss (identity for odometry edges, trusted and never
 pruned; a Cauchy $M$-estimator for confirmed loop-closure edges, both intra- and
 cross-session, or, in the final archival pass, a GNC-TLS weight; see
-\mysecref{sec:method-graph}), and $V_0 \subseteq V$ is the set of per-component gauge-fixing
+\mysecref{sec:method-graph}), and $V_0 \subseteq V$ is the set of per-component gage fixing
 anchor vertices, one per session, each with prior pose $p_v$.
 
-Two properties of \eqref{eq:method-pgo-objective} are what distinguish Polygraph from an
-offline formulation of the same problem (\mysecref{sec:relatedwork-2go}): first, $V$ and $E$
-grow monotonically \emph{online}, one keyframe and one confirmed edge at a time, with no
-assumption that $S$ or any session's full trajectory is known in advance; second, $V_0$ is
-never fixed up front: every session receives its own gauge-fixing prior the moment it
-starts (as its own, momentarily disconnected, single-vertex component), and components merge,
+Two properties of \eqref{eq:method-pgo-objective} are what distinguishes Polygraph from an
+offline formulation of the same problem. First, $V$ and $E$ grow monotonically online, one keyframe and one confirmed edge at a time, without the assumption that $S$ or any session's full trajectory is known in advance. Secondly, $V_0$ is never fixed up front. Every session receives its own gage fixing prior the moment it starts (as its own, momentarily disconnected, single-vertex component), and components merge,
 but never split, only when a cross-session edge survives verification and the gate.
 
 \subsection{Pipeline Walkthrough}
@@ -110,7 +106,7 @@ but never split, only when a cross-session edge survives verification and the ga
 Before the detailed, per-stage treatment in the rest of this chapter, it is worth tracing what
 actually happens to one keyframe and one cluster as they move through Polygraph, end to end.
 
-A session's raw odometry stream is thinned to keyframes as it arrives
+The raw odometry stream of a session is thinned to keyframes as it arrives
 (\mysecref{sec:method-odometry}). Each new keyframe is appended to that session's own
 currently-open \emph{cluster}, a short, spatially bounded run of keyframes
 (\mysecref{sec:method-clustering}). Clusters, not individual keyframes, are the unit
@@ -118,25 +114,19 @@ everything downstream reasons about: a cluster only becomes visible to the rest 
 pipeline once it \emph{closes}, at which point every one of its member keyframes has already
 been assigned a global image descriptor.
 
-The moment a cluster closes, it is matched against every other session's already-closed
-clusters through image retrieval (\mysecref{sec:method-cluster-matching}): its keyframes vote
-for their nearest neighbours elsewhere, and a short list of candidate cluster pairs falls out,
-unverified hypotheses, not yet trusted. Each candidate pair is then checked geometrically
-(\mysecref{sec:method-pose-estimation}): a handful of keyframe pairs from the two clusters are
-matched, triangulated, lifted to metric scale with a monocular depth prior, and cross-checked
-against each other; a pair that survives this becomes one \emph{confirmed edge}, a single
-metric relative pose between two keyframes, one in each cluster.
+The moment a cluster closes, it is matched against the already closed clusters of every other session through image retrieval (\mysecref{sec:method-cluster-matching}). Its keyframes vote
+for their nearest neighbors elsewhere, and a short list of candidate cluster pairs falls out. As unverified hypotheses, not yet trusted. Then each pair of candidates is geometrically checked (\mysecref{sec:method-pose-estimation}). Only a handful of keyframe pairs from the two clusters are matched, triangulated, lifted to the metric scale with a monocular depth prior, and cross-checked against each other. A pair that survives this becomes one \emph{confirmed edge}, a single metric relative pose between two keyframes, one in each cluster.
 
 A confirmed edge is not yet allowed into the shared pose graph unconditionally. If both
-clusters belong to the same session, it commits immediately: that session's own position
+clusters belong to the same session, they commit immediately. That session's own position
 is already fully known from its own sequential odometry, so this is just corroborating
 evidence. If the two clusters belong to different sessions, the edge instead passes through
 the two-tier consensus gate (\mysecref{sec:method-gate}), which decides, based on how much
 prior cross-session evidence that session already has, whether this single piece of evidence
 is enough to trust on its own or needs to be corroborated by another before it is allowed to
-merge two sessions' components together.
+merge two session' components together.
 
-Every edge that is ultimately admitted (intra- or cross-session) becomes a factor in the
+Every edge that is ultimately admitted (intra or cross session) becomes a factor in the
 pose graph of \eqref{eq:method-pgo-objective}, kept current by a cheap incremental solve after
 every closed cluster and periodically refined by a more expensive batch solve that also prunes
 edges that turn out to be outliers (\mysecref{sec:method-graph}). The result, once every
@@ -147,10 +137,10 @@ with the rest.
 \begin{figure}[htb]
   \centering
   \includegraphics[width=\textwidth]{images/03_method/01_overview/pipeline_overview.png}
-  \caption{Left to right: each session's raw per-frame odometry is grouped online into
+  \caption{Left to right: each session's raw per frame odometry is grouped online into
     spatially bounded clusters (Clustering). When a cluster closes, its keyframes vote against
     a retrieval index built from every other session's keyframes (Cluster Matching). A
-    candidate pair then goes through joint pose estimation: keyframe pairs are matched and
+    candidate pair then goes through joint pose estimation. Keyframe pairs are matched and
     reduced by translation-consensus voting into one confirmed edge. Pose graph optimization
     adds every confirmed edge as a loop closure: a cheap incremental Fast update runs
     continuously, and a periodic Full update re-solves the whole graph and prunes outlier
@@ -158,13 +148,9 @@ with the rest.
   \label{fig:method-overview}
 \end{figure}
 
-Unless stated otherwise, every numeric threshold quoted in this chapter is the production
-configuration used to generate this thesis's KITTI multi-session results
-(\texttt{configs/kitti/kitti\_orb\_full.yaml}), not necessarily the pipeline's own built-in
-code defaults, which are in several places more conservative; every threshold remains
-freely configurable per dataset.
+Unless stated otherwise, every numeric threshold quoted in this chapter is the production configuration used to generate this thesis's KITTI multi-session results, not necessarily the pipeline's own built-in code defaults, which are in several places more conservative; every threshold remains freely configurable per dataset. 
 
-\section{Device Odometry and Keyframing}
+\section{Device Odometry and Keyframing} 
 \label{sec:method-odometry}
 
 Polygraph does not track cameras itself: its input is the raw per-frame pose stream
