@@ -286,7 +286,7 @@ Each selected pair $(k, k')$ goes through the same six-step verification:
     $M_{\mathrm{in}} \subseteq M$.
   \item \textbf{Triangulation} (DLT) of $M_{\mathrm{in}}$ under $(\hat{R}, \hat{t})$, giving
     scale-free 3D points $\{X_i^{\mathrm{tri}}\}$, correct only up to one unknown global scale.
-  \item \textbf{Monocular metric depth lift}: Metric3D \cite{yin2023metric3d} predicts a
+  \item \textbf{Monocular metric depth lift}: Metric3D v2 \cite{hu2024metric3dv2} predicts a
     metric depth map for both images; back-projecting each matched keypoint through its own
     image's depth map and camera intrinsics gives metric 3D points $\{X_i^{\mathrm{depth}}\}$.
   \item \textbf{Scale-consistency filter}: for each correspondence $i$, the implied per-point
