@@ -55,7 +55,7 @@ $T^{\mathrm{raw}}_{s,i} \in \SE{3}$, $i = 1, \dots, F_s$, expressed purely in se
 local frame $\mathcal{F}_s$, drifting over time, and with no inherent relationship to any
 other session's frame. \mysecref{sec:method-odometry} selects a keyframe subsequence
 $K_s = (k_1 < k_2 < \dots < k_{|K_s|}) \subseteq \{1,\dots,F_s\}$; write $T_{s,j} :=
-T^{\mathrm{raw}}_{s,k_j}$ for the pose of the keyframe $s$ of session $j$. Everything downstream of
+T^{\mathrm{raw}}_{s,k_j}$ for the pose of the $j$-th keyframe of session $s$. Everything downstream of
 \mysecref{sec:method-odometry} operates purely at the granularity of the keyframe.
 
 Define a graph $G = (V, E)$ with one vertex per keyframe in every session,
@@ -94,11 +94,11 @@ $\SE{3}$ residual under the standard Lie-algebra logarithm map, $\Sigma_{uv}$ is
 noise covariance, $\rho_{uv}$ a robust loss (identity for odometry edges, trusted and never
 pruned; a Cauchy $M$-estimator for confirmed loop-closure edges, both intra- and
 cross-session, or, in the final archival pass, a GNC-TLS weight; see
-\mysecref{sec:method-graph}), and $V_0 \subseteq V$ is the set of per-component gage fixing
+\mysecref{sec:method-graph}), and $V_0 \subseteq V$ is the set of per-component gauge-fixing
 anchor vertices, one per session, each with prior pose $p_v$.
 
 Two properties of \eqref{eq:method-pgo-objective} are what distinguishes Polygraph from an
-offline formulation of the same problem. First, $V$ and $E$ grow monotonically online, one keyframe and one confirmed edge at a time, without the assumption that $S$ or any session's full trajectory is known in advance. Secondly, $V_0$ is never fixed up front. Every session receives its own gage fixing prior the moment it starts (as its own, momentarily disconnected, single-vertex component), and components merge,
+offline formulation of the same problem. First, $V$ and $E$ grow monotonically online, one keyframe and one confirmed edge at a time, without the assumption that $S$ or any session's full trajectory is known in advance. Secondly, $V_0$ is never fixed up front. Every session receives its own gauge-fixing prior the moment it starts (as its own, momentarily disconnected, single-vertex component), and components merge,
 but never split, only when a cross-session edge survives verification and the gate.
 
 \subsection{Pipeline Walkthrough}
