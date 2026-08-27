@@ -259,14 +259,14 @@ closed clusters, each with its member keyframes and their descriptors.
 \label{sec:method-cluster-matching}
 
 Checking a closed cluster against every other cluster in every other session with full
-geometric verification would work, but it would be far too slow to run online: the per-pair
+geometric verification would work, but it would be far too slow to run online. The per pair
 verification in \mysecref{sec:method-pose-estimation} involves real feature matching, RANSAC,
 and a depth network, and none of that is cheap. Cluster matching exists to avoid doing that
 expensive check on every possible pair. It is a fast, approximate filter, built entirely out
 of image retrieval, whose only job is to narrow a huge field of possible cluster pairs down to
-a short list of candidates worth actually verifying. It is allowed to be wrong sometimes (that
+a short list of candidates worth actually verifying. Sometimes, it is allowed to be wrong (that
 is exactly what \mysecref{sec:method-pose-estimation} is for), but it has to be cheap enough to
-run every time a cluster closes, for every session, for the whole lifetime of the pipeline.
+run every time a cluster closes, for every session, for the entire lifetime of the pipeline.
 
 Concretely, once a cluster $C$ closes, it goes through the following steps:
 \begin{itemize}
