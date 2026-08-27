@@ -14,7 +14,7 @@ visual-inertial SLAM. Systems such as ORB-SLAM3 \cite{campos2021orbslam3} and VI
 \cite{qin2019vinsfusionlocal,qin2019vinsfusionglobal} track a single session's camera (optionally fused with IMU measurements) in real time, producing a locally accurate but drift-affected trajectory
 together with intra-session loop closures. This thesis treats such a system's raw per-frame
 pose stream as Polygraph's input odometry (\mysecref{sec:method-odometry}) and does not
-modify it, but rather optimizes it. Polygraph's contribution begins where single-session tracking ends, at the problem of relating \emph{different} sessions' independently tracked trajectories to one
+modify it, but rather optimizes it. Polygraph's contribution begins where single-session tracking ends, at the problem of relating different sessions' independently tracked trajectories to one
 another and alleviating drift. The incremental smoothing formulation backends of these systems use for pose-graph optimization (most directly iSAM2 \cite{kaess2012isam2}, built on the factor-graph
 formulation underlying GTSAM) is also what Polygraph's own online graph solve
 (\mysecref{sec:method-graph}) is built on.
