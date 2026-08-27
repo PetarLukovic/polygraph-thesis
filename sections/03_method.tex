@@ -278,91 +278,141 @@ a short list of candidates worth actually verifying. Sometimes, it is allowed to
 is exactly what \mysecref{sec:method-pose-estimation} is for), but it has to be cheap enough to
 run every time a cluster closes, for every session, for the entire lifetime of the pipeline.
 
-A first thing worth being precise about: matching is done \emph{per other eligible session},
-never against one single pool merging every other session's keyframes together. Everything
-described below happens once, independently, for each other eligible session $s' \in S$ (using
-the same session-index notation as \mysecref{sec:method-overview}), and the results from
-different sessions are never mixed together or ranked against each other. Concretely, for one
-such session $s'$:
-\begin{itemize}
-  \item \textbf{Every keyframe queries that session's own keyframes.} Each member keyframe
+\subsection{The Big Picture: One Session or All of Them?}
+
+Before getting into the mechanics, the most important thing to understand about this stage is
+this: a newly closed cluster $C$ is matched against \emph{every} other eligible session, not
+just one. But it is matched against each of them \emph{separately}. There is no single, giant
+pool combining every other session's keyframes together. Instead, the exact same small
+procedure, described step by step below, is run once per other eligible session, completely
+independently. If there are four other eligible sessions, this procedure runs four separate
+times for this one cluster, once per session, and none of those four runs know anything about
+what happened in the other three. A candidate cluster in session $s'$ is never compared
+against, or ranked against, a candidate cluster in some different session $s''$: they are
+scored on entirely separate scales, using entirely separate vote pools, and the only thing
+that ties the four runs together at the end is that their surviving candidates all get
+collected into one combined shortlist for $C$.
+
+This is why the notation below always talks about ``session $s'$'' as a single, fixed session
+under consideration: everything in this subsection describes what happens for \emph{one} other
+eligible session $s' \in S$ (reusing the session-index notation from
+\mysecref{sec:method-overview}), and that whole description is repeated once per other
+eligible session before their results are pooled together into $C$'s final candidate list.
+
+\subsection{Step by Step, Within One Session}
+
+For one other eligible session $s'$, in order:
+\begin{enumerate}
+  \item \textbf{Every keyframe of $C$ queries $s'$'s own keyframes.} Each member keyframe
     $k \in C$ already has its own global descriptor, computed back in
     \mysecref{sec:method-clustering} the moment it was added to a cluster. That descriptor is
     compared, by cosine similarity, against the descriptors of every keyframe belonging to
-    $s'$ specifically, and only $s'$.
-  \item \textbf{Each keyframe votes, within that session.} Keyframe $k$ does not just look at
-    its single best match in $s'$: it takes its $k_{\mathrm{top}}$ nearest
-    neighbours \emph{within that one session}, looks up which cluster each of those
-    neighbours belongs to, and casts one vote for each of those parent clusters. A vote only
-    counts if the underlying similarity clears a minimum per-vote floor, so an implausibly
-    weak match cannot buy a cluster a vote just by being the least-bad option available.
-    Because this repeats independently for every other eligible session, one keyframe can
+    $s'$, and only $s'$: keyframes belonging to any other session are not part of this
+    comparison at all.
+  \item \textbf{Each keyframe casts its votes, within $s'$ only.} Keyframe $k$ does not just
+    look at its single best match in $s'$: it takes its $k_{\mathrm{top}}$ nearest neighbours
+    \emph{within $s'$ specifically}, looks up which cluster each of those neighbours belongs
+    to, and casts one vote for each of those parent clusters. A vote only counts towards
+    anything if its underlying similarity clears the per-vote floor $\tau_{\mathrm{vote}}$
+    (Table~\ref{tab:method-cluster-matching-thresholds}), so an implausibly weak match cannot
+    buy a cluster a vote just by being the least-bad option available in $s'$. Because this
+    whole procedure repeats independently for every other eligible session, one keyframe can
     cast up to $k_{\mathrm{top}}$ votes \emph{per session}, not $k_{\mathrm{top}}$ votes in
-    total: with several other eligible sessions, the total number of votes a single keyframe
-    casts is $k_{\mathrm{top}}$ multiplied by however many other sessions are eligible.
-  \item \textbf{A session-level participation floor comes first.} Before any individual
-    candidate cluster in $s'$ is even scored, the pipeline checks how many of
-    $C$'s own keyframes managed to cast a surviving vote somewhere in $s'$ at all.
-    If too few did, $s'$ is dropped from candidacy entirely for this cluster, and
-    none of its clusters are considered further, no matter how high any individual one's
-    score would have been.
-  \item \textbf{Votes are pooled and turned into a vote share.} Among the votes that were
-    cast within $s'$, they are tallied up separately per candidate cluster $C'$,
-    and each candidate is scored by \eqref{eq:method-survival-rate} below: not how many raw
-    votes it collected, but what fraction of \emph{all} the votes cast within $s'$
-    it collected.
-  \item \textbf{The adjacency guard removes trivial self-matches.} $C$'s own last two
-    same-session clusters are excluded from candidacy outright, before any scoring happens,
-    and only when $s'$ is $C$'s own session.
-  \item \textbf{Only the best few candidates per session survive.} Of whatever is left,
-    subject to a minimum score floor, only the $k_{\mathrm{clusters}}$ highest-scoring
-    candidate clusters in $s'$ are kept.
-\end{itemize}
+    total across the pipeline: with several other eligible sessions, the total number of votes
+    one keyframe casts is $k_{\mathrm{top}}$ multiplied by however many other sessions are
+    eligible.
+  \item \textbf{The adjacency guard removes trivial self-matches, if $s'$ happens to be $C$'s
+    own session.} $C$'s own last two same-session clusters are removed from candidacy outright,
+    before anything else in this list happens. This step only ever does anything when $s'$ is
+    the session $C$ itself belongs to; for every other session it has nothing to remove.
+  \item \textbf{A session-level participation floor decides whether $s'$ is worth considering
+    at all.} Across every vote just cast in $s'$, the pipeline counts how many \emph{distinct}
+    keyframes of $C$ managed to cast at least one surviving vote there. If that count is below
+    $n_{\mathrm{part}}$ (Table~\ref{tab:method-cluster-matching-thresholds}), $s'$ is dropped
+    from candidacy entirely for this cluster: none of its candidate clusters are considered
+    further, no matter how high any individual one's score would otherwise have been. This
+    check looks only at how many of $C$'s keyframes engaged with $s'$ at all, not at which
+    specific candidate cluster they voted for.
+  \item \textbf{Surviving votes are pooled per candidate cluster and turned into a vote
+    share.} Assuming $s'$ passed the step above, its votes are tallied up separately for every
+    candidate cluster $C'$ that received at least one, and each is scored by
+    \eqref{eq:method-vote-share}: not how many raw votes it collected, but what fraction of
+    \emph{all} the votes cast within $s'$ it collected.
+  \item \textbf{Only the best few candidates, above a score floor, survive.} Candidates are
+    ranked by vote share, and only those whose share also clears $\tau_{\mathrm{share}}$
+    (Table~\ref{tab:method-cluster-matching-thresholds}) are kept at all. Of those, only the
+    top $k_{\mathrm{clusters}}$ scoring candidates in $s'$ are carried forward into $C$'s
+    final shortlist.
+\end{enumerate}
 
-The score itself, for a candidate cluster $C'$ inside one session $s'$, is its
-share of that session's own vote pool:
+The vote-share score from step 5 is
 \begin{equation}
-  \label{eq:method-survival-rate}
+  \label{eq:method-vote-share}
   \mathrm{share}(C, C') \;=\; \frac{\text{votes cast for } C' \text{ within } s'}
   {\text{total votes cast within } s'},
 \end{equation}
-not, importantly, a fraction of $C$'s own keyframe count. A session where $C$'s keyframes cast
-many votes overall, spread thinly across many different candidate clusters, makes it harder
-for any single candidate to earn a large share; a session where most of the votes converge on
-one candidate makes that candidate's share close to $1$. This rewards agreement relative to
-whatever else was on offer in that session, rather than rewarding a candidate just for
-existing in a session with few plausible alternatives.
+for a candidate cluster $C'$ that belongs to session $s'$. This is deliberately \emph{not} a
+fraction of $C$'s own keyframe count. A session where $C$'s keyframes cast many votes overall,
+spread thinly across many different candidate clusters, makes it harder for any single
+candidate to earn a large share of that session's pool; a session where most of the votes
+converge on one candidate makes that candidate's share close to $1$. This rewards agreement
+relative to whatever else was on offer within that same session, rather than rewarding a
+candidate just for existing in a session with few plausible alternatives to compete against.
 
-The participation floor and the vote-share score answer two different questions, and it is
-worth keeping them separate. The participation floor asks: did enough of $C$'s own keyframes
-find anything worth voting for in this session at all? It exists to protect against a mostly
-irrelevant session sneaking a single candidate through on the strength of one noisy,
-coincidentally-similar keyframe pair, when the rest of $C$ found nothing there. The production
-value used throughout this thesis is deliberately permissive: a session only needs a single
-one of $C$'s keyframes to have voted for something to stay in play, not a majority of them.
-The vote-share score, by contrast, only ever asks the second question, once the first has
-already been answered: given that this session is worth considering at all, which of its
-candidate clusters agree with $C$ the most, relative to each other?
+\begin{table}[htb]
+  \centering
+  \begin{tabular}{lllp{5.3cm}}
+  \hline
+  \textbf{Symbol} & \textbf{Name} & \textbf{Value} & \textbf{Gates} \\
+  \hline
+  $k_{\mathrm{top}}$ & votes per keyframe, per session & $5$ &
+    how many nearest-neighbour votes one keyframe of $C$ casts inside one other session
+    (step 2) \\
+  $\tau_{\mathrm{vote}}$ & per-vote similarity floor & $0.28$ &
+    whether one individual vote counts at all (step 2) \\
+  $n_{\mathrm{part}}$ & participation floor & $1$ keyframe &
+    whether session $s'$ is considered further at all, based on how many of $C$'s keyframes
+    voted for \emph{anything} in $s'$ (step 4) \\
+  $\tau_{\mathrm{share}}$ & vote-share floor & $0.25$ &
+    whether one candidate cluster's own vote share is high enough to survive at all
+    (step 6) \\
+  $k_{\mathrm{clusters}}$ & surviving candidates per session & $2$ &
+    how many of $s'$'s remaining candidates, at most, are carried forward (step 6) \\
+  \hline
+  \end{tabular}
+  \caption{Every threshold used in cluster matching, the production values used throughout
+    this thesis, and exactly which step of the per-session procedure each one gates.}
+  \label{tab:method-cluster-matching-thresholds}
+\end{table}
 
-The adjacency guard exists because of how clustering itself works
+Two of these thresholds are easy to conflate, so it is worth spelling out the difference
+directly. The participation floor $n_{\mathrm{part}}$ (step 4) and the vote-share floor
+$\tau_{\mathrm{share}}$ (step 6) answer two different questions, checked at two different
+points, about two different things. The participation floor asks, before any individual
+candidate is even scored: did enough of $C$'s own keyframes find anything worth voting for in
+$s'$ at all? It exists to protect against a mostly irrelevant session sneaking a candidate
+through on the strength of one noisy, coincidentally-similar keyframe pair, when the rest of
+$C$ found nothing there. Its production value is deliberately permissive: $s'$ only needs a
+single one of $C$'s keyframes to have voted for something to stay in play at all, not a
+majority of them. The vote-share floor, by contrast, is only ever checked once a session has
+already passed that first test, and it asks a narrower question about one specific candidate:
+given that $s'$ is worth considering at all, is this particular candidate's own share of the
+vote pool high enough on its own?
+
+The adjacency guard (step 3) exists because of how clustering itself works
 (\mysecref{sec:method-clustering}): consecutive clusters in the same session deliberately
 share their last few keyframes, so that clusters chain together with no coverage gap between
-them. Without the guard, a cluster's own immediately preceding or following cluster would
-trivially win every single time it is $C$'s own session under consideration, since they
-overlap in actual keyframes and would collect an outsized share of the vote pool by
-construction, not because the session ever revisited anything. That is not a real cluster
+them. Without the guard, whenever $s'$ happens to be $C$'s own session, $C$'s immediately
+preceding or following cluster would trivially win every single time: they overlap in actual
+keyframes with $C$, so they would collect an outsized share of that session's vote pool by
+construction, not because the session was ever genuinely revisited. That is not a real cluster
 match, it is just the clustering scheme's own stitching showing through, so those two
-neighbouring clusters are removed from candidacy before scoring even begins.
+neighbouring clusters are removed from candidacy before scoring even begins, and only for
+$C$'s own session; every other eligible session is unaffected by this guard entirely.
 
-The production values used throughout this thesis are $k_{\mathrm{top}} = 5$ and
-$k_{\mathrm{clusters}} = 2$: every keyframe votes for its five nearest neighbours' clusters
-within each other eligible session, and at most two surviving candidates per session are
-carried forward. Two additional similarity floors are active in production alongside the
-participation floor and the top-$k_{\mathrm{clusters}}$ cut: one on the similarity of an
-individual vote before it counts at all, and one on a candidate's final vote-share score
-before it is allowed to survive, both there to keep weak, borderline matches from ever
-reaching \mysecref{sec:method-pose-estimation} in the first place. The output of this whole
-stage is a short list of candidate cluster pairs $(C, C')$, one list per newly closed cluster,
+Once this whole per-session procedure has run once for every other eligible session, and
+their surviving candidates have been pooled together, the result is the output of this whole
+stage: a short list of candidate cluster pairs $(C, C')$, one list per newly closed cluster,
 pooled across however many other sessions had at least one surviving candidate. It is
 important to be clear about what that list is, and what it is not: it is a list of pairs
 worth checking, not a list of confirmed matches. Retrieval descriptors are trained to
@@ -431,7 +481,7 @@ points, $\ge \rho_{\mathrm{inlier}} = 0.80$ RANSAC inlier ratio, and $\le
 % REVIEW NOTE (not rendered): step 5's exact formula (the ratio s_i and how "inconsistent" is
 % decided) formalizes method.md's qualitative description -- confirm against the real
 % scale-consistency-filter code in src/pose_estimation/ (edge_estimator.py or pose_estimator.py)
-% before treating \eqref{eq:method-survival-rate}-style precision here as final; same caveat
+% before treating \eqref{eq:method-vote-share}-style precision here as final; same caveat
 % for the MST edge-weight definition just above (descriptor similarity is stated qualitatively
 % in method.md, not given as an exact formula).
 
