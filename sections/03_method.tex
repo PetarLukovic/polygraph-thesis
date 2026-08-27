@@ -6,13 +6,22 @@
 \chapter{Method}
 \label{chap:method}
 
-% REVIEW NOTE (not rendered): this is now full prose, not a skeleton. Two sections
-% (Odometry/Keyframing, Two-Tier Gate) still have no real figure -- they use a
-% self-contained boxed placeholder (\missingfig, defined below) instead of \includegraphics,
-% specifically so the document keeps compiling cleanly in Overleaf until we sketch those two
-% together. The other five sections point at the real images already sitting under
-% images/03_method/<stage>/ -- replace/adjust those freely, the \includegraphics paths don't
-% need to change if you just edit the PNGs in place.
+% REVIEW NOTE (not rendered): this is now full prose, not a skeleton. Only one section
+% (the Two-Tier Gate, 3.6) still has no real figure -- it uses a self-contained boxed
+% placeholder (\missingfig, defined below) instead of \includegraphics, specifically so the
+% document keeps compiling cleanly in Overleaf until we sketch that one together. Every other
+% section points at real images already sitting under images/03_method/<stage>/ --
+% replace/adjust those freely, the \includegraphics paths don't need to change if you just
+% edit the files in place.
+%
+% Odometry/Keyframing (3.2) now has two real figures: a 3-up whole-trajectory raw-vs-keyframe
+% view (same three sessions as clustering) and a zoomed inset on one real KITTI keyframe
+% trigger. Generation script: /local/home/plukovic/.claude/jobs/7015ebb3/tmp/
+% make_odometry_figs.py + make_odometry_zoom2.py -- not saved anywhere permanent, so if these
+% need regenerating (different sessions, different zoom window) they'd need rewriting, though
+% the approach (parse_tum_trajectory + a LaMAR-CSV parser for iOS/HoloLens raw odometry,
+% align_to_gt's fit_gt_to_est_transform to bring raw into the keyframe frame, then
+% ground_plane_axes for consistent orientation) is straightforward to redo.
 %
 % A second flag: a few equations below FORMALIZE a prose description from
 % polygraph/docs/method.md into notation (survival-rate score in 3.4, the scale-consistency
@@ -177,9 +186,31 @@ this thesis's KITTI results are $\tau_{\mathrm{trans}} = 5.0$m and $\tau_{\mathr
 28.6°$; every subsequent stage of the pipeline operates purely on the resulting keyframe
 subsequence $K_s$, never on raw per-frame poses.
 
-\missingfig{A trajectory strip with keyframe markers dropped at the translation/rotation
-threshold from \eqref{eq:method-keyframe-trigger}, ideally showing one accepted and one
-skipped candidate frame to make the trigger condition concrete.}
+\begin{figure}[htb]
+  \centering
+  \includegraphics[height=4.3cm]{images/03_method/02_odometry/odometry_kitti_00.jpg}
+  \hfill
+  \includegraphics[height=4.3cm]{images/03_method/02_odometry/odometry_hge_hololens.jpg}
+  \hfill
+  \includegraphics[height=4.3cm]{images/03_method/02_odometry/odometry_hge_ios.jpg}
+  \caption{Raw odometry (thin line) against the selected keyframe subsequence (dots), for the
+    same three sessions as \myfigref{fig:method-clustering}: KITTI sequence 00 (4541 raw
+    frames $\to$ 690 keyframes), an HGE HoloLens session (1338 $\to$ 632), and an HGE iPad
+    session (1503 $\to$ 727). The raw stream is aligned into the keyframe trajectory's own
+    frame (Umeyama, via polygraph's own \texttt{align\_to\_gt}) before plotting, since the two
+    are not natively expressed in the same frame.}
+  \label{fig:method-odometry}
+\end{figure}
+
+\begin{figure}[htb]
+  \centering
+  \includegraphics[height=6cm]{images/03_method/02_odometry/odometry_kitti_00_zoom.jpg}
+  \caption{The keyframe trigger of \eqref{eq:method-keyframe-trigger}, zoomed into 14
+    consecutive raw frames of KITTI sequence 00: most raw frames fall below the
+    translation/rotation threshold and are skipped, until one crosses it and is accepted as
+    the next keyframe.}
+  \label{fig:method-odometry-zoom}
+\end{figure}
 
 \section{Online Clustering}
 \label{sec:method-clustering}
