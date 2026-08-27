@@ -280,17 +280,18 @@ run every time a cluster closes, for every session, for the entire lifetime of t
 
 A first thing worth being precise about: matching is done \emph{per other eligible session},
 never against one single pool merging every other session's keyframes together. Everything
-described below happens once, independently, for each other eligible session $\mathrm{sess}$,
-and the results from different sessions are never mixed together or ranked against each
-other. Concretely, for one such session $\mathrm{sess}$:
+described below happens once, independently, for each other eligible session $s' \in S$ (using
+the same session-index notation as \mysecref{sec:method-overview}), and the results from
+different sessions are never mixed together or ranked against each other. Concretely, for one
+such session $s'$:
 \begin{itemize}
   \item \textbf{Every keyframe queries that session's own keyframes.} Each member keyframe
     $k \in C$ already has its own global descriptor, computed back in
     \mysecref{sec:method-clustering} the moment it was added to a cluster. That descriptor is
     compared, by cosine similarity, against the descriptors of every keyframe belonging to
-    $\mathrm{sess}$ specifically, and only $\mathrm{sess}$.
+    $s'$ specifically, and only $s'$.
   \item \textbf{Each keyframe votes, within that session.} Keyframe $k$ does not just look at
-    its single best match in $\mathrm{sess}$: it takes its $k_{\mathrm{top}}$ nearest
+    its single best match in $s'$: it takes its $k_{\mathrm{top}}$ nearest
     neighbours \emph{within that one session}, looks up which cluster each of those
     neighbours belongs to, and casts one vote for each of those parent clusters. A vote only
     counts if the underlying similarity clears a minimum per-vote floor, so an implausibly
@@ -300,30 +301,30 @@ other. Concretely, for one such session $\mathrm{sess}$:
     total: with several other eligible sessions, the total number of votes a single keyframe
     casts is $k_{\mathrm{top}}$ multiplied by however many other sessions are eligible.
   \item \textbf{A session-level participation floor comes first.} Before any individual
-    candidate cluster in $\mathrm{sess}$ is even scored, the pipeline checks how many of
-    $C$'s own keyframes managed to cast a surviving vote somewhere in $\mathrm{sess}$ at all.
-    If too few did, $\mathrm{sess}$ is dropped from candidacy entirely for this cluster, and
+    candidate cluster in $s'$ is even scored, the pipeline checks how many of
+    $C$'s own keyframes managed to cast a surviving vote somewhere in $s'$ at all.
+    If too few did, $s'$ is dropped from candidacy entirely for this cluster, and
     none of its clusters are considered further, no matter how high any individual one's
     score would have been.
   \item \textbf{Votes are pooled and turned into a vote share.} Among the votes that were
-    cast within $\mathrm{sess}$, they are tallied up separately per candidate cluster $C'$,
+    cast within $s'$, they are tallied up separately per candidate cluster $C'$,
     and each candidate is scored by \eqref{eq:method-survival-rate} below: not how many raw
-    votes it collected, but what fraction of \emph{all} the votes cast within $\mathrm{sess}$
+    votes it collected, but what fraction of \emph{all} the votes cast within $s'$
     it collected.
   \item \textbf{The adjacency guard removes trivial self-matches.} $C$'s own last two
     same-session clusters are excluded from candidacy outright, before any scoring happens,
-    and only when $\mathrm{sess}$ is $C$'s own session.
+    and only when $s'$ is $C$'s own session.
   \item \textbf{Only the best few candidates per session survive.} Of whatever is left,
     subject to a minimum score floor, only the $k_{\mathrm{clusters}}$ highest-scoring
-    candidate clusters in $\mathrm{sess}$ are kept.
+    candidate clusters in $s'$ are kept.
 \end{itemize}
 
-The score itself, for a candidate cluster $C'$ inside one session $\mathrm{sess}$, is its
+The score itself, for a candidate cluster $C'$ inside one session $s'$, is its
 share of that session's own vote pool:
 \begin{equation}
   \label{eq:method-survival-rate}
-  \mathrm{share}(C, C') \;=\; \frac{\text{votes cast for } C' \text{ within } \mathrm{sess}}
-  {\text{total votes cast within } \mathrm{sess}},
+  \mathrm{share}(C, C') \;=\; \frac{\text{votes cast for } C' \text{ within } s'}
+  {\text{total votes cast within } s'},
 \end{equation}
 not, importantly, a fraction of $C$'s own keyframe count. A session where $C$'s keyframes cast
 many votes overall, spread thinly across many different candidate clusters, makes it harder
