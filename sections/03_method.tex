@@ -63,12 +63,19 @@ T^{\mathrm{raw}}_{s,k_j}$ for session $s$'s $j$-th keyframe pose. Everything dow
 \mysecref{sec:method-odometry} operates purely at keyframe granularity.
 
 Define a graph $G = (V, E)$ with one vertex per keyframe across every session,
-$V = \{ (s,j) : s \in S,\ j = 1,\dots,|K_s| \}$, and edges $E = E_{\mathrm{intra}} \cup
-E_{\mathrm{cross}}$ of two kinds:
+$V = \{ (s,j) : s \in S,\ j = 1,\dots,|K_s| \}$, and edges $E = E_{\mathrm{odom}} \cup
+E_{\mathrm{intra}} \cup E_{\mathrm{cross}}$ of three kinds:
 \begin{itemize}
-  \item \textbf{Intra-session edges} $E_{\mathrm{intra}}$: one per consecutive keyframe pair
+  \item \textbf{Odometry edges} $E_{\mathrm{odom}}$: one per consecutive keyframe pair
     $(s,j),(s,j{+}1)$ within a session, with measurement $z_{(s,j),(s,j+1)} = T_{s,j}^{-1}
-    T_{s,j+1}$ taken directly from the (trusted, drift-affected) raw odometry.
+    T_{s,j+1}$ taken directly from the (trusted, drift-affected) raw odometry; never removed
+    by outlier rejection.
+  \item \textbf{Intra-session edges} $E_{\mathrm{intra}}$: loop-closure edges between two
+    \emph{non-consecutive} keyframes of the \emph{same} session, confirmed by the same
+    retrieval-and-verification pipeline as cross-session edges
+    (\mysecref{sec:method-cluster-matching}, \mysecref{sec:method-pose-estimation}) but
+    admitted directly, without the gate, since that session's position is already anchored
+    by $E_{\mathrm{odom}}$ (\mysecref{sec:method-gate}).
   \item \textbf{Cross-session edges} $E_{\mathrm{cross}}$: between keyframes of two
     \emph{different} sessions, added only once a candidate match survives verification
     (\mysecref{sec:method-pose-estimation}) and is admitted by the gate
@@ -88,8 +95,9 @@ every component, by solving
 \end{equation}
 where $r(X_u,X_v,z) = \mathrm{Log}\!\big(z^{-1} X_u^{-1} X_v\big) \in \mathbb{R}^6$ is the
 $\SE{3}$ residual under the standard Lie-algebra logarithm map, $\Sigma_{uv}$ is the edge's
-noise covariance, $\rho_{uv}$ a robust loss (identity for intra-session edges; a Cauchy
-$M$-estimator or, in the final archival pass, a GNC-TLS weight for cross-session edges; see
+noise covariance, $\rho_{uv}$ a robust loss (identity for odometry edges, trusted and never
+pruned; a Cauchy $M$-estimator for confirmed loop-closure edges, both intra- and
+cross-session, or, in the final archival pass, a GNC-TLS weight; see
 \mysecref{sec:method-graph}), and $V_0 \subseteq V$ is the set of per-component gauge-fixing
 anchor vertices, one per session, each with prior pose $p_v$.
 
@@ -354,9 +362,9 @@ is.
 
 An edge whose two clusters both belong to the same session commits directly to the graph,
 no check required: that session's own position is already fully determined by its own
-sequential odometry chain (\mysecref{sec:method-overview}'s $E_{\mathrm{intra}}$), so a
-same-session loop closure is simply extra corroborating evidence, not new placement
-information.
+sequential odometry chain (\mysecref{sec:method-overview}'s $E_{\mathrm{odom}}$), so a
+same-session loop closure ($E_{\mathrm{intra}}$) is simply extra corroborating evidence, not
+new placement information.
 
 \subsection{Anchor/Query Assignment}
 
@@ -427,8 +435,9 @@ conceptually dense, least visual section, worth the most joint sketching time.}
 \section{Pose Graph Optimization}
 \label{sec:method-graph}
 
-Every admitted edge (intra-session, and cross-session once past the gate) becomes a
-factor in \eqref{eq:method-pgo-objective}. When a session starts, it becomes its own connected
+Every admitted edge (the sequential odometry chain, same-session loop closures, and
+cross-session loop closures once past the gate) becomes a factor in
+\eqref{eq:method-pgo-objective}. When a session starts, it becomes its own connected
 component with its own gauge-fixing prior vertex in $V_0$; the first cross-session edge that
 survives the gate merges its two components (rebasing the smaller component's frame into the
 surviving one).
