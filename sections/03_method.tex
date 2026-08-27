@@ -23,13 +23,23 @@
 % align_to_gt's fit_gt_to_est_transform to bring raw into the keyframe frame, then
 % ground_plane_axes for consistent orientation) is straightforward to redo.
 %
-% A second flag: a few equations below FORMALIZE a prose description from
-% polygraph/docs/method.md into notation (survival-rate score in 3.4, the scale-consistency
-% filter in 3.5, MST edge weights in 3.5) rather than being read directly off the exact source
-% formula in code -- I only had verified exact code for the *thresholds/values*, not every
-% underlying formula's precise form. Worth a direct check against
-% src/retrieval/cluster_index.py and src/pose_estimation/edge_estimator.py before this is
-% final, flagged again inline where it matters.
+% A second flag: a couple of equations below still FORMALIZE a prose description from
+% polygraph/docs/method.md into notation (the scale-consistency filter in 3.5, MST edge
+% weights in 3.5) rather than being read directly off the exact source formula in code -- same
+% caveat as before, worth a direct check against src/pose_estimation/edge_estimator.py.
+%
+% 3.4's own formula WAS wrong until this pass (2026-08-27): checked directly against
+% src/retrieval/cluster_index.py's real code (_match_against) plus configs/kitti/
+% kitti_orb_full.yaml's real production values. Two real corrections made: (1) top_k is
+% applied PER OTHER ELIGIBLE SESSION, not once globally -- one keyframe casts up to
+% top_k * (number of eligible sessions) votes total, not top_k; (2) the score is each
+% candidate's SHARE of that session's own vote pool (votes for C' / total votes cast in that
+% session), not "fraction of C's own keyframe count" as the old equation said -- that older
+% formula and the real per-session participation floor (min_survival_votes=1 in production,
+% far more permissive than the 0.5-fraction code default) had gotten conflated into one
+% "survival rate" concept that doesn't actually exist as a single quantity in the code. Also
+% added the two active similarity floors (kf_min_score=0.28, min_score=0.25) that production
+% actually uses and the old text never mentioned at all.
 %
 % The clustering figure (3.3) now uses three real clusters.jpg outputs (KITTI/HGE-HoloLens/
 % HGE-iOS) straight from polygraph's own src/visualization/clusters.py -- real data, not a
@@ -268,73 +278,98 @@ a short list of candidates worth actually verifying. It is allowed to be wrong s
 is exactly what \mysecref{sec:method-pose-estimation} is for), but it has to be cheap enough to
 run every time a cluster closes, for every session, for the whole lifetime of the pipeline.
 
-Concretely, once a cluster $C$ closes, it goes through the following steps:
+A first thing worth being precise about: matching is done \emph{per other eligible session},
+never against one single pool merging every other session's keyframes together. Everything
+described below happens once, independently, for each other eligible session $\mathrm{sess}$,
+and the results from different sessions are never mixed together or ranked against each
+other. Concretely, for one such session $\mathrm{sess}$:
 \begin{itemize}
-  \item \textbf{Every keyframe queries the retrieval index.} Each member keyframe $k \in C$
-    already has its own global descriptor, computed back in
+  \item \textbf{Every keyframe queries that session's own keyframes.} Each member keyframe
+    $k \in C$ already has its own global descriptor, computed back in
     \mysecref{sec:method-clustering} the moment it was added to a cluster. That descriptor is
     compared, by cosine similarity, against the descriptors of every keyframe belonging to
-    every other eligible session.
-  \item \textbf{Each keyframe votes.} Keyframe $k$ does not just look at its single best
-    match: it takes its $k_{\mathrm{top}}$ nearest neighbours overall, looks up which cluster
-    each of those neighbours belongs to, and casts one vote for each of those parent clusters.
-    A single keyframe can therefore vote for several different candidate clusters at once, or
-    vote more than once for the same cluster if several of its nearest neighbours happen to
-    fall inside it.
-  \item \textbf{Votes are pooled per candidate cluster.} Once every member keyframe of $C$ has
-    voted, the votes are tallied up separately for each candidate cluster $C'$ that received
-    at least one vote.
-  \item \textbf{Pooled votes are turned into a survival rate.} Raw vote counts are not
-    comparable across candidates of different sizes, so they are normalized instead
-    (\eqref{eq:method-survival-rate} below): what matters is not how many individual votes a
-    candidate collected, but what fraction of $C$'s own keyframes agreed on it at all.
+    $\mathrm{sess}$ specifically, and only $\mathrm{sess}$.
+  \item \textbf{Each keyframe votes, within that session.} Keyframe $k$ does not just look at
+    its single best match in $\mathrm{sess}$: it takes its $k_{\mathrm{top}}$ nearest
+    neighbours \emph{within that one session}, looks up which cluster each of those
+    neighbours belongs to, and casts one vote for each of those parent clusters. A vote only
+    counts if the underlying similarity clears a minimum per-vote floor, so an implausibly
+    weak match cannot buy a cluster a vote just by being the least-bad option available.
+    Because this repeats independently for every other eligible session, one keyframe can
+    cast up to $k_{\mathrm{top}}$ votes \emph{per session}, not $k_{\mathrm{top}}$ votes in
+    total: with several other eligible sessions, the total number of votes a single keyframe
+    casts is $k_{\mathrm{top}}$ multiplied by however many other sessions are eligible.
+  \item \textbf{A session-level participation floor comes first.} Before any individual
+    candidate cluster in $\mathrm{sess}$ is even scored, the pipeline checks how many of
+    $C$'s own keyframes managed to cast a surviving vote somewhere in $\mathrm{sess}$ at all.
+    If too few did, $\mathrm{sess}$ is dropped from candidacy entirely for this cluster, and
+    none of its clusters are considered further, no matter how high any individual one's
+    score would have been.
+  \item \textbf{Votes are pooled and turned into a vote share.} Among the votes that were
+    cast within $\mathrm{sess}$, they are tallied up separately per candidate cluster $C'$,
+    and each candidate is scored by \eqref{eq:method-survival-rate} below: not how many raw
+    votes it collected, but what fraction of \emph{all} the votes cast within $\mathrm{sess}$
+    it collected.
   \item \textbf{The adjacency guard removes trivial self-matches.} $C$'s own last two
-    same-session clusters are excluded from candidacy outright, before survival rate is even
-    considered.
-  \item \textbf{Only the best few candidates per session survive.} Subject to the survival
-    floor, only the $k_{\mathrm{clusters}}$ highest-scoring candidate clusters per other
-    session are kept.
+    same-session clusters are excluded from candidacy outright, before any scoring happens,
+    and only when $\mathrm{sess}$ is $C$'s own session.
+  \item \textbf{Only the best few candidates per session survive.} Of whatever is left,
+    subject to a minimum score floor, only the $k_{\mathrm{clusters}}$ highest-scoring
+    candidate clusters in $\mathrm{sess}$ are kept.
 \end{itemize}
 
-The survival rate itself is defined as
+The score itself, for a candidate cluster $C'$ inside one session $\mathrm{sess}$, is its
+share of that session's own vote pool:
 \begin{equation}
   \label{eq:method-survival-rate}
-  \sigma(C, C') \;=\; \frac{\#\{\, k \in C : C' \text{ received a vote from } k \,\}}{|C|},
+  \mathrm{share}(C, C') \;=\; \frac{\text{votes cast for } C' \text{ within } \mathrm{sess}}
+  {\text{total votes cast within } \mathrm{sess}},
 \end{equation}
-the fraction of $C$'s own keyframes that voted for $C'$ at all, regardless of how many times
-each of them voted for it. This is a deliberately conservative way to score a candidate.
-Imagine a cluster with ten keyframes: if only one of them happens to have a noisy,
-coincidentally-similar-looking neighbour in some unrelated candidate cluster, that candidate
-might still pick up a handful of raw votes just from that one keyframe's several nearest
-neighbours all landing in the same place. Survival rate would score that candidate low, at
-$0.1$, since only one out of ten keyframes actually agreed it was relevant. A genuine revisit,
-by contrast, tends to have many of $C$'s keyframes independently pointing at the same
-candidate, since a real repeated visit to the same place looks similar from many nearby
-viewpoints, not just one. A candidate only survives if it clears a minimum floor on this
-fraction, so an isolated coincidence is not enough on its own to keep a candidate alive; it
-still has to be corroborated by a reasonable share of $C$'s own keyframes.
+not, importantly, a fraction of $C$'s own keyframe count. A session where $C$'s keyframes cast
+many votes overall, spread thinly across many different candidate clusters, makes it harder
+for any single candidate to earn a large share; a session where most of the votes converge on
+one candidate makes that candidate's share close to $1$. This rewards agreement relative to
+whatever else was on offer in that session, rather than rewarding a candidate just for
+existing in a session with few plausible alternatives.
+
+The participation floor and the vote-share score answer two different questions, and it is
+worth keeping them separate. The participation floor asks: did enough of $C$'s own keyframes
+find anything worth voting for in this session at all? It exists to protect against a mostly
+irrelevant session sneaking a single candidate through on the strength of one noisy,
+coincidentally-similar keyframe pair, when the rest of $C$ found nothing there. The production
+value used throughout this thesis is deliberately permissive: a session only needs a single
+one of $C$'s keyframes to have voted for something to stay in play, not a majority of them.
+The vote-share score, by contrast, only ever asks the second question, once the first has
+already been answered: given that this session is worth considering at all, which of its
+candidate clusters agree with $C$ the most, relative to each other?
 
 The adjacency guard exists because of how clustering itself works
 (\mysecref{sec:method-clustering}): consecutive clusters in the same session deliberately
 share their last few keyframes, so that clusters chain together with no coverage gap between
 them. Without the guard, a cluster's own immediately preceding or following cluster would
-trivially win every single time, since they overlap in actual keyframes and would score a
-survival rate at or near $1.0$ by construction, not because the session ever revisited
-anything. That is not a real cluster match, it is just the clustering scheme's own stitching
-showing through, so those two neighbouring clusters are removed from candidacy before scoring
-even begins.
+trivially win every single time it is $C$'s own session under consideration, since they
+overlap in actual keyframes and would collect an outsized share of the vote pool by
+construction, not because the session ever revisited anything. That is not a real cluster
+match, it is just the clustering scheme's own stitching showing through, so those two
+neighbouring clusters are removed from candidacy before scoring even begins.
 
 The production values used throughout this thesis are $k_{\mathrm{top}} = 5$ and
-$k_{\mathrm{clusters}} = 2$: every keyframe votes for its five nearest neighbours' clusters,
-and at most two surviving candidates per other session are carried forward. The output of this
-whole stage is a short list of candidate cluster pairs $(C, C')$, one list per newly closed
-cluster. It is important to be clear about what that list is, and what it is not: it is a list
-of pairs worth checking, not a list of confirmed matches. Retrieval descriptors are trained to
+$k_{\mathrm{clusters}} = 2$: every keyframe votes for its five nearest neighbours' clusters
+within each other eligible session, and at most two surviving candidates per session are
+carried forward. Two additional similarity floors are active in production alongside the
+participation floor and the top-$k_{\mathrm{clusters}}$ cut: one on the similarity of an
+individual vote before it counts at all, and one on a candidate's final vote-share score
+before it is allowed to survive, both there to keep weak, borderline matches from ever
+reaching \mysecref{sec:method-pose-estimation} in the first place. The output of this whole
+stage is a short list of candidate cluster pairs $(C, C')$, one list per newly closed cluster,
+pooled across however many other sessions had at least one surviving candidate. It is
+important to be clear about what that list is, and what it is not: it is a list of pairs
+worth checking, not a list of confirmed matches. Retrieval descriptors are trained to
 recognize that two images look similar, not to prove that they were taken at the same physical
 place; generic-looking scenes, repeated architectural elements, or two genuinely different
-locations that simply resemble each other can all produce a high survival rate without any
-real revisit behind them. Every candidate this stage proposes still has to earn its way into
-the pose graph through actual geometric verification, which is exactly what
+locations that simply resemble each other can all produce a high vote share without any real
+revisit behind them. Every candidate this stage proposes still has to earn its way into the
+pose graph through actual geometric verification, which is exactly what
 \mysecref{sec:method-pose-estimation} does next.
 
 \begin{figure}[htb]
