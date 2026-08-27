@@ -21,10 +21,20 @@
 % underlying formula's precise form. Worth a direct check against
 % src/retrieval/cluster_index.py and src/pose_estimation/edge_estimator.py before this is
 % final, flagged again inline where it matters.
+%
+% Also fixed this pass: the clustering and overview figures previously had an editorial note
+% (mine) leaked directly into their rendered \caption{} text ("Placeholder caption -- confirm
+% this figure actually shows...", "Figure reused from the polygraph project report; consider a
+% thesis-formatted redraw..."). Moved both notes here instead -- (a) confirm the clustering
+% figure (images/03_method/03_clustering/clustering_explainer.png) actually shows the
+% overlap-keyframe chaining between consecutive clusters, add a small second panel if not; (b)
+% the overview figure (images/03_method/01_overview/pipeline_overview.png) is reused as-is from
+% the polygraph project report -- consider a thesis-formatted redraw of its labels/fonts before
+% submission.
 \newcommand{\missingfig}[1]{%
   \begin{center}
   \fbox{\parbox{0.85\textwidth}{\centering\vspace{0.3cm}
-  \textbf{[FIGURE NEEDED --- sketch together]}\\[4pt]
+  \textbf{[FIGURE NEEDED: sketch together]}\\[4pt]
   \small #1
   \vspace{0.3cm}}}
   \end{center}
@@ -46,7 +56,7 @@ Let $S = \{1, \dots, N\}$ index the $N$ sessions to be fused. Each session $s \i
 tracked independently by a single-session visual(-inertial) odometry backbone
 (\mychapterref{chap:relatedwork} discusses several), producing a stream of raw per-frame poses
 $T^{\mathrm{raw}}_{s,i} \in \SE{3}$, $i = 1, \dots, F_s$, expressed purely in session $s$'s own
-local frame $\mathcal{F}_s$ --- drifting over time, and with no inherent relationship to any
+local frame $\mathcal{F}_s$, drifting over time, and with no inherent relationship to any
 other session's frame. \mysecref{sec:method-odometry} selects a keyframe subsequence
 $K_s = (k_1 < k_2 < \dots < k_{|K_s|}) \subseteq \{1,\dots,F_s\}$; write $T_{s,j} :=
 T^{\mathrm{raw}}_{s,k_j}$ for session $s$'s $j$-th keyframe pose. Everything downstream of
@@ -79,7 +89,7 @@ every component, by solving
 where $r(X_u,X_v,z) = \mathrm{Log}\!\big(z^{-1} X_u^{-1} X_v\big) \in \mathbb{R}^6$ is the
 $\SE{3}$ residual under the standard Lie-algebra logarithm map, $\Sigma_{uv}$ is the edge's
 noise covariance, $\rho_{uv}$ a robust loss (identity for intra-session edges; a Cauchy
-$M$-estimator or, in the final archival pass, a GNC-TLS weight for cross-session edges --- see
+$M$-estimator or, in the final archival pass, a GNC-TLS weight for cross-session edges; see
 \mysecref{sec:method-graph}), and $V_0 \subseteq V$ is the set of per-component gauge-fixing
 anchor vertices, one per session, each with prior pose $p_v$.
 
@@ -87,7 +97,7 @@ Two properties of \eqref{eq:method-pgo-objective} are what distinguish Polygraph
 offline formulation of the same problem (\mysecref{sec:relatedwork-2go}): first, $V$ and $E$
 grow monotonically \emph{online}, one keyframe and one confirmed edge at a time, with no
 assumption that $S$ or any session's full trajectory is known in advance; second, $V_0$ is
-never fixed up front --- every session receives its own gauge-fixing prior the moment it
+never fixed up front: every session receives its own gauge-fixing prior the moment it
 starts (as its own, momentarily disconnected, single-vertex component), and components merge,
 but never split, only when a cross-session edge survives verification and the gate.
 
@@ -98,7 +108,7 @@ actually happens to one keyframe and one cluster as they move through Polygraph,
 
 A session's raw odometry stream is thinned to keyframes as it arrives
 (\mysecref{sec:method-odometry}). Each new keyframe is appended to that session's own
-currently-open \emph{cluster} --- a short, spatially bounded run of keyframes
+currently-open \emph{cluster}, a short, spatially bounded run of keyframes
 (\mysecref{sec:method-clustering}). Clusters, not individual keyframes, are the unit
 everything downstream reasons about: a cluster only becomes visible to the rest of the
 pipeline once it \emph{closes}, at which point every one of its member keyframes has already
@@ -106,15 +116,15 @@ been assigned a global image descriptor.
 
 The moment a cluster closes, it is matched against every other session's already-closed
 clusters through image retrieval (\mysecref{sec:method-cluster-matching}): its keyframes vote
-for their nearest neighbours elsewhere, and a short list of candidate cluster pairs falls out
---- unverified hypotheses, not yet trusted. Each candidate pair is then checked geometrically
+for their nearest neighbours elsewhere, and a short list of candidate cluster pairs falls out,
+unverified hypotheses, not yet trusted. Each candidate pair is then checked geometrically
 (\mysecref{sec:method-pose-estimation}): a handful of keyframe pairs from the two clusters are
 matched, triangulated, lifted to metric scale with a monocular depth prior, and cross-checked
-against each other; a pair that survives this becomes one \emph{confirmed edge} --- a single
+against each other; a pair that survives this becomes one \emph{confirmed edge}, a single
 metric relative pose between two keyframes, one in each cluster.
 
 A confirmed edge is not yet allowed into the shared pose graph unconditionally. If both
-clusters belong to the same session, it commits immediately --- that session's own position
+clusters belong to the same session, it commits immediately: that session's own position
 is already fully known from its own sequential odometry, so this is just corroborating
 evidence. If the two clusters belong to different sessions, the edge instead passes through
 the two-tier consensus gate (\mysecref{sec:method-gate}), which decides, based on how much
@@ -122,12 +132,12 @@ prior cross-session evidence that session already has, whether this single piece
 is enough to trust on its own or needs to be corroborated by another before it is allowed to
 merge two sessions' components together.
 
-Every edge that is ultimately admitted --- intra- or cross-session --- becomes a factor in the
+Every edge that is ultimately admitted (intra- or cross-session) becomes a factor in the
 pose graph of \eqref{eq:method-pgo-objective}, kept current by a cheap incremental solve after
 every closed cluster and periodically refined by a more expensive batch solve that also prunes
 edges that turn out to be outliers (\mysecref{sec:method-graph}). The result, once every
 session has been processed, is one pose graph spanning every session shown, with corroborated
-evidence, to revisit another --- each session's own trajectory corrected wherever it overlaps
+evidence, to revisit another, each session's own trajectory corrected wherever it overlaps
 with the rest.
 
 \begin{figure}[htb]
@@ -140,15 +150,14 @@ with the rest.
     reduced by translation-consensus voting into one confirmed edge. Pose graph optimization
     adds every confirmed edge as a loop closure: a cheap incremental Fast update runs
     continuously, and a periodic Full update re-solves the whole graph and prunes outlier
-    edges. \textit{Figure reused from the polygraph project report; consider a
-    thesis-formatted redraw of labels/fonts before submission.}}
+    edges.}
   \label{fig:method-overview}
 \end{figure}
 
 Unless stated otherwise, every numeric threshold quoted in this chapter is the production
 configuration used to generate this thesis's KITTI multi-session results
 (\texttt{configs/kitti/kitti\_orb\_full.yaml}), not necessarily the pipeline's own built-in
-code defaults, which are in several places more conservative --- every threshold remains
+code defaults, which are in several places more conservative; every threshold remains
 freely configurable per dataset.
 
 \section{Device Odometry and Keyframing}
@@ -156,7 +165,7 @@ freely configurable per dataset.
 
 Polygraph does not track cameras itself: its input is the raw per-frame pose stream
 $T^{\mathrm{raw}}_{s,i} \in \SE{3}$ produced by an off-the-shelf single-session
-visual(-inertial) odometry backbone --- ORB-SLAM3 \cite{campos2021orbslam3}, VINS-Fusion
+visual(-inertial) odometry backbone: ORB-SLAM3 \cite{campos2021orbslam3}, VINS-Fusion
 \cite{qin2019vinsfusionlocal,qin2019vinsfusionglobal}, or a device's own onboard visual-inertial
 odometry (a HoloLens or a Boston Dynamics Spot robot, for the indoor deployments in
 \mychapterref{chap:experiments}). This stream is locally accurate but drifts over time, and is
@@ -186,7 +195,7 @@ skipped candidate frame to make the trigger condition concrete.}
 \label{sec:method-clustering}
 
 Each session's own \texttt{ClusterBuilder} groups its keyframe stream into spatially bounded
-\emph{clusters}, entirely online and using only that session's own travel distance --- no
+\emph{clusters}, entirely online and using only that session's own travel distance; no
 global trajectory or cross-session information is needed at this stage. A cluster
 $C = (k_{j_1}, \dots, k_{j_2})$ starts at keyframe $k_{j_1}$ and closes at the first later
 keyframe $k_{j_2}$ satisfying both
@@ -214,9 +223,7 @@ closed clusters, each with its member keyframes and their descriptors.
   \includegraphics[width=0.85\textwidth]{images/03_method/03_clustering/clustering_explainer.png}
   \caption{Online clustering: keyframes accumulate into a cluster until the closing condition
     of \eqref{eq:method-cluster-close} is met; the cluster's last $n_{\mathrm{ov}}$ keyframes
-    seed the next one. \textit{Placeholder caption --- confirm this figure actually shows the
-    overlap-keyframe chaining between consecutive clusters once we look at it together; if
-    not, that may be worth a small addition.}}
+    seed the next one.}
   \label{fig:method-clustering}
 \end{figure}
 
@@ -235,11 +242,11 @@ normalized into a \emph{survival rate}
 \end{equation}
 the fraction of $C$'s own keyframes that voted for $C'$ at all; a candidate must clear a
 minimum survival-rate floor to be considered further. $C$'s own last two same-session clusters
-are excluded from candidacy by construction (an adjacency guard) --- they share keyframes with
+are excluded from candidacy by construction (an adjacency guard): they share keyframes with
 $C$ by construction, not because of a genuine revisit. Subject to the survival floor, the
 $k_{\mathrm{clusters}}$ highest-scoring candidates per other session survive. Production values
 are $k_{\mathrm{top}} = 5$, $k_{\mathrm{clusters}} = 2$. The output of this stage is a short
-list of candidate cluster pairs $(C, C')$ --- unverified hypotheses, not confirmed matches.
+list of candidate cluster pairs $(C, C')$: unverified hypotheses, not confirmed matches.
 
 \begin{figure}[htb]
   \centering
@@ -271,8 +278,8 @@ of collapsing onto one dominant viewpoint. Production value: $k_{\mathrm{pairs}}
 Each selected pair $(k, k')$ goes through the same six-step verification:
 \begin{enumerate}
   \item \textbf{Sparse matching}: XFeat feature extraction \cite{potje2024xfeat} followed by
-    LighterGlue matching --- a lighter, faster retraining of LightGlue
-    \cite{lindenberger2023lightglue} distributed as part of the XFeat project --- giving a
+    LighterGlue matching, a lighter, faster retraining of LightGlue
+    \cite{lindenberger2023lightglue} distributed as part of the XFeat project, giving a
     correspondence set $M$.
   \item \textbf{Essential-matrix RANSAC} (via poselib) on $M$, giving a scale-free relative
     rotation $\hat{R}$ and translation direction $\hat{t}$ (unit norm) plus an inlier subset
@@ -310,7 +317,7 @@ $k_{\mathrm{pairs}}$ attempted) are combined by a translation-consensus vote rat
 trusted individually. Two estimates \emph{agree} if their implied translations differ by less
 than $\tau_{\mathrm{vote}} = 1.5$m; the largest mutually agreeing subset (a maximum clique in
 the pairwise-agreement graph) is averaged into one confirmed edge measurement $\hat{z}$ via a
-chordal $\SE{3}$ mean --- translations averaged arithmetically, rotations averaged by
+chordal $\SE{3}$ mean: translations averaged arithmetically, rotations averaged by
 projecting their arithmetic mean onto $\SO{3}$ (via SVD). A candidate pair of clusters only
 becomes a confirmed edge once at least $n_{\mathrm{vote}} = 2$ independent per-pair estimates
 agree; one uncorroborated estimate is never enough, and the candidate is otherwise dropped.
@@ -355,26 +362,26 @@ information.
 
 For a confirmed cross-session edge between session $s$ and session $s'$, let $n(s)$ denote the
 number of currently live (unpruned) cross-session edges already incident on $s$. The session
-with more live cross-session edges plays \emph{anchor} --- its current pose estimate is treated
-as the trusted reference for this check --- and the other plays \emph{query}, the side being
+with more live cross-session edges plays \emph{anchor} (its current pose estimate is treated
+as the trusted reference for this check), and the other plays \emph{query}, the side being
 tested; ties (including neither session having any live edges yet) are broken arbitrarily but
 deterministically. Whether the query session already has at least one live cross-session edge
 decides which of the two tiers below the candidate is routed through.
 
-\subsection{Tier 1 --- Corroboration Pool}
+\subsection{Tier 1: Corroboration Pool}
 
 If the query session is still fully disconnected ($n(\text{query}) = 0$), there is no live
 estimate yet worth checking a single candidate against. Instead, candidates targeting that
 session are pooled, and checked only against each other: once a subset of at least
-$m_{\mathrm{corrob}} = 2$ pooled candidates mutually agree --- their implied world poses within
-$\tau_{\mathrm{pool}} = 2.0$m / $10.0°$ of one another --- \emph{and} are independent (their
+$m_{\mathrm{corrob}} = 2$ pooled candidates mutually agree (their implied world poses within
+$\tau_{\mathrm{pool}} = 2.0$m / $10.0°$ of one another) \emph{and} are independent (their
 source clusters on the anchor side at least $g_{\min} = 3$ clusters apart, so two candidates
 are not simply the same retrieval mistake repeated), they commit together as a group and
 jointly establish that session's first anchor, arriving at $\ge 2$ live cross-session edges at
 once, never at exactly one. A candidate that never finds enough agreeing peers is dropped once
 it has sat in the pool longer than $t_{\max} = 1$ day.
 
-\subsection{Tier 2 --- Pending Queue}
+\subsection{Tier 2: Pending Queue}
 
 If the query session already has at least one live cross-session edge, the candidate is
 checked immediately against the query's current live pose estimate, rather than queued first.
@@ -383,7 +390,7 @@ The consistency threshold depends on how much existing evidence that session alr
   \label{eq:method-consistency-table}
   \big(\tau_{\mathrm{trans}}(n), \tau_{\mathrm{rot}}(n)\big) \;=\;
   \begin{cases}
-    (\infty, \infty) & n = 0 \quad\text{(bootstrap row --- unreachable in Tier 2 by
+    (\infty, \infty) & n = 0 \quad\text{(bootstrap row, unreachable in Tier 2 by
       construction)} \\
     (10.0\text{m}, 20.0°) & n \ge 1,
   \end{cases}
@@ -392,21 +399,21 @@ where $n = n(\text{query})$. If the pose the candidate implies is consistent wit
 current estimate under \eqref{eq:method-consistency-table}, it commits immediately and never
 touches the queue. If it fails, it is placed in the pending queue and re-checked against the
 graph's estimate at every later full update (\mysecref{sec:method-graph}) until it either
-passes, accumulates $r_{\max} = 3$ rejections, or ages out past $t_{\max}$ --- whichever comes
-first --- at which point it is dropped for good.
+passes, accumulates $r_{\max} = 3$ rejections, or ages out past $t_{\max}$ (whichever comes
+first), at which point it is dropped for good.
 
 \subsection{Worked Example}
 
 Consider three cross-session candidates between sessions A and B, arriving in order. Both
 sessions start with $n(\cdot) = 0$, so edge 1 (A$\leftrightarrow$B) ties for anchor, A wins
-arbitrarily, B is query with $n(\mathrm{B})=0$ --- Tier 1. Its corroboration pool for B now has
+arbitrarily, B is query with $n(\mathrm{B})=0$: Tier 1. Its corroboration pool for B now has
 one entry, below $m_{\mathrm{corrob}}=2$; nothing commits yet. Edge 2 (a different A cluster
 $\leftrightarrow$ B cluster) routes the same way, and the pool for B now has two entries: if
 they agree and are independent, both commit together right now, and B jumps straight to $2$
 live cross-session edges. If they disagree, both stay pooled, waiting for a future third
-candidate to pair with one of them --- if none ever arrives, both simply age out and B is never
+candidate to pair with one of them; if none ever arrives, both simply age out and B is never
 anchored via this pair. Assuming edges 1 and 2 did corroborate, a third A$\leftrightarrow$B
-candidate (edge 3) now finds $n(\mathrm{B}) \ge 1$ --- Tier 2 --- and is checked immediately
+candidate (edge 3) now finds $n(\mathrm{B}) \ge 1$ (Tier 2) and is checked immediately
 against B's live estimate under the $10.0$m/$20.0°$ bound of
 \eqref{eq:method-consistency-table}: if consistent, it commits immediately (B now grows one
 edge at a time, never in pairs again); if not, it lands in the pending queue for a later
@@ -415,12 +422,12 @@ re-check.
 \missingfig{A state-diagram-style figure: disconnected query session $\to$ Corroboration Pool
 $\to$ joint commit; already-anchored query session $\to$ immediate consistency check $\to$
 commit or Pending Queue $\to$ commit/reject on re-check. This is the chapter's most
-conceptually dense, least visual section --- worth the most joint sketching time.}
+conceptually dense, least visual section, worth the most joint sketching time.}
 
 \section{Pose Graph Optimization}
 \label{sec:method-graph}
 
-Every admitted edge --- intra-session, and cross-session once past the gate --- becomes a
+Every admitted edge (intra-session, and cross-session once past the gate) becomes a
 factor in \eqref{eq:method-pgo-objective}. When a session starts, it becomes its own connected
 component with its own gauge-fixing prior vertex in $V_0$; the first cross-session edge that
 survives the gate merges its two components (rebasing the smaller component's frame into the
@@ -442,7 +449,7 @@ Two solves keep the graph current, at different costs and cadences:
       r_e \;>\; \kappa \cdot \mathrm{median}\big(\{ r_{e'} : e' \text{ same group as } e \}\big),
     \end{equation}
     with $\kappa = 3$ and \emph{group} meaning intra-session edges are judged against their own
-    median, cross-session edges against theirs --- so one session's tighter loop closures
+    median, cross-session edges against theirs, so one session's tighter loop closures
     cannot drag down the bar for everyone else's. This step also drains the pending queue
     (\mysecref{sec:method-gate}) against the freshly re-solved estimate.
 \end{itemize}
@@ -450,14 +457,14 @@ Two solves keep the graph current, at different costs and cadences:
 \subsection{End-of-Run Finalization}
 
 Once every frame across every session has been processed, one more full update runs
-unconditionally --- not gated by the cluster-count trigger like the periodic ones --- and
+unconditionally, not gated by the cluster-count trigger like the periodic ones, and
 drains the pending queue once more. Only then do two final passes run, once each, over the
 complete graph:
 \begin{enumerate}
   \item \textbf{Inter-cluster pair consensus}: every session pair's independent edges are
-    cross-checked against each other using each edge's \emph{pre-fusion local pose} --- the
+    cross-checked against each other using each edge's \emph{pre-fusion local pose} (the
     raw odometry-derived pose captured when the edge was created, never touched by any
-    optimization pass --- rather than the graph's current estimate. This is deliberate:
+    optimization pass) rather than the graph's current estimate. This is deliberate:
     \eqref{eq:method-outlier-prune} is structurally blind to a group of edges that are
     individually plausible \emph{and} mutually self-consistent, since least-squares optimization
     simply bends the graph to satisfy the majority, producing small residuals against the
@@ -468,8 +475,8 @@ complete graph:
     least-squares pass \cite{yang2020gnc} over the \emph{complete} graph, including edges
     already pruned by the full update, giving every loop-closure edge one last principled
     outlier weight and producing the pipeline's final pose estimate. It inherits the same
-    blind spot as \eqref{eq:method-outlier-prune} for the same reason --- it is still only
-    weighting by residual against the graph's own current solve --- which is exactly why the
+    blind spot as \eqref{eq:method-outlier-prune} for the same reason (it is still only
+    weighting by residual against the graph's own current solve), which is exactly why the
     inter-cluster pair consensus step above has to run first.
 \end{enumerate}
 The end-of-run order is therefore fixed: full update (removes obvious single-edge outliers)
@@ -498,7 +505,7 @@ consensus (catches hidden, mutually self-consistent outlier groups) $\to$ final 
   \centering
   \includegraphics[width=0.85\textwidth]{images/03_method/07_graph/slow_update_outliers.png}
   \caption{Residuals of every loop-closure edge at one full update, relative to
-    \eqref{eq:method-outlier-prune}'s per-group median threshold --- the same 32 kept / 21
+    \eqref{eq:method-outlier-prune}'s per-group median threshold: the same 32 kept / 21
     pruned split as \myfigref{fig:method-graph-edges}.}
   \label{fig:method-graph-outliers}
 \end{figure}

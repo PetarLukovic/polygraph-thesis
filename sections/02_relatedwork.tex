@@ -18,8 +18,8 @@ pose stream as Polygraph's input odometry (\mysecref{sec:method-odometry}) and d
 modify it; Polygraph's contribution begins where single-session tracking ends, at the
 problem of relating \emph{different} sessions' independently-tracked trajectories to one
 another. The incremental smoothing formulation these systems' backends use for pose-graph
-optimization --- most directly iSAM2 \cite{kaess2012isam2}, built on the factor-graph
-formulation underlying GTSAM --- is also what Polygraph's own online graph solve
+optimization (most directly iSAM2 \cite{kaess2012isam2}, built on the factor-graph
+formulation underlying GTSAM) is also what Polygraph's own online graph solve
 (\mysecref{sec:method-graph}) is built on.
 
 \section{Visual Place Recognition for Loop Closure}
@@ -35,14 +35,14 @@ appearance change. Polygraph uses one such descriptor (\mysecref{sec:method-clus
 cast votes between clusters of keyframes across sessions; unlike single-session loop closure,
 where the retrieval index only ever needs to answer queries against one session's own past,
 Polygraph's retrieval index spans every other session concurrently and must scale as new
-sessions --- not just new keyframes within a session --- are added online.
+sessions, not just new keyframes within a session, are added online.
 
 \section{Learned Two-View Matching and Metric Pose Recovery}
 
 A retrieval hit is only a hypothesis; Polygraph verifies each candidate keyframe pair
 geometrically before it is allowed to become a graph edge
 (\mysecref{sec:method-pose-estimation}). Sparse feature matching between the two images uses
-XFeat \cite{potje2024xfeat} for feature extraction and LighterGlue for matching --- a lighter,
+XFeat \cite{potje2024xfeat} for feature extraction and LighterGlue for matching, a lighter,
 faster retraining of LightGlue \cite{lindenberger2023lightglue} distributed as part of the
 XFeat project \cite{potje2024xfeat}; the overall recipe of sparse matching lifted to metric
 scale with a monocular depth prior matches 2GO's own default (``CL-Absolute'') variant
@@ -50,7 +50,7 @@ scale with a monocular depth prior matches 2GO's own default (``CL-Absolute'') v
 two-view matching alone only recovers relative pose up to an unknown scale, Polygraph lifts matched
 keypoints to metric 3D with a monocular metric depth estimator, Metric3D
 \cite{yin2023metric3d}, and checks that the resulting metric estimate agrees with the
-scale-free triangulated one before accepting a match --- avoiding the need for a second,
+scale-free triangulated one before accepting a match, avoiding the need for a second,
 overlapping camera or a dense stereo/LiDAR sensor purely to resolve scale. At the pose-graph
 level, once candidate edges are admitted, Polygraph's final robust solve uses Graduated
 Non-Convexity with a truncated least-squares cost (GNC-TLS) \cite{yang2020gnc} to down-weight
@@ -74,7 +74,7 @@ not with scene density.
 The closest prior work to this thesis is 2GO \cite{lim2025twogo}, which fuses multiple
 sessions' odometry into one pose graph using exactly the ingredients described above:
 retrieval-based candidate proposal, sparse matching with a monocular depth prior for metric
-scale, and a two-tier gate that only admits a cross-session edge once it is corroborated ---
+scale, and a two-tier gate that only admits a cross-session edge once it is corroborated:
 first against other pending candidates for a session with no prior anchor, then against the
 graph's live estimate once a session has one. Several components of Polygraph's own gating
 and consistency-checking logic (\mysecref{sec:method-gate}) directly mirror 2GO's, including
@@ -90,7 +90,7 @@ sessions can be processed one at a time, in any order, as they are collected
 \cite{brizi2024vbr}, and a self-recorded indoor session captured with a Boston Dynamics Spot
 robot; it does not cover the CroCoDL- and LaMAR-derived indoor deployments or the RTK-verified
 Oxford RobotCar sessions this thesis evaluates on (\mychapterref{chap:experiments}), none of
-which --- to the best of our knowledge --- any prior multi-session pose-graph fusion system
+which, to the best of our knowledge, any prior multi-session pose-graph fusion system
 has been evaluated against.
 \mysecref{sec:experiments-2go-comparison} reports a direct, hardware-matched comparison
 against 2GO's own published KITTI numbers, including an open gap in loop-closure recall that
@@ -103,8 +103,8 @@ in its multi-sequence form to construct multi-session fusion scenarios. Oxford R
 \cite{maddern2017robotcar}, with the later RTK-based ground truth release
 \cite{maddern2020rtk}, provides repeated traversals of the same route recorded months apart
 under different weather, season, and lighting; this thesis draws a paired easy/hard session
-split from it --- sharing all but one session between the two, with the hard split adding a
-night traversal --- specifically to test single- and multi-session performance under real
+split from it, sharing all but one session between the two, with the hard split adding a
+night traversal, specifically to test single- and multi-session performance under real
 day/night appearance change, an axis prior work on this dataset has approached from other
 angles, including radar-based SLAM \cite{radarslam2021}, direct sparse odometry with
 omnidirectional cameras \cite{matsuki2018omnidso}, and a systematic evaluation of visual
@@ -114,8 +114,8 @@ localization/mapping benchmarks rather than newly captured: HGE (both a HoloLens
 capture) from LaMAR \cite{sarlin2022lamar}, a benchmark for AR localization and mapping across
 long, unconstrained indoor/outdoor trajectories, and HYDRO (a Boston Dynamics Spot capture)
 from CroCoDL \cite{blum2025crocodl}, a cross-device dataset combining HoloLens and legged-robot
-recordings --- neither previously used to evaluate multi-session pose-graph fusion. Both are
-introduced together with the rest of the
+recordings; neither has previously been used to evaluate multi-session pose-graph fusion. Both
+are introduced together with the rest of the
 experimental setup in \mychapterref{chap:experiments}; EuRoC \cite{burri2016euroc} is also
 part of the broader experimental campaign (\mysecref{sec:experiments-euroc}) but is not
 treated as a headline dataset in this chapter, since its evaluation is still evolving.
