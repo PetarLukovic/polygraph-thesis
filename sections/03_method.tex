@@ -23,10 +23,12 @@
 % align_to_gt's fit_gt_to_est_transform to bring raw into the keyframe frame, then
 % ground_plane_axes for consistent orientation) is straightforward to redo.
 %
-% A second flag: a couple of equations below still FORMALIZE a prose description from
-% polygraph/docs/method.md into notation (the scale-consistency filter in 3.5, MST edge
-% weights in 3.5) rather than being read directly off the exact source formula in code -- same
-% caveat as before, worth a direct check against src/pose_estimation/edge_estimator.py.
+% Pose Estimation (3.5) has now been checked directly, twice, against
+% src/pose_estimation/pose_estimator.py, edge_estimator.py, and mst_selector.py -- no equation
+% in it is a docs/method.md paraphrase anymore. See the in-section REVIEW NOTE right after the
+% Per-Pair Verification list for what the second pass found and fixed (the RANSAC-stage symbol
+% mislabeling, the two-separate-depth-lifts conflation, and the "maximum clique" mischaracterization
+% of the translation-consensus vote, which is really a mode-seeking vote around a single anchor).
 %
 % 3.4's own formula WAS wrong until this pass (2026-08-27): checked directly against
 % src/retrieval/cluster_index.py's real code (_match_against) plus configs/kitti/
@@ -484,16 +486,26 @@ Each selected pair $(k, k')$ goes through the same six-step verification:
     correspondence set $M$.
   \item \textbf{Essential-matrix RANSAC} (via poselib) on $M$, giving a scale-free relative
     rotation $\hat{R}$ and translation direction $\hat{t}$ (unit norm) plus an inlier subset
-    $M_{\mathrm{in}} \subseteq M$.
+    $M_{\mathrm{in}} \subseteq M$. The pair is already rejected outright here, before
+    triangulation or depth are computed for it at all, if fewer than $n_{\mathrm{sf}}$ matches
+    survive as inliers or this RANSAC's own model score exceeds $\epsilon_{\mathrm{sf}}$.
   \item \textbf{Triangulation} (DLT) of $M_{\mathrm{in}}$ under $(\hat{R}, \hat{t})$, giving
-    scale-free 3D points $\{X_i^{\mathrm{tri}}\}$, correct only up to one unknown global scale.
+    scale-free 3D points $\{X_i^{\mathrm{tri}}\}$ in $k$'s own camera frame, correct only up to
+    one unknown global scale.
   \item \textbf{Monocular metric depth lift}: Metric3D v2 \cite{hu2024metric3dv2} predicts a
-    metric depth map for both images; back-projecting each matched keypoint through its own
-    image's depth map and camera intrinsics gives metric 3D points $\{X_i^{\mathrm{depth}}\}$.
+    metric depth map for $k$ and $k'$ independently; back-projecting each matched keypoint
+    through its own image's depth map and camera intrinsics gives two separate metric 3D point
+    sets, not one: $\{X_i^{\mathrm{depth}}\}$ from $k$'s own depth map, in $k$'s camera frame
+    (the same frame the triangulated points already live in), and $\{X_i^{\prime\mathrm{depth}}\}$
+    from $k'$'s own depth map, in $k'$'s camera frame. A point whose predicted depth falls
+    outside a plausible metric range is already discarded at this step.
   \item \textbf{Scale-consistency filter}: this check looks at each correspondence entirely on
-    its own, not against any other correspondence. For correspondence $i$, a per-point scale
-    factor $\hat{s}_i$ is estimated as the mean, over the three coordinate axes, of the
-    depth-lifted point's coordinates divided by the triangulated point's coordinates,
+    its own, not against any other correspondence, and only ever compares quantities already
+    expressed in $k$'s own camera frame: the triangulated point $X_i^{\mathrm{tri}}$ against
+    $k$'s own depth-lifted point $X_i^{\mathrm{depth}}$, never against $k'$'s. For
+    correspondence $i$, a per-point scale factor $\hat{s}_i$ is estimated as the mean, over the
+    three coordinate axes, of the depth-lifted point's coordinates divided by the triangulated
+    point's coordinates,
     $\hat{s}_i = \mathrm{mean}\big(X_i^{\mathrm{depth}} \oslash X_i^{\mathrm{tri}}\big)$ (with
     $\oslash$ elementwise division); scaling the triangulated point by $\hat{s}_i$ and
     comparing it directly against the depth-lifted point gives a residual
@@ -508,59 +520,116 @@ Each selected pair $(k, k')$ goes through the same six-step verification:
     comparing back leaves a large residual. This is what the filter actually catches: internal
     inconsistency within one correspondence, not disagreement between different
     correspondences.
-  \item \textbf{PnP} (via poselib) of the surviving depth-lifted (metric) 3D points against
-    their 2D correspondences in the other image, giving a metric relative pose
-    $\hat{T}_{k,k'} \in \SE{3}$.
+  \item \textbf{PnP} (via poselib): the correspondences that survive step 5 hand their $k'$-side
+    depth-lifted metric points $X_i^{\prime\mathrm{depth}}$, not the $k$-side points the
+    scale-consistency filter just validated, to a PnP solve against their 2D pixel location in
+    $k$. This directly yields $\hat{T}_{k,k'} \in \SE{3}$, $k$ expressed relative to $k'$, with
+    no extra inversion needed: the 3D points already live in $k'$'s frame and the 2D
+    observations are $k$'s own pixels.
 \end{enumerate}
-A pair is rejected outright unless it clears $\ge n_{\mathrm{valid}} = 150$ scale-consistent
-points, $\ge \rho_{\mathrm{inlier}} = 0.80$ RANSAC inlier ratio, and $\le
-\epsilon_{\mathrm{ransac}} = 0.05$ RANSAC score.
+Two separate accept/reject gates apply along this chain, not just one at the end. Step 2's
+essential-matrix RANSAC already discards a pair outright, well before triangulation or depth are
+computed for it, if fewer than $n_{\mathrm{sf}} = 10$ matches survive as its own inliers or its
+own model score exceeds $\epsilon_{\mathrm{sf}} = 0.5$. A pair that survives this far is still
+rejected outright unless it also clears three further conditions: at least $n_{\mathrm{valid}} =
+150$ correspondences survive triangulation, depth-validity, and the scale-consistency filter
+combined; the final, absolute-pose (PnP) RANSAC's own inlier ratio reaches at least
+$\rho_{\mathrm{abs}} = 0.80$; and that same RANSAC's model score stays at most
+$\epsilon_{\mathrm{abs}} = 0.05$.
 
-% REVIEW NOTE (not rendered, 2026-08-27): both flagged-as-unverified formulas in this section
-% are now resolved. (1) The scale-consistency filter (step 5) WAS wrong -- checked directly
-% against src/pose_estimation/pose_estimator.py's real _scale_consistent (~line 322): it's a
-% per-point-only check (elementwise-mean scale ratio, then a fixed 0.2m residual floor
-% tau_scale, scale_consistency_th_m in code), not a cross-point consensus/outlier-rejection
-% step the way the old text implied. Rewritten above to match. (2) The MST edge-weight formula
-% (start of this section, "Keyframe-Pair Selection") was already accurate -- confirmed against
-% the real src/pose_estimation/mst_selector.py: a full bipartite cosine-similarity graph,
-% networkx maximum_spanning_tree, top_k_pairs highest-similarity MST edges kept. No change
-% needed there. Also fixed a real symbol collision this same pass: tau_vote meant two different
-% things in 3.4 (per-vote similarity floor, 0.28) and 3.5 (translation-consensus agreement
-% threshold, 1.5m) -- the 3.5 one is now tau_agree.
+% REVIEW NOTE (not rendered, 2026-08-27, second pass): read pose_estimator.py and
+% edge_estimator.py directly again end to end for this pass, beyond the earlier scale-
+% consistency/tau_agree fixes. Three more real inaccuracies found and fixed: (1) the final
+% rejection paragraph's rho_inlier/epsilon_ransac were unlabeled generic "RANSAC" thresholds --
+% they are specifically the ABSOLUTE-POSE (PnP, step 6) RANSAC's own gate (code:
+% abs_min_inlier_ratio/abs_max_ransac_score); the essential-matrix RANSAC of step 2 has its own,
+% entirely separate and previously unmentioned gate (code: sf_min_num_matches=10,
+% sf_max_ransac_score=0.5, dataclass defaults, never overridden in any of the three main-
+% experiment configs) -- renamed the PnP-stage symbols rho_abs/epsilon_abs and added
+% n_sf/epsilon_sf for the essential-matrix stage, mirroring the code's own sf_/abs_ naming.
+% (2) Step 4/5/6 conflated "the" depth-lifted points into one set -- the code computes TWO
+% independent depth lifts (one per image, lifted0 from k's own depth, lifted1 from k''s own
+% depth); the scale-consistency filter (step 5) only ever checks lifted0 against the
+% triangulated points (both in k's frame), while the final PnP (step 6) uses lifted1 (k''s own
+% depth, in k''s frame) as its object points -- these are two different quantities, not the
+% same X_i^depth reused twice. Rewritten above to keep them distinct.
+% (3) Translation-Consensus Voting below described the consensus set as "the largest mutually
+% agreeing subset (a maximum clique in the pairwise-agreement graph)" -- checked directly
+% against edge_estimator.py's _aggregate(): it is NOT a clique search. It picks the single
+% estimate with the most agreeing neighbors as an anchor, then takes every estimate that agrees
+% with THAT anchor -- a mode-seeking vote (closer to RANSAC's own inlier counting) that never
+% checks whether two non-anchor members of the consensus set agree with each other. Rewritten
+% to describe this accurately.
+% Also: the production values in the table/prose below (k_pairs=10, n_vote=2, rho_abs=0.80,
+% epsilon_abs=0.05) are this thesis's KITTI configuration specifically, matching the scoping
+% convention already used by the odometry (3.2) and clustering (3.3) tables -- HGE and HYDRO
+% retune four of these six thresholds per dataset (see final_configs/*_main_experiment/*.yaml):
+% HGE uses top_k_pairs=5, min_kf_pairs=3, abs_min_inlier_ratio=0.55, abs_max_ransac_score=0.6;
+% HYDRO matches KITTI's top_k_pairs=10/min_kf_pairs=2 but shares HGE's looser RANSAC gate
+% (0.55/0.6). multi_edge_consensus=true, by contrast, genuinely is constant across all three.
 
 \subsection{Translation-Consensus Voting}
 
 The surviving per-pair estimates $\{\hat{T}_1, \dots, \hat{T}_m\}$ (of the up to
 $k_{\mathrm{pairs}}$ attempted) are combined by a translation-consensus vote rather than
 trusted individually. Two estimates \emph{agree} if their implied translations differ by less
-than $\tau_{\mathrm{agree}} = 1.5$m; the largest mutually agreeing subset (a maximum clique in
-the pairwise-agreement graph) is averaged into one confirmed edge measurement $\hat{z}$ via a
-chordal $\SE{3}$ mean: translations averaged arithmetically, rotations averaged by
-projecting their arithmetic mean onto $\SO{3}$ (via SVD). A candidate pair of clusters only
-becomes a confirmed edge once at least $n_{\mathrm{vote}} = 2$ independent per-pair estimates
-agree; one uncorroborated estimate is never enough, and the candidate is otherwise dropped.
-When multi-edge consensus is enabled (the production setting used throughout this thesis),
-every individual agreeing estimate is \emph{also} added as its own extra graph edge alongside
-the averaged one, giving the optimizer more redundant evidence per confirmed match.
+than $\tau_{\mathrm{agree}} = 1.5$m. Every estimate is scored by how many other estimates it
+agrees with; the estimate with the most agreeing neighbors becomes the anchor of the consensus
+set, which also includes every other estimate that agrees with \emph{that anchor}. This is a
+mode-seeking vote in the style of RANSAC's own inlier counting, not a requirement that every
+pair of estimates within the consensus set mutually agree with each other, two non-anchor
+members can end up in the same consensus set without agreeing with one another, as long as both
+agree with the anchor. The consensus set is then averaged into one confirmed edge measurement
+$\hat{z}$ via a chordal $\SE{3}$ mean: translations averaged arithmetically, rotations averaged
+by projecting their arithmetic mean onto $\SO{3}$ (via SVD). A candidate pair of clusters only
+becomes a confirmed edge once the consensus set holds at least $n_{\mathrm{vote}} = 2$
+estimates; a single, uncorroborated estimate is never enough, and the candidate is otherwise
+dropped. When multi-edge consensus is enabled (the production setting used throughout this
+thesis), every individual estimate in the consensus set is \emph{also} added as its own extra
+graph edge alongside the averaged one, giving the optimizer more redundant evidence per
+confirmed match.
 
-\begin{figure}[htb]
+\begin{table}[htb]
   \centering
-  \includegraphics[width=0.85\textwidth]{images/03_method/05_pose_estimation/pose_estimation_explainer.png}
-  \caption[Per-pair verification pipeline]{Per-pair verification: matched keyframe pairs between two candidate clusters go
-    through sparse matching, RANSAC, triangulation, metric depth lift, and PnP.}
-  \label{fig:method-pose-estimation}
-\end{figure}
+  \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}} lllp{6.3cm}}
+  \hline
+  \textbf{Symbol} & \textbf{Name} & \textbf{Value} & \textbf{Role} \\
+  \hline
+  $k_{\mathrm{pairs}}$ & keyframe pairs per candidate & $10$ &
+    how many MST-selected keyframe pairs are actually verified per candidate cluster pair \\
+  $n_{\mathrm{sf}}$ & minimum essential-matrix inliers & $10$ &
+    a pair is rejected outright at step 2 if fewer essential-matrix RANSAC inliers survive \\
+  $\epsilon_{\mathrm{sf}}$ & maximum essential-matrix RANSAC score & $0.5$ &
+    a pair is rejected outright at step 2 if this RANSAC's own model score exceeds this \\
+  $n_{\mathrm{valid}}$ & minimum surviving correspondences & $150$ &
+    a pair is rejected outright if fewer correspondences survive triangulation,
+    depth-validity, and the scale-consistency filter combined \\
+  $\rho_{\mathrm{abs}}$ & minimum absolute-pose (PnP) inlier ratio & $0.80$ &
+    a pair is rejected outright if the final PnP RANSAC's inlier ratio falls below this \\
+  $\epsilon_{\mathrm{abs}}$ & maximum absolute-pose (PnP) RANSAC score & $0.05$ &
+    a pair is rejected outright if the final PnP RANSAC's model score exceeds this \\
+  $\tau_{\mathrm{scale}}$ & scale-consistency floor & $0.2$m &
+    a correspondence is discarded if its own scaled-triangulated-vs-depth-lifted residual
+    exceeds this \\
+  $\tau_{\mathrm{agree}}$ & translation-consensus agreement & $1.5$m &
+    two per-pair estimates are considered to agree if their implied translations differ by
+    less than this \\
+  $n_{\mathrm{vote}}$ & minimum consensus-set size & $2$ &
+    a candidate pair only becomes a confirmed edge once the consensus set holds at least this
+    many estimates \\
+  \hline
+  \end{tabular*}
+  \caption[Pose-estimation thresholds]{Every threshold used in joint pose estimation, and the
+    production values used to generate this thesis's KITTI results; HGE and HYDRO retune the
+    RANSAC and consensus thresholds, see the review note above.}
+  \label{tab:method-pose-estimation-thresholds}
+\end{table}
 
-\begin{figure}[htb]
-  \centering
-  \includegraphics[width=0.85\textwidth]{images/03_method/05_pose_estimation/pose_consensus_plot.png}
-  \caption[Translation-consensus voting]{Translation-consensus voting on one real KITTI candidate pair: each of the five
-    MST-selected keyframe pairs is either a failed estimate or a translation distance along the
-    corridor; the real \texttt{\_aggregate()} vote separates agreeing (kept) from
-    disagreeing (outlier) estimates, and the dashed line marks the final chordal-mean edge.}
-  \label{fig:method-pose-consensus}
-\end{figure}
+% REVIEW NOTE (not rendered): both figures pulled out of this section deliberately -- the
+% schematic (pose_estimation_explainer.png) is retired for good (not real data), the real
+% translation-consensus plot (pose_consensus_plot.png) is left on disk under
+% images/03_method/05_pose_estimation/ in case it's worth reusing, just not wired in right now.
+% Section currently has no figures at all, pending the visualization discussion.
 
 \section{The Two-Tier Consensus Gate}
 \label{sec:method-gate}
