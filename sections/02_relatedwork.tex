@@ -46,7 +46,12 @@ XFeat \cite{potje2024xfeat} for feature extraction and LighterGlue for matching,
 faster retraining of LightGlue \cite{lindenberger2023lightglue} distributed as part of the
 XFeat project \cite{potje2024xfeat}; the overall recipe of sparse matching lifted to metric
 scale with a monocular depth prior matches 2GO's own default (``CL-Absolute'') variant
-\cite{lim2025twogo}. Because
+\cite{lim2025twogo}. Classical and widely used alternatives to this matching step include
+SuperPoint \cite{detone2018superpoint} paired with SuperGlue \cite{sarlin2020superglue}, and,
+at the other extreme, dense two-view reconstruction methods such as MASt3R
+\cite{leroy2024mast3r} that recover a metric point map directly rather than only sparse
+correspondences; Polygraph favors XFeat and LighterGlue for their speed, consistent with the
+lightweight, map-less design goal set out in \mychapterref{chap:intro}. Because
 two-view matching alone only recovers relative pose up to an unknown scale, Polygraph lifts matched
 keypoints to metric 3D with a monocular metric depth estimator, Metric3D
 \cite{yin2023metric3d}, and checks that the resulting metric estimate agrees with the
@@ -61,7 +66,8 @@ or reject edges that remain outliers even after the gating described in
 
 Fusing more than one session's map is a long-standing problem beyond single-session SLAM.
 Systems that maintain dense or semi-dense multi-map representations, such as ORB-SLAM3's
-Atlas \cite{campos2021orbslam3}, merge sessions by matching and aligning their dense maps
+Atlas \cite{campos2021orbslam3} or the open, multi-session visual-inertial mapping framework
+maplab \cite{schneider2018maplab}, merge sessions by matching and aligning their maps
 directly, which gives strong geometric evidence for a match but ties the cost of fusion to
 the cost of maintaining dense geometry across every session. Polygraph instead follows the
 sparse, pose-graph-only line of work described next, trading some of that direct geometric
