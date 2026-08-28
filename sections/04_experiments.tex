@@ -222,15 +222,15 @@ cross-session anchoring accuracy rather than raw ATE, which barely moves.
 \section{Main Experiments}
 \label{sec:experiments-main}
 
-Every dataset below is run in two modes: \emph{single-session}, where each session is refined
-using only its own intra-session loop closures, and \emph{multi-session}, which additionally
+Every dataset below is run in two modes: single-session, where each session is refined
+using only its own intra-session loop closures, and multi-session, which additionally
 allows cross-session edges between different sessions once they pass the two-tier gate
 (\mysecref{sec:method-gate}). Accuracy is reported as ATE (m) against ground truth, Umeyama-aligned
 per session (\mysecref{sec:method-graph}'s own convention, no scale correction, since every
-odometry backbone used here is already metric). Where a dataset is multi-session-GT-eligible
-(\mytabref{tab:experiments-datasets-overview}), a second, \emph{ref-anchored} error is also
+odometry backbone used here is already metric). Where a dataset is multi-session GT eligible
+(\mytabref{tab:experiments-datasets-overview}), a second, ref-anchored error is also
 reported per non-reference session, isolating how accurately a session was placed relative to the
-rest of its connected component, from ATE's own within-session drift. Published baselines are
+rest of its connected component, from ATE's own within session drift. Published baselines are
 included wherever a directly-comparable number exists in prior work.
 
 \subsection{KITTI}
@@ -277,7 +277,7 @@ that actually revisits the same place.
 ORB-SLAM3 is non-deterministic, so \mytabref{tab:experiments-kitti-orb}'s ``Single (ours)''/
 ``Multi (ours)'' columns are themselves a mean over 5 independently regenerated odometry runs.
 \mytabref{tab:experiments-kitti-orb-runs} shows every one of those 5 runs individually, for full
-transparency about the run-to-run spread the mean is hiding.
+transparency about the run to run spread the mean is hiding.
 
 \begin{table}[htb]
   \centering
@@ -318,7 +318,7 @@ transparency about the run-to-run spread the mean is hiding.
   \caption[KITTI ORB-SLAM3, all 5 individual regenerated-odometry runs]{Every one of the 5
     independently regenerated ORB-SLAM3 odometry runs behind \mytabref{tab:experiments-kitti-orb}'s
     ``Single (ours)''/``Multi (ours)'' columns, single-session mode above, multi-session mode
-    below. Mean/Min/Max computed across the 5 runs per row; Total/Mean rows are the same
+    below. Mean/Min/Max computed across the 5 runs per row. Total/Mean rows are the same
     L2-norm/arithmetic-mean convention as \mytabref{tab:experiments-kitti-orb}, computed once per
     run then summarized the same way across runs.}
   \label{tab:experiments-kitti-orb-runs}
