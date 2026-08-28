@@ -68,3 +68,30 @@ per-sequence trajectory visualizations and other detailed breakdowns.
     (\mytabref{tab:experiments-hydro-ate}).}
   \label{fig:appendix-hydro-traj}
 \end{figure}
+
+\section{HYDRO Ref-Anchoring Visualization}
+\label{sec:appendix-hydro-anchor}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=\textwidth]{images/07_appendix/hydro_anchor_individual.png}
+  \caption[HYDRO ref-anchored estimate vs.\ GT, per session]{HYDRO's 4 non-reference sessions,
+    each panel showing that session's ref-anchored estimate (blue) against its own GT (green,
+    faded), over the real site-scan floor plan. Same methodology as
+    \texttt{pipelines/compute\_ref\_anchored.py} (\mytabref{tab:experiments-hydro-ate}'s
+    ref-anchored columns): the reference session (\texttt{11-24\_11-13}) is Umeyama-fit to its
+    own GT once, and that same fixed transform, not an independent per-session fit, is applied to
+    every other session's estimate before comparing it to its own GT.}
+  \label{fig:appendix-hydro-anchor-individual}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=\textwidth]{images/07_appendix/hydro_anchor_combined.png}
+  \caption[HYDRO ref-anchored estimates, all sessions combined]{All 5 HYDRO sessions in one
+    shared frame: dashed lines are each session's own GT, solid lines its ref-anchored estimate,
+    same color per session, same real floor-plan backdrop as \myfigref{fig:appendix-hydro-anchor-individual}.
+    Visualizes the same 0.15--0.18\,m ref-anchored translation error that
+    \mytabref{tab:experiments-hydro-ate} reports numerically.}
+  \label{fig:appendix-hydro-anchor-combined}
+\end{figure}
