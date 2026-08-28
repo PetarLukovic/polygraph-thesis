@@ -91,9 +91,6 @@ between them, just not one that KITTI's own GT can validate). Seven sequences (0
 all and are the ones evaluated in \mysecref{sec:experiments-main-kitti}; the remaining four are
 single, non-revisiting drives.
 
-\subsection{HGE}
-\label{sec:experiments-hge}
-
 \begin{figure}[htb]
   \centering
   \includegraphics[height=5.7cm]{images/04_experiments/01_datasets/dataset_hge_hololens.png}
@@ -106,6 +103,9 @@ single, non-revisiting drives.
     HoloLens sessions and with each other.}
   \label{fig:experiments-hge-gt}
 \end{figure}
+
+\subsection{HGE}
+\label{sec:experiments-hge}
 
 HGE is one physical site (part of the LaMAR benchmark \cite{sarlin2022lamar}, an ETH Zurich
 building interior/exterior spanning several floors and an outdoor courtyard) captured twice, by
@@ -121,6 +121,9 @@ optics that cross-device matching needed its own fix in \mysecref{sec:method-pos
 sparse matcher (downsampling the higher-resolution side before matching); \mysecref{sec:experiments-main-hge}
 reports both a device-isolated and a mixed HoloLens+iPad multi-session run for this reason.
 
+\subsection{HYDRO}
+\label{sec:experiments-hydro}
+
 \begin{figure}[htb]
   \centering
   \includegraphics[width=0.85\textwidth]{images/04_experiments/01_datasets/dataset_hydro.png}
@@ -130,9 +133,6 @@ reports both a device-isolated and a mixed HoloLens+iPad multi-session run for t
     (\mysecref{sec:experiments-main-hydro}).}
   \label{fig:experiments-hydro-gt}
 \end{figure}
-
-\subsection{HYDRO}
-\label{sec:experiments-hydro}
 
 HYDRO is 5 indoor sessions from CroCoDL \cite{blum2025crocodl}, captured by a Boston Dynamics
 Spot quadruped walking the same building complex on different days (two sessions from
