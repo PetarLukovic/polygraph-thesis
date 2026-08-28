@@ -19,7 +19,7 @@
 % shared/non-shared GT frames) -- see each subsection for the specific source.
 
 This chapter first introduces the six datasets this thesis evaluates on
-(\mysecref{sec:experiments-datasets}): what each one actually looks like, which agent captured
+(\mysecref{sec:experiments-datasets}), covering what each one actually looks like, which agent captured
 it, and whether it can be used to test cross-session fusion at all. \mysecref{sec:experiments-main}
 then reports Polygraph's own accuracy on each dataset, single-session and multi-session, against
 published baselines where they exist. Finally, \mysecref{sec:experiments-ablation} isolates the
@@ -40,7 +40,7 @@ A dataset is only useful for testing \emph{cross-session} fusion, as opposed to 
 refinement alone, if it gives a way to check whether two sessions were really placed in the
 correct relative position, that is, if it has ground truth expressed in one shared coordinate
 frame across sessions, not just an internally-consistent ground truth per session. \mytabref{tab:experiments-datasets-overview}
-marks this per dataset; \mysecref{sec:method-gate}'s two-tier gate and every ATE number in
+marks this per dataset. \mysecref{sec:method-gate}'s two-tier gate and every ATE number in
 \mysecref{sec:experiments-main} that references anchoring accuracy specifically depend on it.
 
 \begin{table}[htb]
@@ -61,7 +61,7 @@ marks this per dataset; \mysecref{sec:method-gate}'s two-tier gate and every ATE
   \hline
   \end{tabular*}
   \caption[Dataset overview]{Used/available cameras, agent, environment, session counts, and
-    multi-session-GT eligibility per dataset. EuRoC's ``Partial'': shared GT frame within each
+    multi-session-GT eligibility per dataset. EuRoC's ``Partial'' means a shared GT frame within each
     of its three rooms, not across rooms (\mysecref{sec:experiments-euroc}).}
   \label{tab:experiments-datasets-overview}
 \end{table}
@@ -75,20 +75,20 @@ marks this per dataset; \mysecref{sec:method-gate}'s two-tier gate and every ATE
   \caption[KITTI ground-truth trajectories]{GT trajectories of the 7 loop-closure KITTI
     sequences, each in its own independent frame (own start pose = origin), since no shared
     frame exists across sequences. Orange dot: start pose. Note sequence 00's and 07's real,
-    if not GT-provable, spatial overlap: both are the same downtown loop.}
+    if not GT-provable, spatial overlap, both are the same downtown loop.}
   \label{fig:experiments-kitti-gt}
 \end{figure}
 
 KITTI \cite{geiger2012kitti} is 11 outdoor driving sequences (00 through 10) recorded from an
 instrumented car around Karlsruhe, using its left color camera (\texttt{image\_2}) for retrieval
 and pose estimation, stereo for odometry generation. Every sequence is its own independent drive
-with its own zeroed-out GT origin; nothing in KITTI's own ground truth places two sequences in a
+with its own zeroed-out GT origin. Nothing in KITTI's own ground truth places two sequences in a
 shared frame, so by the rule above KITTI is not multi-session-GT-eligible, even though two of its
 sequences, 00 and 07, do physically revisit the same intersection (a fact Polygraph's own
 retrieval and pose estimation can and does detect, forming a real cross-session loop closure
 between them, just not one that KITTI's own GT can validate). Seven sequences (00, 02, 05, 06,
 07, 08, 09) contain the loop-closure structure needed to test intra- and cross-session fusion at
-all and are the ones evaluated in \mysecref{sec:experiments-main-kitti}; the remaining four are
+all and are the ones evaluated in \mysecref{sec:experiments-main-kitti}. The remaining four are
 single, non-revisiting drives.
 
 \begin{figure}[htb]
@@ -116,9 +116,9 @@ single canonical name \texttt{phone} since ARKit assigns a new sensor id every s
 capture types share LaMAR's own site-registered GT frame, so both are multi-session-GT-eligible,
 and the same site scan (a subsampled laser/photogrammetry point cloud) can back both figures
 below to show real corridor and room layout behind the trajectories, not just bare lines.
-Particularity worth flagging up front: HoloLens and iPad footage differ enough in resolution and
+One particularity is worth flagging up front. HoloLens and iPad footage differ enough in resolution and
 optics that cross-device matching needed its own fix in \mysecref{sec:method-pose-estimation}'s
-sparse matcher (downsampling the higher-resolution side before matching); \mysecref{sec:experiments-main-hge}
+sparse matcher (downsampling the higher-resolution side before matching). \mysecref{sec:experiments-main-hge}
 reports both a device-isolated and a mixed HoloLens+iPad multi-session run for this reason.
 
 \subsection{HYDRO}
@@ -137,7 +137,7 @@ reports both a device-isolated and a mixed HoloLens+iPad multi-session run for t
 HYDRO is 5 indoor sessions from CroCoDL \cite{blum2025crocodl}, captured by a Boston Dynamics
 Spot quadruped walking the same building complex on different days (two sessions from
 2023-11-24, two from 2024-05-17, roughly six months apart). Spot carries 4 onboard cameras
-(front-left, front-right, and two wide-FOV side cameras roughly 178\textdegree{} apart); the
+(front-left, front-right, and two wide-FOV side cameras roughly 178\textdegree{} apart). The
 front-left camera (\texttt{frontleft}) is used for the main results, all four in
 \mysecref{sec:experiments-ablation-cameras}'s camera-pairing ablation. Like HGE, HYDRO's GT is
 registered to one shared site frame and the same real site-scan backdrop is available.
@@ -159,11 +159,11 @@ registered to one shared site frame and the same real site-scan backdrop is avai
 
 Oxford RobotCar \cite{maddern2017robotcar}, with the RTK-GPS ground truth release
 \cite{maddern2020rtk}, is repeated traversals of the same central-Oxford route by an instrumented
-car, recorded months apart under different weather, season, and lighting; the single centre
+car, recorded months apart under different weather, season, and lighting. The single centre
 stereo camera (\texttt{stereo\_centre}) is used for retrieval and pose estimation. RTK GPS gives
 every session a genuinely shared world frame, so RobotCar is multi-session-GT-eligible, and, since
 it is street-level outdoor driving, its GT overlays cleanly onto a real street map rather than a
-site scan: the figure below uses free OpenStreetMap tiles as backdrop instead of a laser scan
+site scan. The figure below uses free OpenStreetMap tiles as backdrop instead of a laser scan
 (RobotCar has no scan mesh in this codebase, unlike HGE/HYDRO). Two splits are drawn from four
 distinct sessions, sharing two sessions between them: an \emph{easy} split (3 daytime sessions)
 and a \emph{hard} split (2 daytime, 1 night session, with real heavy heading noise), specifically
@@ -184,7 +184,7 @@ to test single- and multi-session robustness under real day/night appearance cha
 \end{figure}
 
 VBR \cite{vbr}, the Vision Benchmark in Rome, is a larger multi-agent benchmark (it also includes
-handheld and multi-floor indoor captures); this thesis uses only its 8 outdoor, car-captured
+handheld and multi-floor indoor captures). This thesis uses only its 8 outdoor, car-captured
 training routes (\texttt{campus}, \texttt{ciampino} $\times 2$, \texttt{colosseo},
 \texttt{diag}, \texttt{pincio}, \texttt{spagna} $\times$ variants), the same subset 2GO's own
 paper evaluates on, using the left camera of its stereo pair (\texttt{camera\_left}). Unlike
@@ -227,7 +227,7 @@ using only its own intra-session loop closures, and \emph{multi-session}, which 
 allows cross-session edges between different sessions once they pass the two-tier gate
 (\mysecref{sec:method-gate}). Accuracy is reported as ATE (m) against ground truth, Umeyama-aligned
 per session (\mysecref{sec:method-graph}'s own convention, no scale correction, since every
-odometry backbone used here is already metric); where a dataset is multi-session-GT-eligible
+odometry backbone used here is already metric). Where a dataset is multi-session-GT-eligible
 (\mytabref{tab:experiments-datasets-overview}), a second, \emph{ref-anchored} error is also
 reported per non-reference session, isolating how accurately a session was placed relative to the
 rest of its connected component, from ATE's own within-session drift. Published baselines are
@@ -239,7 +239,7 @@ included wherever a directly-comparable number exists in prior work.
 Both regenerated odometry backbones (ORB-SLAM3, VINS-Fusion), each in single- and multi-session
 mode, across the 7 loop-closure sequences (\mysecref{sec:experiments-kitti}), against published
 ORB-SLAM3, Maplab-BIN, Maplab-SP, and 2GO baselines. Cross-session edges only ever form between
-00 and 07 (the only pair that revisits the same place); every other sequence's multi-session
+00 and 07 (the only pair that revisits the same place), so every other sequence's multi-session
 result is identical to its single-session one by construction. Since KITTI has no shared GT frame,
 this section can only show that multi-session mode improves ATE where a real overlap exists, not
 validate the cross-session alignment itself the way HGE/HYDRO/RobotCar can.
@@ -281,7 +281,7 @@ Both backbones (VINS-Fusion stereo and RobotCar's own published visual odometry)
 full pipeline, not just compared as raw odometry, across both splits. RobotCar's drift is far
 larger than the other datasets (tens of metres of single-session ATE even in daytime, worse at
 night), so several thresholds tuned on HGE/HYDRO/KITTI needed real, evidence-based widening
-specific to this dataset; that investigation, and a genuine backbone-dependent divergence on the
+specific to this dataset. That investigation, and a genuine backbone-dependent divergence on the
 hard split, is summarized here and detailed in the appendix.
 % TODO: Table 7 (easy split, VINS-Fusion vs. VO, ATE + ref-anchored error) and Table 8 (hard
 % split), plus the trajectory-comparison figure for both splits and backbones.
@@ -291,7 +291,7 @@ hard split, is summarized here and detailed in the appendix.
 \subsection{VBR}
 \label{sec:experiments-main-vbr}
 
-Single-session only (\mysecref{sec:experiments-vbr}: no two VBR sequences overlap), both
+Single-session only (\mysecref{sec:experiments-vbr}, no two VBR sequences overlap), both
 backbones, against 2GO's own published per-sequence numbers (its SLAM/PGO result, two Maplab
 variants, and 2GO itself). Includes the real per-dataset threshold retuning this dataset needed
 (VBR's sessions are an order of magnitude larger than KITTI's, and a blind default copied across
@@ -306,7 +306,7 @@ methodology note, not a result.
 \label{sec:experiments-main-euroc}
 
 Reframed around cross-session anchoring accuracy rather than raw ATE (\mysecref{sec:experiments-euroc}'s
-own caveat: EuRoC's odometry is already too tight for ATE to move much). Each room group is run
+own caveat, EuRoC's odometry is already too tight for ATE to move much). Each room group is run
 as its own isolated multi-session graph and compared against ORB-SLAM3's own native multi-session
 mode (Atlas, sequential map-merging via its own place recognition) on ref-anchored consistency
 and loop/merge-edge accuracy, with a COVINS-G number included wherever its own paper reports a
@@ -327,7 +327,7 @@ and where the pipeline's own wall-clock time actually goes.
 \label{sec:experiments-ablation-cameras}
 
 Production uses one camera per session (\mysecref{sec:experiments-datasets}'s ``Camera(s) used''
-column); this ablation adds a second (and, for HGE/HYDRO, up to all four) onboard camera to
+column). This ablation adds a second (and, for HGE/HYDRO, up to all four) onboard camera to
 retrieval and pose estimation instead, on HGE, HYDRO, and KITTI, to see whether more viewpoints
 per keyframe buys real accuracy or just more compute. Reports single-/multi-session ATE, intra-
 and cross-session edge counts, connected components, and (HGE/HYDRO only, since KITTI has no

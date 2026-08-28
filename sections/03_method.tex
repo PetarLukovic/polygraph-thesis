@@ -87,7 +87,7 @@ tracked independently by a single-session visual(inertial) odometry backbone
 $T^{\mathrm{raw}}_{s,i} \in \SE{3}$, $i = 1, \dots, F_s$, expressed purely in session $s$'s own
 local frame $\mathcal{F}_s$, drifting over time, and with no inherent relationship to any
 other session's frame. \mysecref{sec:method-odometry} selects a keyframe subsequence
-$K_s = (k_1 < k_2 < \dots < k_{|K_s|}) \subseteq \{1,\dots,F_s\}$; write $T_{s,j} :=
+$K_s = (k_1 < k_2 < \dots < k_{|K_s|}) \subseteq \{1,\dots,F_s\}$. Write $T_{s,j} :=
 T^{\mathrm{raw}}_{s,k_j}$ for the pose of the $j$-th keyframe of session $s$. Everything downstream of
 \mysecref{sec:method-odometry} operates purely at the granularity of the keyframe.
 
@@ -108,7 +108,7 @@ E_{\mathrm{intra}} \cup E_{\mathrm{cross}}$ of three kinds:
   \item \textbf{Cross-session edges} $E_{\mathrm{cross}}$: between keyframes of two
     \emph{different} sessions, added only once a candidate match survives verification
     (\mysecref{sec:method-pose-estimation}) and is admitted by the gate
-    (\mysecref{sec:method-gate}); measurement $\hat{z}_{(s,j),(s',j')} \in \SE{3}$ is the
+    (\mysecref{sec:method-gate}). Measurement $\hat{z}_{(s,j),(s',j')} \in \SE{3}$ is the
     estimated relative pose between the two keyframes.
 \end{itemize}
 The connected components of $G$ partition $V$ into groups of sessions confirmed, with
@@ -124,10 +124,10 @@ every component, by solving
 \end{equation}
 where $r(X_u,X_v,z) = \mathrm{Log}\!\big(z^{-1} X_u^{-1} X_v\big) \in \mathbb{R}^6$ is the
 $\SE{3}$ residual under the standard Lie-algebra logarithm map, $\Sigma_{uv}$ is the edge's
-noise covariance, $\rho_{uv}$ a robust loss (identity for odometry edges, trusted and never
-pruned; a Cauchy $M$-estimator for confirmed loop-closure edges, both intra- and
-cross-session, or, in the final archival pass, a GNC-TLS weight; see
-\mysecref{sec:method-graph}), and $V_0 \subseteq V$ is the set of per-component gauge-fixing
+noise covariance, and $\rho_{uv}$ a robust loss: identity for odometry edges (trusted and never
+pruned), a Cauchy $M$-estimator for confirmed loop-closure edges (both intra- and
+cross-session), or, in the final archival pass, a GNC-TLS weight (see
+\mysecref{sec:method-graph}). $V_0 \subseteq V$ is the set of per-component gauge-fixing
 anchor vertices, one per session, each with prior pose $p_v$.
 
 Two properties of \eqref{eq:method-pgo-objective} are what distinguishes Polygraph from an
@@ -144,7 +144,7 @@ but never split, only when a cross-session edge survives verification and the ga
     a retrieval index built from every other session's keyframes (Cluster Matching). A
     candidate pair then goes through joint pose estimation. Keyframe pairs are matched and
     reduced by translation-consensus voting into one confirmed edge. Pose graph optimization
-    adds every confirmed edge as a loop closure: a cheap incremental Fast update runs
+    adds every confirmed edge as a loop closure. A cheap incremental Fast update runs
     continuously, and a periodic Full update re-solves the whole graph and prunes outlier
     edges.}
   \label{fig:method-overview}
@@ -157,7 +157,7 @@ The raw odometry stream of a session is thinned to keyframes as it arrives
 (\mysecref{sec:method-odometry}). Each new keyframe is appended to that session's own
 currently-open \emph{cluster}, a short, spatially bounded run of keyframes
 (\mysecref{sec:method-clustering}). Clusters, not individual keyframes, are the unit
-everything downstream reasons about: a cluster only becomes visible to the rest of the
+everything downstream reasons about. A cluster only becomes visible to the rest of the
 pipeline once it \emph{closes}, at which point every one of its member keyframes has already
 been assigned a global image descriptor.
 
@@ -182,12 +182,12 @@ evidence, to revisit another, each session's own trajectory corrected wherever i
 with the rest.
 
 
-Unless stated otherwise, every numeric threshold quoted in this chapter is the production configuration used to generate this thesis's KITTI multi-session results, not necessarily the pipeline's own built-in code defaults, which are in several places more conservative; every threshold remains freely configurable per dataset. 
+Unless stated otherwise, every numeric threshold quoted in this chapter is the production configuration used to generate this thesis's KITTI multi-session results, not necessarily the pipeline's own built-in code defaults, which are in several places more conservative. Every threshold remains freely configurable per dataset.
 
 \section{Device Odometry and Keyframing} 
 \label{sec:method-odometry}
 
-Polygraph does not track cameras itself: its input is the raw per-frame pose stream
+Polygraph does not track cameras itself. Its input is the raw per-frame pose stream
 $T^{\mathrm{raw}}_{s,i} \in \SE{3}$ produced by an off-the-shelf single-session
 visual(-inertial) odometry backbone: ORB-SLAM3 \cite{campos2021orbslam3}, VINS-Fusion
 \cite{qin2019vinsfusionlocal,qin2019vinsfusionglobal}, or a device's own onboard visual-inertial
@@ -249,7 +249,7 @@ poses.
   \centering
   \includegraphics[width=0.55\textwidth]{images/03_method/02_odometry/odometry_kitti_00_zoom.jpg}
   \caption[Keyframe trigger, zoomed]{The keyframe trigger of \eqref{eq:method-keyframe-trigger}, zoomed into 10
-    consecutive raw frames of KITTI sequence 00: most raw frames fall below the
+    consecutive raw frames of KITTI sequence 00. Most raw frames fall below the
     translation/rotation threshold and are skipped, until one crosses it and is accepted as
     the next keyframe.}
   \label{fig:method-odometry-zoom}
@@ -332,7 +332,13 @@ a short list of candidates worth actually verifying. Sometimes, it is allowed to
 is exactly what \mysecref{sec:method-pose-estimation} is for), but it has to be cheap enough to
 run every time a cluster closes, for every session, for the entire lifetime of the pipeline.
 
-Before going into the mechanics, the most important thing to understand about this stage is this: a newly closed cluster $C$ is matched against \emph{every} other eligible session, not just one. A candidate group in session $s'$ is never compared or ranked against a group of candidates in a different session $s''$. In the following explanation, we will use the following convention: $s$ will be used for the session and $C$ for the clusters. Where, $s$ is usually the session in which the current cluster is closed and $s'$ is the session to which we are currently matching and correspondingly for clusters.
+Before going into the mechanics, the most important thing to understand about this stage is
+that a newly closed cluster $C$ is matched against \emph{every} other eligible session, not
+just one. A candidate group in session $s'$ is never compared or ranked against a group of
+candidates in a different session $s''$. The notation below keeps this fixed throughout, $s$
+denotes a session and $C$ one of its clusters, with $s$ usually the session the current cluster
+just closed in and $s'$ the other session it is being matched against, and correspondingly for
+their clusters.
 
 \subsection{Step by Step, Within One Session}
 
@@ -342,10 +348,10 @@ For one other eligible session $s'$, in order:
     $k \in C$ already has its own global descriptor, computed back in
     \mysecref{sec:method-clustering} the moment it was added to a cluster. That descriptor is
     compared, by cosine similarity, against the descriptors of every keyframe belonging to
-    $s'$, and only $s'$: keyframes belonging to any other session are not part of this
+    $s'$, and only $s'$. Keyframes belonging to any other session are not part of this
     comparison at all.
   \item \textbf{Each keyframe casts its votes, within $s'$ only.} Keyframe $k$ does not just
-    look at its single best match in $s'$: it takes its $k_{\mathrm{top}}$ nearest neighbours
+    look at its single best match in $s'$. Instead, it takes its $k_{\mathrm{top}}$ nearest neighbours
     \emph{within $s'$ specifically}, looks up which cluster each of those neighbours belongs
     to, and casts one vote for each of those parent clusters. A vote only counts towards
     anything if its underlying similarity clears the per-vote floor $\tau_{\mathrm{vote}}$
@@ -359,12 +365,12 @@ For one other eligible session $s'$, in order:
   \item \textbf{The adjacency guard removes trivial self-matches, if $s'$ happens to be $C$'s
     own session.} $C$'s own last two same-session clusters are removed from candidacy outright,
     before anything else in this list happens. This step only ever does anything when $s'$ is
-    the session $C$ itself belongs to; for every other session it has nothing to remove.
+    the session $C$ itself belongs to. For every other session it has nothing to remove.
   \item \textbf{A session-level participation floor decides whether $s'$ is worth considering
     at all.} Across every vote just cast in $s'$, the pipeline counts how many \emph{distinct}
     keyframes of $C$ managed to cast at least one surviving vote there. If that count is below
     $n_{\mathrm{part}}$ (Table~\ref{tab:method-cluster-matching-thresholds}), $s'$ is dropped
-    from candidacy entirely for this cluster: none of its candidate clusters are considered
+    from candidacy entirely for this cluster. None of its candidate clusters are considered
     further, no matter how high any individual one's score would otherwise have been. This
     check looks only at how many of $C$'s keyframes engaged with $s'$ at all, not at which
     specific candidate cluster they voted for.
@@ -389,7 +395,7 @@ The vote-share score from step 5 is
 for a candidate cluster $C'$ that belongs to session $s'$. This is deliberately \emph{not} a
 fraction of $C$'s own keyframe count. A session where $C$'s keyframes cast many votes overall,
 spread thinly across many different candidate clusters, makes it harder for any single
-candidate to earn a large share of that session's pool; a session where most of the votes
+candidate to earn a large share of that session's pool. A session where most of the votes
 converge on one candidate makes that candidate's share close to $1$. This rewards agreement
 relative to whatever else was on offer within that same session, rather than rewarding a
 candidate just for existing in a session with few plausible alternatives to compete against.
@@ -426,7 +432,7 @@ points, about two different things. The participation floor asks, before any ind
 candidate is even scored, did enough of $C$'s own keyframes find anything worth voting for in
 $s'$ at all? It exists to protect against a mostly irrelevant session sneaking a candidate
 through on the strength of one noisy, coincidentally-similar keyframe pair, when the rest of
-$C$ found nothing there. Its production value is deliberately permissive: $s'$ only needs a
+$C$ found nothing there. Its production value is deliberately permissive. $s'$ only needs a
 single one of $C$'s keyframes to have voted for something to stay in play at all, not a
 majority of them. The vote-share floor, by contrast, is only ever checked once a session has
 already passed that first test, and it asks a narrower question about one specific candidate,
@@ -445,8 +451,8 @@ neighbouring clusters are removed from candidacy before scoring even begins. And
 $C$'s own session, every other eligible session is unaffected by this guard entirely.
 
 Once this whole per-session procedure has run once for every other eligible session, and
-their surviving candidates have been pooled together, the result is the output of this whole
-stage: a short list of candidate cluster pairs $(C, C')$, one list per newly closed cluster,
+their surviving candidates have been pooled together, the result is a short list of
+candidate cluster pairs $(C, C')$, one list per newly closed cluster,
 pooled across however many other sessions had at least one surviving candidate. It is
 important to be clear about what that list is, and what it is not. It is a list of pairs
 worth checking, not a list of confirmed matches. Retrieval descriptors are trained to
@@ -479,7 +485,7 @@ the only stage that actually looks at image content and produces metric poses.
 
 \subsection{Keyframe-Pair Selection}
 
-The check of every keyframe in $C$ against every keyframe in $C'$ would be wasteful and redundant. Instead, every cross keyframe-pair $(k,k') \in C \times C'$ is weighted by descriptor similarity, and a maximum-spanning tree (MST) over this complete bipartite similarity graph selects the spatially diverse pairs $k_{\mathrm{pairs}}$ highest-similarity to actually verify. The MST property guaranties that every selected pair covers at least one keyframe, which no earlier selected pair did, so the selected pairs spread across the cluster instead of collapsing onto one dominant viewpoint. Production value: $k_{\mathrm{pairs}} = 10$.
+Checking every keyframe in $C$ against every keyframe in $C'$ would be wasteful and redundant. Instead, every cross keyframe-pair $(k,k') \in C \times C'$ is weighted by descriptor similarity, and a maximum-spanning tree (MST) over this complete bipartite similarity graph selects the $k_{\mathrm{pairs}}$ highest-similarity, spatially diverse pairs to actually verify. The MST property guarantees that every selected pair covers at least one keyframe no earlier selected pair did, so the selected pairs spread across the cluster instead of collapsing onto one dominant viewpoint. The production value is $k_{\mathrm{pairs}} = 10$.
 
 \subsection{Per-Pair Verification}
 
@@ -498,15 +504,15 @@ Each selected pair $(k, k')$ goes through the same six-step verification:
     scale-free 3D points $\{X_i^{\mathrm{tri}}\}$ in $k$'s own camera frame, correct only up to
     one unknown global scale.
   \item \textbf{Monocular metric depth lift}: Metric3D v2 \cite{hu2024metric3dv2} predicts a
-    metric depth map for $k$ and $k'$ independently; back-projecting each matched keypoint
+    metric depth map for $k$ and $k'$ independently. Back-projecting each matched keypoint
     through its own image's depth map and camera intrinsics gives two separate metric 3D point
-    sets, not one: $\{X_i^{\mathrm{depth}}\}$ from $k$'s own depth map, in $k$'s camera frame
+    sets, not one, $\{X_i^{\mathrm{depth}}\}$ from $k$'s own depth map, in $k$'s camera frame
     (the same frame the triangulated points already live in), and $\{X_i^{\prime\mathrm{depth}}\}$
     from $k'$'s own depth map, in $k'$'s camera frame. A point whose predicted depth falls
     outside a plausible metric range is already discarded at this step.
   \item \textbf{Scale-consistency filter}: this check looks at each correspondence entirely on
     its own, not against any other correspondence, and only ever compares quantities already
-    expressed in $k$'s own camera frame: the triangulated point $X_i^{\mathrm{tri}}$ against
+    expressed in $k$'s own camera frame, the triangulated point $X_i^{\mathrm{tri}}$ against
     $k$'s own depth-lifted point $X_i^{\mathrm{depth}}$, never against $k'$'s. For
     correspondence $i$, a per-point scale factor $\hat{s}_i$ is estimated as the mean, over the
     three coordinate axes, of the depth-lifted point's coordinates divided by the triangulated
@@ -522,24 +528,24 @@ Each selected pair $(k, k')$ goes through the same six-step verification:
     difference well and the residual is small. A bad triangulation or a mismatched
     correspondence instead tends to disagree with itself internally, its own per-axis ratios
     do not agree on one consistent scale, so forcing a single mean scale factor onto it and
-    comparing back leaves a large residual. This is what the filter actually catches: internal
+    comparing back leaves a large residual. What the filter actually catches is internal
     inconsistency within one correspondence, not disagreement between different
     correspondences.
   \item \textbf{PnP} (via poselib): the correspondences that survive step 5 hand their $k'$-side
     depth-lifted metric points $X_i^{\prime\mathrm{depth}}$, not the $k$-side points the
     scale-consistency filter just validated, to a PnP solve against their 2D pixel location in
     $k$. This directly yields $\hat{T}_{k,k'} \in \SE{3}$, $k$ expressed relative to $k'$, with
-    no extra inversion needed: the 3D points already live in $k'$'s frame and the 2D
+    no extra inversion needed, since the 3D points already live in $k'$'s frame and the 2D
     observations are $k$'s own pixels.
 \end{enumerate}
 Two separate accept/reject gates apply along this chain, not just one at the end. Step 2's
 essential-matrix RANSAC already discards a pair outright, well before triangulation or depth are
 computed for it, if fewer than $n_{\mathrm{sf}} = 10$ matches survive as its own inliers or its
 own model score exceeds $\epsilon_{\mathrm{sf}} = 0.5$. A pair that survives this far is still
-rejected outright unless it also clears three further conditions: at least $n_{\mathrm{valid}} =
-150$ correspondences survive triangulation, depth-validity, and the scale-consistency filter
-combined; the final, absolute-pose (PnP) RANSAC's own inlier ratio reaches at least
-$\rho_{\mathrm{abs}} = 0.80$; and that same RANSAC's model score stays at most
+rejected outright unless it also clears three further conditions. At least $n_{\mathrm{valid}} =
+150$ correspondences must survive triangulation, depth-validity, and the scale-consistency filter
+combined. The final, absolute-pose (PnP) RANSAC's own inlier ratio must reach at least
+$\rho_{\mathrm{abs}} = 0.80$. That same RANSAC's model score must stay at most
 $\epsilon_{\mathrm{abs}} = 0.05$.
 
 % REVIEW NOTE (not rendered, 2026-08-27, second pass): read pose_estimator.py and
@@ -579,16 +585,16 @@ The surviving per-pair estimates $\{\hat{T}_1, \dots, \hat{T}_m\}$ (of the up to
 $k_{\mathrm{pairs}}$ attempted) are combined by a translation-consensus vote rather than
 trusted individually. Two estimates \emph{agree} if their implied translations differ by less
 than $\tau_{\mathrm{agree}} = 1.5$m. Every estimate is scored by how many other estimates it
-agrees with; the estimate with the most agreeing neighbors becomes the anchor of the consensus
+agrees with. The estimate with the most agreeing neighbors becomes the anchor of the consensus
 set, which also includes every other estimate that agrees with \emph{that anchor}. This is a
 mode-seeking vote in the style of RANSAC's own inlier counting, not a requirement that every
-pair of estimates within the consensus set mutually agree with each other, two non-anchor
+pair of estimates within the consensus set mutually agree with each other. Two non-anchor
 members can end up in the same consensus set without agreeing with one another, as long as both
 agree with the anchor. The consensus set is then averaged into one confirmed edge measurement
-$\hat{z}$ via a chordal $\SE{3}$ mean: translations averaged arithmetically, rotations averaged
+$\hat{z}$ via a chordal $\SE{3}$ mean, translations averaged arithmetically and rotations averaged
 by projecting their arithmetic mean onto $\SO{3}$ (via SVD). A candidate pair of clusters only
 becomes a confirmed edge once the consensus set holds at least $n_{\mathrm{vote}} = 2$
-estimates; a single, uncorroborated estimate is never enough, and the candidate is otherwise
+estimates. A single, uncorroborated estimate is never enough, and the candidate is otherwise
 dropped. When multi-edge consensus is enabled (the production setting used throughout this
 thesis), every individual estimate in the consensus set is \emph{also} added as its own extra
 graph edge alongside the averaged one, giving the optimizer more redundant evidence per
@@ -625,8 +631,10 @@ confirmed match.
   \hline
   \end{tabular*}
   \caption[Pose-estimation thresholds]{Every threshold used in joint pose estimation, and the
-    production values used to generate this thesis's KITTI results; HGE and HYDRO retune the
-    RANSAC and consensus thresholds, see the review note above.}
+    production values used to generate this thesis's KITTI results. HGE and HYDRO retune the
+    RANSAC and consensus thresholds: HGE uses $k_{\mathrm{pairs}}=5$, $n_{\mathrm{vote}}=3$,
+    $\rho_{\mathrm{abs}}=0.55$, $\epsilon_{\mathrm{abs}}=0.6$; HYDRO matches KITTI's
+    $k_{\mathrm{pairs}}=10$/$n_{\mathrm{vote}}=2$ but shares HGE's looser RANSAC gate.}
   \label{tab:method-pose-estimation-thresholds}
 \end{table}
 
@@ -634,11 +642,11 @@ confirmed match.
 \label{sec:method-pose-estimation-case-study}
 
 To make the six-step chain above concrete, this subsection walks through one real cross-session
-candidate exactly as Polygraph actually processed it: cluster 8 of HYDRO session
+candidate exactly as Polygraph actually processed it. The pair is cluster 8 of HYDRO session
 \texttt{spot\_2024-05-17-16-43} against cluster 5 of session \texttt{spot\_2024-05-17-14-39}, 38
 keyframes on each side, a real committed edge from this thesis's own production HYDRO run. Every
-number below is real: the same production thresholds from \mytabref{tab:method-pose-estimation-thresholds},
-the same cached MegaLoc descriptors, XFeat/LighterGlue weights, and Metric3D v2 depth cache the
+number below is real, drawn from the same production thresholds as \mytabref{tab:method-pose-estimation-thresholds}
+and the same cached MegaLoc descriptors, XFeat/LighterGlue weights, and Metric3D v2 depth cache the
 real run used, replayed step by step so every intermediate (matches, depth, which points survive
 which filter) can be inspected, not just the final committed edge. As a check that this replay is
 faithful and not just illustrative, its own final translation-consensus output, $(1.884,\,
@@ -647,7 +655,7 @@ faithful and not just illustrative, its own final translation-consensus output, 
 All $k_{\mathrm{pairs}} = 10$ MST-selected keyframe pairs between these two clusters passed
 every gate in \mysecref{sec:method-pose-estimation} and agreed in the translation-consensus vote,
 $n_{\mathrm{agree}} = 10/10$, the largest possible margin over the $n_{\mathrm{vote}} = 2$
-threshold. \myfigref{fig:method-case-study-consensus} shows how tightly: every pair's own
+threshold. \myfigref{fig:method-case-study-consensus} shows how tightly. Every pair's own
 independent estimate, lifted into the clusters' shared reference frame, lands within
 $6.3$cm of the consensus mean, two orders of magnitude inside the $\tau_{\mathrm{agree}} = 1.5$m
 agreement threshold. The resulting confirmed edge places the two clusters $3.85$m apart with a
@@ -658,8 +666,8 @@ viewpoints.
   \centering
   \includegraphics[width=\textwidth]{images/03_method/05_pose_estimation/case_study_matching.png}
   \caption[Case study: sparse matching and essential-matrix RANSAC]{Steps 1 to 2 on the single
-    highest-similarity MST pair (of the 10): XFeat/LighterGlue proposes 2181 raw correspondences
-    (grey lines connecting the query image, left, to the retrieved image, right); essential-matrix
+    highest-similarity MST pair, of the 10. XFeat/LighterGlue proposes 2181 raw correspondences
+    (grey lines connecting the query image, left, to the retrieved image, right). Essential-matrix
     RANSAC keeps 1230 of them as inliers (green), comfortably above the $n_{\mathrm{sf}} = 10$
     floor, at a model score of $0.019$, comfortably under $\epsilon_{\mathrm{sf}} = 0.5$.}
   \label{fig:method-case-study-matching}
@@ -668,20 +676,20 @@ viewpoints.
 \begin{figure}[htb]
   \centering
   \includegraphics[width=0.85\textwidth]{images/03_method/05_pose_estimation/case_study_depth.png}
-  \caption[Case study: depth lift and scale-consistency filter]{Steps 4 to 5 on the same pair:
-    real Metric3D v2 depth for both images, with every triangulated correspondence overlaid,
+  \caption[Case study: depth lift and scale-consistency filter]{Steps 4 to 5 on the same pair.
+    Real Metric3D v2 depth for both images, with every triangulated correspondence overlaid,
     green where it survives the scale-consistency filter, red where it is discarded. 1224
-    correspondences triangulate; 1215 survive as scale-consistent, comfortably above the
-    $n_{\mathrm{valid}} = 150$ floor. The 9 discarded points cluster where they visibly should:
+    correspondences triangulate, and 1215 survive as scale-consistent, comfortably above the
+    $n_{\mathrm{valid}} = 150$ floor. The 9 discarded points cluster in visibly sensible places,
     the reflective floor's shadow edge and a bright, saturated doorway.}
   \label{fig:method-case-study-depth}
 \end{figure}
 
 Step 6's PnP solve on those 1215 points reaches a $0.998$ inlier ratio and a $0.075$ model score
 against this pair's own production gates ($\rho_{\mathrm{abs}} = 0.55$, $\epsilon_{\mathrm{abs}} =
-0.6$ for HYDRO), giving a metric pose $\hat{T}_{k,k'}$ for this pair alone: a translation of only
-$2.5$cm and a rotation of $2.8°$. That is not a mistake, it is the single most-similar keyframe
-pair MST could find, so its own two viewpoints are, unsurprisingly, nearly identical; it is one
+0.6$ for HYDRO), giving this pair alone a metric pose $\hat{T}_{k,k'}$ of only
+$2.5$cm translation and $2.8°$ rotation. That is not a mistake. It is the single most-similar keyframe
+pair MST could find, so its own two viewpoints are, unsurprisingly, nearly identical. It is one
 data point among ten, not the cluster-level answer. The $3.85$m, $47.6°$ registration above comes
 only after every pair's own small, local estimate is lifted through its own keyframe's real
 odometry into the clusters' shared reference frame (\mysecref{sec:method-pose-estimation}'s
@@ -692,8 +700,8 @@ translation-consensus step) and averaged.
   \includegraphics[width=0.85\textwidth]{images/03_method/05_pose_estimation/case_study_consensus.png}
   \caption[Case study: translation-consensus vote across all 10 pairs]{Every one of the 10
     MST-selected pairs' own lifted translation estimate, plotted as distance from the consensus
-    mean. All 10 agree; the agreement threshold $\tau_{\mathrm{agree}} = 1.5$m sits two orders of
-    magnitude above this axis.}
+    mean. All 10 agree, and the agreement threshold $\tau_{\mathrm{agree}} = 1.5$m sits two orders
+    of magnitude above this axis.}
   \label{fig:method-case-study-consensus}
 \end{figure}
 
@@ -706,7 +714,7 @@ pose graph. This section describes the gate that decides whether it is or when.
 \subsection{Same-Session Edges Bypass the Gate}
 
 An edge whose two clusters both belong to the same session commits directly to the graph,
-no check required: that session's own position is already fully determined by its own
+no check required. That session's own position is already fully determined by its own
 sequential odometry chain (\mysecref{sec:method-overview}'s $E_{\mathrm{odom}}$), so a
 same session loop closure ($E_{\mathrm{intra}}$) is simply extra corroborating evidence, not
 new placement information.
@@ -717,7 +725,7 @@ Before a confirmed cross-session edge between session $s$ and session $s'$ can b
 
 That choice is made purely by how well-established each session is already. Let $n(s)$ denote the number of currently live (unpruned) cross-session edges already incident on session $s$, a simple proxy for how much prior cross-session evidence already supports that session's position. Whichever of $s$, $s'$ has the larger $n(\cdot)$ becomes anchor, the other becomes query. If $n(s) = n(s')$, most commonly because neither session has any live cross-session edges yet (two sessions meeting for the first time), the tie is broken with no real criterion at all, whichever session happened to be listed first internally keeps the anchor role. This is arbitrary in that sense, but still deterministic, the same tie always resolves the same way, so re-running the pipeline on the same data reproduces the same assignment. This particular tie case is harmless. When neither session has any live edges, the candidate is routed to Tier 1 below, which never actually leans on either side's pose estimate, it only checks whether several independent candidates agree with each other, so it does not matter which of the two was labeled anchor.
 
-The query session's own edge count then decides how the candidate is checked: whether it already has at least one live cross-session edge selects which of the two tiers below it is routed through.
+The query session's own edge count then decides how the candidate is checked. Whether it already has at least one live cross-session edge selects which of the two tiers below it is routed through.
 
 
 \subsection{Tier 1: Corroboration Pool}
@@ -758,19 +766,19 @@ first), at which point it is dropped for good.
 
 Consider three cross-session candidates between sessions A and B, arriving in order. Both
 sessions start with $n(\cdot) = 0$, so edge 1 (A$\leftrightarrow$B) ties for anchor. A wins
-arbitrarily, and B is query with $n(\mathrm{B})=0$: Tier 1. Its corroboration pool for B now
+arbitrarily, and B is query with $n(\mathrm{B})=0$, routing to Tier 1. Its corroboration pool for B now
 has one entry, below $m_{\mathrm{corrob}}=2$, so nothing is committed yet. Edge 2 (a different A
 cluster $\leftrightarrow$ B cluster) runs in the same way, and the pool for B now holds two
-entries. If they agree and are independent, both commit together right now, and A and B 
-jump straight to $2$ live cross-session edges, the count is symmetric, and the committed edge is
+entries. If they agree and are independent, both commit together right now, and A and B
+jump straight to $2$ live cross-session edges. The count is symmetric, and the committed edge is
 incident on both of its sessions, not only the query side. If they disagree, both stay pooled,
-waiting for a future third candidate to pair with one of them; if none ever arrives, both
+waiting for a future third candidate to pair with one of them. If none ever arrives, both
 simply age out, and B is never anchored via this pair.
 
 Assuming that edges 1 and 2 corroborated, a third candidate A$\leftrightarrow$ B (edge 3) now
 finds $n(\mathrm{B}) \ge 1$ (Tier 2) and is checked immediately against the live estimate of B under
 the $10.0$m / $20.0°$ limit of \eqref{eq:method-consistency-table}. If consistent, it commits
-immediately, and B (and A) grow one edge at a time from here on, never in pairs again; if not,
+immediately, and B (and A) grow one edge at a time from here on, never in pairs again. If not,
 it lands in the pending queue for a later re-check.
 
 \begin{figure}[htb]
@@ -779,15 +787,15 @@ it lands in the pending queue for a later re-check.
   \hfill
   \includegraphics[width=0.48\textwidth]{images/03_method/07_graph/graph_edges_after.png}
   \caption[Loop-closure edges before/after pruning]{One real KITTI session's cross-session loop-closure edges before and after a full
-    update's outlier pruning (\eqref{eq:method-outlier-prune}): 32 kept, 21 pruned.}
+    update's outlier pruning (\eqref{eq:method-outlier-prune}), 32 kept and 21 pruned.}
   \label{fig:method-graph-edges}
 \end{figure}
 
 \section{Pose Graph Optimization}
 \label{sec:method-graph}
 
-Every admitted edge (the sequential odometry chain, loop closures in the same-session, and loop closures in
-the cross-session once past the gate) becomes a factor in \eqref{eq:method-pgo-objective}. When a session starts, it becomes its own connected component with its own gauge fixing prior vertex in $V_0$. The first cross-session edge that survives the gate merges its two components (rebasing the smaller component's frame into thesurviving one).
+Every admitted edge (the sequential odometry chain, loop closures in the same session, and loop closures in
+the cross-session case once past the gate) becomes a factor in \eqref{eq:method-pgo-objective}. When a session starts, it becomes its own connected component with its own gauge-fixing prior vertex in $V_0$. The first cross-session edge that survives the gate merges its two components, rebasing the smaller component's frame into the surviving one.
 
 \begin{figure}[htb]
   \centering
@@ -827,8 +835,8 @@ drains the pending queue once more. Only then do two final passes run, once each
 complete graph:
 \begin{enumerate}
   \item \textbf{Inter-cluster pair consensus}: every session pair's independent edges are
-    cross checked against each other using each edge's pre fusion local pose (the
-    raw odometry derived pose captured when the edge was created, never touched by any
+    cross-checked against each other using each edge's pre-fusion local pose (the
+    raw-odometry-derived pose captured when the edge was created, never touched by any
     optimization pass) rather than the graph's current estimate. This is deliberate,
     \eqref{eq:method-outlier-prune} is structurally blind to a group of edges that are
     individually plausible and mutually self-consistent, since least-squares optimization
@@ -845,7 +853,7 @@ complete graph:
     inter-cluster pair consensus step above has to run first.
 \end{enumerate}
 The end-of-run order is therefore fixed: full update (removes obvious single-edge outliers)
-$\to$ drain the pending queue (last chance for anything still waiting) $\to$ inter cluster pair
+$\to$ drain the pending queue (last chance for anything still waiting) $\to$ inter-cluster pair
 consensus (catches hidden, mutually self-consistent outlier groups) $\to$ final GNC-TLS solve
 (final weights for everything that survives).
 
