@@ -267,6 +267,13 @@ validate the cross-session alignment itself the way HGE/HYDRO/RobotCar can.
   \label{tab:experiments-kitti-orb}
 \end{table}
 
+Our multi-session output matches or beats 2GO's own published result on four of the seven
+sequences (00, 02, 07, 08), ties it exactly on 09, and trails it on 05 and 06, both short,
+low-drift sequences where raw odometry is already close to GT and there is comparatively little
+for the pipeline to correct. Sequence 07 is the only row where multi-session mode itself makes a
+difference (0.46\,m $\to$ 0.33\,m, single vs.\ multi), consistent with 00/07 being the only pair
+that actually revisits the same place.
+
 ORB-SLAM3 is non-deterministic, so \mytabref{tab:experiments-kitti-orb}'s ``Single (ours)''/
 ``Multi (ours)'' columns are themselves a mean over 5 independently regenerated odometry runs.
 \mytabref{tab:experiments-kitti-orb-runs} shows every one of those 5 runs individually, for full
@@ -342,6 +349,12 @@ transparency about the run-to-run spread the mean is hiding.
     kept in rather than hidden. Bold marks the best result in a row, underline the second-best.}
   \label{tab:experiments-kitti-vins}
 \end{table}
+
+VINS-Fusion's raw odometry starts from a substantially worse baseline than ORB-SLAM3's on every
+sequence (13.06\,m vs.\ 5.28\,m on 00, for example), yet the pipeline ends up matching or beating
+2GO on five of the seven sequences on this backbone (00, 02, 06, 07, 09), one more than on
+ORB-SLAM3, losing only on 05 and the detection-miss sequence 08. Raw odometry quality alone does
+not predict which backbone benefits most from cross-session fusion.
 
 The real per-sequence trajectory comparison (raw odometry vs. single-session vs. multi-session
 output, both backbones) is in \mysecref{sec:appendix-kitti-traj}.
