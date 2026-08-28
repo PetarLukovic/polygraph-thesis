@@ -95,3 +95,47 @@ per-sequence trajectory visualizations and other detailed breakdowns.
     \mytabref{tab:experiments-hydro-ate} reports numerically.}
   \label{fig:appendix-hydro-anchor-combined}
 \end{figure}
+
+\section{HGE Ref-Anchoring Visualization}
+\label{sec:appendix-hge-anchor}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=\textwidth]{images/07_appendix/hge_hololens_anchor_individual.png}
+  \caption[HGE HoloLens ref-anchored estimate vs.\ GT, per session]{HGE HoloLens non-reference
+    sessions, same methodology and layout as \myfigref{fig:appendix-hydro-anchor-individual}. The
+    device splits into 2 disconnected components (\mytabref{tab:experiments-hge-ate}): A
+    (reference \texttt{139}, others \texttt{568}/\texttt{996}) and B (reference \texttt{693},
+    other \texttt{295}), each anchored by its own component's fixed transform.}
+  \label{fig:appendix-hge-hololens-anchor-individual}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.85\textwidth]{images/07_appendix/hge_hololens_anchor_combined.png}
+  \caption[HGE HoloLens ref-anchored estimates, all sessions combined]{Both HoloLens components
+    in one shared frame, same style as \myfigref{fig:appendix-hydro-anchor-combined}. The two
+    components sit in genuinely different parts of the site and never share a cross-session edge
+    with each other, only within their own component.}
+  \label{fig:appendix-hge-hololens-anchor-combined}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=\textwidth]{images/07_appendix/hge_ios_anchor_individual.png}
+  \caption[HGE iOS ref-anchored estimate vs.\ GT, per session]{HGE iOS non-reference sessions
+    (\texttt{ios\_split}, reference \texttt{01-18}), same methodology as
+    \myfigref{fig:appendix-hydro-anchor-individual}. No published per-session ref-anchored
+    number exists for iOS (only the HoloLens component in \mytabref{tab:experiments-hge-ate}), so
+    panels are unannotated; the visible GT/estimate gap on \texttt{06-24} and \texttt{07-01} is
+    real and consistent with their higher multi-session ATE in \mytabref{tab:experiments-hge-mixed}.}
+  \label{fig:appendix-hge-ios-anchor-individual}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.85\textwidth]{images/07_appendix/hge_ios_anchor_combined.png}
+  \caption[HGE iOS ref-anchored estimates, all sessions combined]{All 4 iOS sessions in one
+    shared frame, same style as \myfigref{fig:appendix-hydro-anchor-combined}.}
+  \label{fig:appendix-hge-ios-anchor-combined}
+\end{figure}
