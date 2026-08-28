@@ -756,7 +756,7 @@ complete graph:
   \item \textbf{Inter-cluster pair consensus}: every session pair's independent edges are
     cross checked against each other using each edge's pre fusion local pose (the
     raw odometry derived pose captured when the edge was created, never touched by any
-    optimization pass) rather than the graph's current estimate. This is deliberate:
+    optimization pass) rather than the graph's current estimate. This is deliberate,
     \eqref{eq:method-outlier-prune} is structurally blind to a group of edges that are
     individually plausible and mutually self-consistent, since least-squares optimization
     simply bends the graph to satisfy the majority, producing small residuals against the
