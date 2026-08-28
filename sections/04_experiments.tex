@@ -344,8 +344,7 @@ transparency about the run-to-run spread the mean is hiding.
 \end{table}
 
 The real per-sequence trajectory comparison (raw odometry vs. single-session vs. multi-session
-output, both backbones) is in \mysecref{sec:experiments-ablation-kitti-traj}, alongside the
-other KITTI-specific supplementary material.
+output, both backbones) is in \mysecref{sec:appendix-kitti-traj}.
 
 \subsection{HGE}
 \label{sec:experiments-main-hge}
@@ -455,45 +454,3 @@ and an RTX 4090), broken down by pipeline phase (retrieval, pose estimation, gra
 other), plus a hardware-matched runtime comparison against 2GO's own published number.
 % TODO: Table 10 (KITTI wall time and phase breakdown by backbone, mode, and GPU) and the
 % hardware-matched comparison against 2GO.
-
-\subsection{KITTI}
-\label{sec:experiments-ablation-kitti-traj}
-
-The per-sequence ATE numbers in \mytabref{tab:experiments-kitti-orb} and
-\mytabref{tab:experiments-kitti-vins} are point summaries, one number per sequence. This
-subsection instead plots every one of the 7 loop-closure sequences' full trajectories, real
-raw odometry, real single-session output, and real multi-session output, each aligned into GT
-the same way the ATE numbers themselves are (Umeyama, no scale correction), as one grid per
-backbone: rows are sequences, columns are raw odometry, single-session, and multi-session.
-Every sequence is rotated in-plane to its own principal axis before plotting, so a near-straight
-sequence like 06 does not force a mostly-empty row just to preserve true-north orientation; only
-each trajectory's shape relative to GT matters here, not its compass heading. Because sequences
-00 and 07 are the only pair with a real cross-session overlap
-(\mysecref{sec:experiments-kitti}), the single- and multi-session columns are visually identical
-for every other sequence, by construction, not a plotting error. Each backbone's grid is one
-continuous image, cropped at exactly the page boundary and carried onto the next page with no
-gap or caption in between, so it reads as one uninterrupted grid rather than two separate
-figures.
-
-\clearpage
-\noindent\includegraphics[width=\textwidth]{images/04_experiments/04_ablation/kitti_grid_orb_part1.png}
-
-\clearpage
-\noindent\includegraphics[width=\textwidth]{images/04_experiments/04_ablation/kitti_grid_orb_part2.png}
-\captionof{figure}[KITTI trajectory grid, ORB-SLAM3 backbone]{KITTI trajectory grid, ORB-SLAM3
-  backbone, all 7 loop-closure sequences: raw odometry, single-session, and multi-session output
-  (green) against GT (red), GT-aligned.}
-\label{fig:experiments-ablation-kitti-orb}
-
-\clearpage
-\noindent\includegraphics[width=\textwidth]{images/04_experiments/04_ablation/kitti_grid_vins_part1.png}
-
-\clearpage
-\noindent\includegraphics[width=\textwidth]{images/04_experiments/04_ablation/kitti_grid_vins_part2.png}
-\captionof{figure}[KITTI trajectory grid, VINS-Fusion backbone]{Same layout as
-  \myfigref{fig:experiments-ablation-kitti-orb}, VINS-Fusion backbone. Sequence 08's raw
-  odometry visibly drifts from GT and stays uncorrected in both the single- and multi-session
-  columns, the same drift pattern in all three panels (\mytabref{tab:experiments-kitti-vins}'s
-  detection-miss caveat: zero intra- or cross-session edges found for this sequence on this
-  backbone).}
-\label{fig:experiments-ablation-kitti-vins}
