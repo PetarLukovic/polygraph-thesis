@@ -71,6 +71,16 @@ marks this per dataset; \mysecref{sec:method-gate}'s two-tier gate and every ATE
 \subsection{KITTI}
 \label{sec:experiments-kitti}
 
+\begin{figure}[htb]
+  \centering
+  \includegraphics[width=\textwidth]{images/04_experiments/01_datasets/dataset_kitti_grid.png}
+  \caption[KITTI ground-truth trajectories]{GT trajectories of the 7 loop-closure KITTI
+    sequences, each in its own independent frame (own start pose = origin), since no shared
+    frame exists across sequences. Orange dot: start pose. Note sequence 00's and 07's real,
+    if not GT-provable, spatial overlap: both are the same downtown loop.}
+  \label{fig:experiments-kitti-gt}
+\end{figure}
+
 KITTI \cite{geiger2012kitti} is 11 outdoor driving sequences (00 through 10) recorded from an
 instrumented car around Karlsruhe, using its left color camera (\texttt{image\_2}) for retrieval
 and pose estimation, stereo for odometry generation. Every sequence is its own independent drive
@@ -83,18 +93,21 @@ between them, just not one that KITTI's own GT can validate). Seven sequences (0
 all and are the ones evaluated in \mysecref{sec:experiments-main-kitti}; the remaining four are
 single, non-revisiting drives.
 
-\begin{figure}[htb]
-  \centering
-  \includegraphics[width=\textwidth]{images/04_experiments/01_datasets/dataset_kitti_grid.png}
-  \caption[KITTI ground-truth trajectories]{GT trajectories of the 7 loop-closure KITTI
-    sequences, each in its own independent frame (own start pose = origin), since no shared
-    frame exists across sequences. Orange dot: start pose. Note sequence 00's and 07's real,
-    if not GT-provable, spatial overlap: both are the same downtown loop.}
-  \label{fig:experiments-kitti-gt}
-\end{figure}
-
 \subsection{HGE}
 \label{sec:experiments-hge}
+
+\begin{figure}[htb]
+  \centering
+  \includegraphics[width=0.49\textwidth]{images/04_experiments/01_datasets/dataset_hge_hololens.png}
+  \hfill
+  \includegraphics[width=0.49\textwidth]{images/04_experiments/01_datasets/dataset_hge_ios.png}
+  \caption[HGE ground-truth trajectories, both capture devices]{GT trajectories for both HGE
+    capture devices, in the site's own shared frame, over a faint backdrop of the real site scan
+    (a horizontal slice of the laser/photogrammetry point cloud at trajectory height). Left: 5
+    HoloLens sessions. Right: 5 iPad/ARKit sessions, picked for real spatial overlap with the
+    HoloLens sessions and with each other.}
+  \label{fig:experiments-hge-gt}
+\end{figure}
 
 HGE is one physical site (part of the LaMAR benchmark \cite{sarlin2022lamar}, an ETH Zurich
 building interior/exterior spanning several floors and an outdoor courtyard) captured twice, by
@@ -112,15 +125,12 @@ reports both a device-isolated and a mixed HoloLens+iPad multi-session run for t
 
 \begin{figure}[htb]
   \centering
-  \includegraphics[width=0.49\textwidth]{images/04_experiments/01_datasets/dataset_hge_hololens.png}
-  \hfill
-  \includegraphics[width=0.49\textwidth]{images/04_experiments/01_datasets/dataset_hge_ios.png}
-  \caption[HGE ground-truth trajectories, both capture devices]{GT trajectories for both HGE
-    capture devices, in the site's own shared frame, over a faint backdrop of the real site scan
-    (a horizontal slice of the laser/photogrammetry point cloud at trajectory height). Left: 5
-    HoloLens sessions. Right: 5 iPad/ARKit sessions, picked for real spatial overlap with the
-    HoloLens sessions and with each other.}
-  \label{fig:experiments-hge-gt}
+  \includegraphics[width=0.85\textwidth]{images/04_experiments/01_datasets/dataset_hydro.png}
+  \caption[HYDRO ground-truth trajectories]{GT trajectories of all 5 HYDRO sessions in the
+    site's own shared frame, over the same kind of real site-scan backdrop as \myfigref{fig:experiments-hge-gt}.
+    All 5 sessions end up in one connected component once cross-session edges are formed
+    (\mysecref{sec:experiments-main-hydro}).}
+  \label{fig:experiments-hydro-gt}
 \end{figure}
 
 \subsection{HYDRO}
@@ -134,30 +144,8 @@ front-left camera (\texttt{frontleft}) is used for the main results, all four in
 \mysecref{sec:experiments-ablation-cameras}'s camera-pairing ablation. Like HGE, HYDRO's GT is
 registered to one shared site frame and the same real site-scan backdrop is available.
 
-\begin{figure}[htb]
-  \centering
-  \includegraphics[width=0.85\textwidth]{images/04_experiments/01_datasets/dataset_hydro.png}
-  \caption[HYDRO ground-truth trajectories]{GT trajectories of all 5 HYDRO sessions in the
-    site's own shared frame, over the same kind of real site-scan backdrop as \myfigref{fig:experiments-hge-gt}.
-    All 5 sessions end up in one connected component once cross-session edges are formed
-    (\mysecref{sec:experiments-main-hydro}).}
-  \label{fig:experiments-hydro-gt}
-\end{figure}
-
 \subsection{RobotCar}
 \label{sec:experiments-robotcar}
-
-Oxford RobotCar \cite{maddern2017robotcar}, with the RTK-GPS ground truth release
-\cite{maddern2020rtk}, is repeated traversals of the same central-Oxford route by an instrumented
-car, recorded months apart under different weather, season, and lighting; the single centre
-stereo camera (\texttt{stereo\_centre}) is used for retrieval and pose estimation. RTK GPS gives
-every session a genuinely shared world frame, so RobotCar is multi-session-GT-eligible, and, since
-it is street-level outdoor driving, its GT overlays cleanly onto a real street map rather than a
-site scan: the figure below uses free OpenStreetMap tiles as backdrop instead of a laser scan
-(RobotCar has no scan mesh in this codebase, unlike HGE/HYDRO). Two splits are drawn from four
-distinct sessions, sharing two sessions between them: an \emph{easy} split (3 daytime sessions)
-and a \emph{hard} split (2 daytime, 1 night session, with real heavy heading noise), specifically
-to test single- and multi-session robustness under real day/night appearance change.
 
 \begin{figure}[htb]
   \centering
@@ -171,17 +159,20 @@ to test single- and multi-session robustness under real day/night appearance cha
   \label{fig:experiments-robotcar-gt}
 \end{figure}
 
+Oxford RobotCar \cite{maddern2017robotcar}, with the RTK-GPS ground truth release
+\cite{maddern2020rtk}, is repeated traversals of the same central-Oxford route by an instrumented
+car, recorded months apart under different weather, season, and lighting; the single centre
+stereo camera (\texttt{stereo\_centre}) is used for retrieval and pose estimation. RTK GPS gives
+every session a genuinely shared world frame, so RobotCar is multi-session-GT-eligible, and, since
+it is street-level outdoor driving, its GT overlays cleanly onto a real street map rather than a
+site scan: the figure below uses free OpenStreetMap tiles as backdrop instead of a laser scan
+(RobotCar has no scan mesh in this codebase, unlike HGE/HYDRO). Two splits are drawn from four
+distinct sessions, sharing two sessions between them: an \emph{easy} split (3 daytime sessions)
+and a \emph{hard} split (2 daytime, 1 night session, with real heavy heading noise), specifically
+to test single- and multi-session robustness under real day/night appearance change.
+
 \subsection{VBR}
 \label{sec:experiments-vbr}
-
-VBR \cite{vbr}, the Vision Benchmark in Rome, is a larger multi-agent benchmark (it also includes
-handheld and multi-floor indoor captures); this thesis uses only its 8 outdoor, car-captured
-training routes (\texttt{campus}, \texttt{ciampino} $\times 2$, \texttt{colosseo},
-\texttt{diag}, \texttt{pincio}, \texttt{spagna} $\times$ variants), the same subset 2GO's own
-paper evaluates on, using the left camera of its stereo pair (\texttt{camera\_left}). Unlike
-KITTI/HGE/HYDRO/RobotCar, no two of these 8 sequences share physical space at all, so VBR is not
-multi-session-GT-eligible and every VBR result in \mysecref{sec:experiments-main-vbr} is
-single-session only.
 
 \begin{figure}[htb]
   \centering
@@ -194,8 +185,27 @@ single-session only.
   \label{fig:experiments-vbr-gt}
 \end{figure}
 
+VBR \cite{vbr}, the Vision Benchmark in Rome, is a larger multi-agent benchmark (it also includes
+handheld and multi-floor indoor captures); this thesis uses only its 8 outdoor, car-captured
+training routes (\texttt{campus}, \texttt{ciampino} $\times 2$, \texttt{colosseo},
+\texttt{diag}, \texttt{pincio}, \texttt{spagna} $\times$ variants), the same subset 2GO's own
+paper evaluates on, using the left camera of its stereo pair (\texttt{camera\_left}). Unlike
+KITTI/HGE/HYDRO/RobotCar, no two of these 8 sequences share physical space at all, so VBR is not
+multi-session-GT-eligible and every VBR result in \mysecref{sec:experiments-main-vbr} is
+single-session only.
+
 \subsection{EuRoC}
 \label{sec:experiments-euroc}
+
+\begin{figure}[htb]
+  \centering
+  \includegraphics[width=\textwidth]{images/04_experiments/01_datasets/dataset_euroc_rooms.png}
+  \caption[EuRoC ground-truth trajectories, by room]{GT trajectories of all 11 EuRoC sessions,
+    grouped into their three room-local shared frames (no shared frame across rooms). Every
+    session in a room overlaps heavily with every other session in that room, real revisit
+    structure a Vicon room's small footprint all but guarantees.}
+  \label{fig:experiments-euroc-gt}
+\end{figure}
 
 EuRoC \cite{burri2016euroc} is 11 short indoor flights of a micro aerial vehicle (MAV), Vicon- or
 Leica-tracked, split across three physically distinct rooms: Machine Hall (5 sessions), Vicon
@@ -209,15 +219,7 @@ graphs for exactly this reason. EuRoC's own odometry is already extremely tight 
 tightest of any dataset here), so its main results section reframes the comparison around
 cross-session anchoring accuracy rather than raw ATE, which barely moves.
 
-\begin{figure}[htb]
-  \centering
-  \includegraphics[width=\textwidth]{images/04_experiments/01_datasets/dataset_euroc_rooms.png}
-  \caption[EuRoC ground-truth trajectories, by room]{GT trajectories of all 11 EuRoC sessions,
-    grouped into their three room-local shared frames (no shared frame across rooms). Every
-    session in a room overlaps heavily with every other session in that room, real revisit
-    structure a Vicon room's small footprint all but guarantees.}
-  \label{fig:experiments-euroc-gt}
-\end{figure}
+\newpage
 
 \section{Main Experiments}
 \label{sec:experiments-main}
