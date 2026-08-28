@@ -470,44 +470,30 @@ sequence like 06 does not force a mostly-empty row just to preserve true-north o
 each trajectory's shape relative to GT matters here, not its compass heading. Because sequences
 00 and 07 are the only pair with a real cross-session overlap
 (\mysecref{sec:experiments-kitti}), the single- and multi-session columns are visually identical
-for every other sequence, by construction, not a plotting error. Each grid is one continuous
-figure split across two page-width placements (below), rather than being compressed to fit a
-single page.
+for every other sequence, by construction, not a plotting error. Each backbone's grid is one
+continuous image, cropped at exactly the page boundary and carried onto the next page with no
+gap or caption in between, so it reads as one uninterrupted grid rather than two separate
+figures.
 
-\begin{figure}[htb]
-  \centering
-  \includegraphics[width=\textwidth]{images/04_experiments/04_ablation/kitti_grid_orb_a.png}
-  \caption[KITTI trajectory grid, ORB-SLAM3 backbone (1/2)]{KITTI trajectory grid, ORB-SLAM3
-    backbone, sequences 00, 02, 05, 06, 07: raw odometry, single-session, and multi-session
-    output (green) against GT (red), GT-aligned. Continued in
-    \myfigref{fig:experiments-ablation-kitti-orb-b}.}
-  \label{fig:experiments-ablation-kitti-orb-a}
-\end{figure}
+\clearpage
+\noindent\includegraphics[width=\textwidth]{images/04_experiments/04_ablation/kitti_grid_orb_part1.png}
 
-\begin{figure}[htb]
-  \centering
-  \includegraphics[width=\textwidth]{images/04_experiments/04_ablation/kitti_grid_orb_b.png}
-  \caption[KITTI trajectory grid, ORB-SLAM3 backbone (2/2)]{\myfigref{fig:experiments-ablation-kitti-orb-a}
-    continued: sequences 08, 09.}
-  \label{fig:experiments-ablation-kitti-orb-b}
-\end{figure}
+\clearpage
+\noindent\includegraphics[width=\textwidth]{images/04_experiments/04_ablation/kitti_grid_orb_part2.png}
+\captionof{figure}[KITTI trajectory grid, ORB-SLAM3 backbone]{KITTI trajectory grid, ORB-SLAM3
+  backbone, all 7 loop-closure sequences: raw odometry, single-session, and multi-session output
+  (green) against GT (red), GT-aligned.}
+\label{fig:experiments-ablation-kitti-orb}
 
-\begin{figure}[htb]
-  \centering
-  \includegraphics[width=\textwidth]{images/04_experiments/04_ablation/kitti_grid_vins_a.png}
-  \caption[KITTI trajectory grid, VINS-Fusion backbone (1/2)]{Same layout as
-    \myfigref{fig:experiments-ablation-kitti-orb-a}, VINS-Fusion backbone, sequences 00, 02, 05,
-    06, 07. Continued in \myfigref{fig:experiments-ablation-kitti-vins-b}.}
-  \label{fig:experiments-ablation-kitti-vins-a}
-\end{figure}
+\clearpage
+\noindent\includegraphics[width=\textwidth]{images/04_experiments/04_ablation/kitti_grid_vins_part1.png}
 
-\begin{figure}[htb]
-  \centering
-  \includegraphics[width=\textwidth]{images/04_experiments/04_ablation/kitti_grid_vins_b.png}
-  \caption[KITTI trajectory grid, VINS-Fusion backbone (2/2)]{\myfigref{fig:experiments-ablation-kitti-vins-a}
-    continued: sequences 08, 09. Sequence 08's raw odometry visibly drifts from GT and stays
-    uncorrected in both the single- and multi-session columns, the same drift pattern in all
-    three panels (\mytabref{tab:experiments-kitti-vins}'s detection-miss caveat: zero intra- or
-    cross-session edges found for this sequence on this backbone).}
-  \label{fig:experiments-ablation-kitti-vins-b}
-\end{figure}
+\clearpage
+\noindent\includegraphics[width=\textwidth]{images/04_experiments/04_ablation/kitti_grid_vins_part2.png}
+\captionof{figure}[KITTI trajectory grid, VINS-Fusion backbone]{Same layout as
+  \myfigref{fig:experiments-ablation-kitti-orb}, VINS-Fusion backbone. Sequence 08's raw
+  odometry visibly drifts from GT and stays uncorrected in both the single- and multi-session
+  columns, the same drift pattern in all three panels (\mytabref{tab:experiments-kitti-vins}'s
+  detection-miss caveat: zero intra- or cross-session edges found for this sequence on this
+  backbone).}
+\label{fig:experiments-ablation-kitti-vins}
