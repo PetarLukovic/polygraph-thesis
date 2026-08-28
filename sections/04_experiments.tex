@@ -395,6 +395,13 @@ connected component each session ends up in.
   \label{tab:experiments-hge-ate}
 \end{table}
 
+Nearly all of HGE's error reduction comes from session \texttt{hl\_568}. Its raw HoloLens odometry
+drifts to 2.09 meters. Multi-session mode brings it down to 0.29 meters. The other four sessions
+already sit close to GT before fusion and barely move. Ref-anchored error stays small across both
+connected components. Averaged over the four non-reference sessions it is 0.32 meters translation
+and 0.68 degrees rotation, so both components are not just accurate on their own but placed
+correctly relative to their own reference session.
+
 \begin{table}[htb]
   \centering
   \footnotesize
@@ -434,8 +441,15 @@ connected component each session ends up in.
   \label{tab:experiments-hge-mixed}
 \end{table}
 
+Mixing HoloLens and iOS sessions into one graph does not hurt HoloLens accuracy. The HoloLens
+total stays at 0.67 to 0.68 meters across all three multi-session variants. It helps iOS accuracy
+instead. The iOS total drops from 1.13 meters device-isolated to 1.04 meters once HoloLens
+sessions are allowed to connect to it at \texttt{min\_kf\_pairs}$=4$. The combined total keeps
+improving as the threshold rises, from 1.31 meters split to 1.24 meters at
+\texttt{min\_kf\_pairs}$=4$, the setting used in production.
+
 The real per-session trajectory comparison (native odometry vs. single-session vs. multi-session
-output, both devices) is in \mysecref{sec:appendix-hge-traj}; \mysecref{sec:appendix-hge-anchor}
+output, both devices) is in \mysecref{sec:appendix-hge-traj}. \mysecref{sec:appendix-hge-anchor}
 shows the ref-anchoring itself, visualized against the real site scan.
 
 \subsection{HYDRO}
@@ -470,8 +484,16 @@ report.
   \label{tab:experiments-hydro-ate}
 \end{table}
 
+HYDRO's improvement is spread across sessions rather than driven by one outlier. Session
+\texttt{11-24\_11-26} goes from 0.44 meters raw to 0.14 meters multi-session. Session
+\texttt{05-17\_16-43} goes from 0.47 meters to 0.16 meters. Both are close to a threefold
+reduction. The other three sessions already sit close to GT and change less. All five sessions
+form a single connected component, so ref-anchored error covers the whole dataset instead of being
+split across separate clusters like HGE. It stays tight at 0.17 meters translation and 0.34
+degrees rotation on average.
+
 The real per-session trajectory comparison (native odometry vs. single-session vs. multi-session
-output) is in \mysecref{sec:appendix-hydro-traj}; \mysecref{sec:appendix-hydro-anchor} shows the
+output) is in \mysecref{sec:appendix-hydro-traj}. \mysecref{sec:appendix-hydro-anchor} shows the
 ref-anchoring itself, visualized against the real site scan.
 
 \subsection{RobotCar}
@@ -555,6 +577,15 @@ hard split, is summarized here and detailed in the appendix.
   \label{tab:experiments-robotcar-hard}
 \end{table}
 
+RobotCar is the first dataset here where multi-session fusion is not always the source of the
+improvement. On the easy split, VINS-Fusion's gain comes almost entirely from single-session
+refinement, 125.43 meters raw to 104.73 meters single, with multi-session mode adding only a small
+extra reduction to 102.24 meters. VO benefits from both stages instead, 235.46 meters raw to
+150.51 meters single, then a further drop to 99.34 meters multi-session. The hard split is a
+different story. Swapping in a night session breaks VINS-Fusion multi-session mode outright,
+single-session is honestly the better result there. VO stays flat instead of breaking, but neither
+backbone reaches usable cross-session anchoring once a night session is involved.
+
 \subsection{VBR}
 \label{sec:experiments-main-vbr}
 
@@ -630,6 +661,13 @@ mode (Atlas, sequential map-merging via its own place recognition) on ref-anchor
 and loop/merge-edge accuracy, with a COVINS-G number included wherever its own paper reports a
 directly comparable one.
 
+EuRoC itself is not a good match for this pipeline. Its rooms are small and its own odometry is
+already close to ground truth, exactly the regime where a dense SLAM system like ORB-SLAM3 has
+the most to work with. The tables below are included for clarity, not as a claim that this
+pipeline is the right tool for EuRoC. The real question they answer is how sparse, map-less pose
+estimation compares to traditional dense 3D map estimation once both are pushed onto the same
+small, high-overlap data.
+
 \begin{table}[htb]
   \centering
   \footnotesize
@@ -655,6 +693,16 @@ directly comparable one.
   \label{tab:experiments-euroc-anchoring}
 \end{table}
 
+Atlas wins every split here, which is expected on data this favorable to dense mapping. Atlas also
+commits far more edges to reach that result, 915 on MH01--05 against our 43, since it treats every
+keyframe pair sharing map points as a candidate rather than filtering for genuinely useful ones
+first. The accuracy gap stays small, roughly 8 centimeters on average and never more than 12
+centimeters on any split. That is close to the pipeline's own typical per-pair pose estimation
+error on the other three datasets, around 0.26 meters median (\mytabref{tab:ablation-pe-accuracy}),
+even though EuRoC was not part of that ablation. A few centimeters is a small price for admitting
+only robust edges instead of every possible one. Maplab will be added to this table at a later
+pass.
+
 \begin{table}[htb]
   \centering
   \footnotesize
@@ -675,6 +723,11 @@ directly comparable one.
     the best result jointly across all 5 rows, underline the second-best.}
   \label{tab:experiments-euroc-covins}
 \end{table}
+
+Against COVINS-G's own published numbers the picture is mixed. Its best configuration, the
+17-point variant on either front end, beats us clearly on both translation and rotation. Its PnP
+variant on VINS-mono is worse than us on both. Its PnP variant on ORB-SLAM3 sits close to us on
+rotation and ahead on translation.
 
 \section{Ablation Studies}
 \label{sec:experiments-ablation}
