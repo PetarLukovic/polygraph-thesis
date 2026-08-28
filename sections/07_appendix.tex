@@ -13,22 +13,9 @@ per-sequence trajectory visualizations and other detailed breakdowns.
 \section{KITTI Trajectory Comparison}
 \label{sec:appendix-kitti-traj}
 
-The per-sequence ATE numbers in \mytabref{tab:experiments-kitti-orb} and
-\mytabref{tab:experiments-kitti-vins} are point summaries, one number per sequence. This section
-instead plots every one of the 7 loop-closure sequences' full trajectories, real raw odometry,
-real single-session output, and real multi-session output, each aligned into GT the same way the
-ATE numbers themselves are (Umeyama, no scale correction), as one grid per backbone: rows are
-sequences, columns are raw odometry, single-session, and multi-session. Every sequence is
-rotated in-plane to its own principal axis before plotting, so a near-straight sequence like 06
-does not force a mostly-empty row just to preserve true-north orientation; only each
-trajectory's shape relative to GT matters here, not its compass heading. Because sequences 00
-and 07 are the only pair with a real cross-session overlap (\mysecref{sec:experiments-kitti}),
-the single- and multi-session columns are visually identical for every other sequence, by
-construction, not a plotting error.
-
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=\textwidth]{images/07_appendix/kitti_grid_orb.png}
+  \includegraphics[width=0.9\textwidth]{images/07_appendix/kitti_grid_orb.png}
   \caption[KITTI trajectory grid, ORB-SLAM3 backbone]{KITTI trajectory grid, ORB-SLAM3 backbone,
     all 7 loop-closure sequences: raw odometry, single-session, and multi-session output
     (green) against GT (red), GT-aligned.}
@@ -37,7 +24,7 @@ construction, not a plotting error.
 
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=\textwidth]{images/07_appendix/kitti_grid_vins.png}
+  \includegraphics[width=0.9\textwidth]{images/07_appendix/kitti_grid_vins.png}
   \caption[KITTI trajectory grid, VINS-Fusion backbone]{Same layout as
     \myfigref{fig:appendix-kitti-orb}, VINS-Fusion backbone. Sequence 08's raw odometry visibly
     drifts from GT and stays uncorrected in both the single- and multi-session columns, the same
