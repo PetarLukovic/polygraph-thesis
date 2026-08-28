@@ -243,9 +243,63 @@ ORB-SLAM3, Maplab-BIN, Maplab-SP, and 2GO baselines. Cross-session edges only ev
 result is identical to its single-session one by construction. Since KITTI has no shared GT frame,
 this section can only show that multi-session mode improves ATE where a real overlap exists, not
 validate the cross-session alignment itself the way HGE/HYDRO/RobotCar can.
-% TODO: Table 1 (ORB-SLAM3 backbone ATE) and Table 2 (VINS-Fusion backbone ATE), both benchmark-style
-% (raw odom / single-session / multi-session vs. published baselines), plus the trajectory-comparison
-% figure (raw odom / single-session / multi-session vs. GT, 7 sequences x 2 backbones).
+
+\begin{table}[htb]
+  \centering
+  \footnotesize
+  \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}} lrrrrrrr}
+  \hline
+  \textbf{Seq} & \textbf{Raw (ours)} & \textbf{ORB-SLAM3 (pub.)} & \textbf{Maplab-BIN} & \textbf{Maplab-SP} & \textbf{2GO} & \textbf{Single (ours)} & \textbf{Multi (ours)} \\
+  \hline
+  00 & 5.28 & 4.85 & 37.51 & 12.69 & 1.82 & \textbf{1.25} & \textbf{1.25} \\
+  02 & 7.34 & 5.64 & 18.01 & 44.78 & 8.04 & \textbf{4.85} & \textbf{4.85} \\
+  05 & 2.14 & \underline{0.95} & 7.44 & 7.98 & \textbf{0.92} & 1.02 & 1.02 \\
+  06 & 2.07 & \underline{0.79} & 7.09 & 10.74 & \textbf{0.62} & 0.90 & 0.90 \\
+  07 & 1.29 & 0.50 & 5.60 & 5.63 & \underline{0.41} & 0.46 & \textbf{0.33} \\
+  08 & \underline{3.28} & 3.67 & 40.79 & 11.65 & 3.78 & \textbf{3.22} & \textbf{3.22} \\
+  09 & \underline{2.72} & 3.22 & 10.23 & 11.32 & \textbf{1.84} & \textbf{1.84} & \textbf{1.84} \\
+  \hline
+  Total (n=7) & 10.51 & 9.00 & 60.31 & 51.39 & 9.33 & \underline{6.42} & \textbf{6.41} \\
+  Mean (n=7) & 3.45 & 2.80 & 18.10 & 14.97 & 2.49 & \underline{1.93} & \textbf{1.92} \\
+  \hline
+  \end{tabular*}
+  \caption[KITTI ATE, ORB-SLAM3 backbone]{KITTI ATE (m), ORB-SLAM3 backbone. ``Raw (ours)'' is
+    our own regenerated ORB-SLAM3 run's raw odometry, a different number from ``ORB-SLAM3
+    (pub.)'', the ORB-SLAM3 paper's own externally published result. Total is the L2-norm across
+    all 7 sequences, Mean the arithmetic mean of the same 7. Bold marks the best result in a row,
+    underline the second-best.}
+  \label{tab:experiments-kitti-orb}
+\end{table}
+
+\begin{table}[htb]
+  \centering
+  \footnotesize
+  \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}} lrrrrrrr}
+  \hline
+  \textbf{Seq} & \textbf{Raw (ours)} & \textbf{VINS+PGO (pub.)} & \textbf{Maplab-BIN} & \textbf{Maplab-SP} & \textbf{2GO} & \textbf{Single (ours)} & \textbf{Multi (ours)} \\
+  \hline
+  00 & 13.06 & 4.20 & 11.13 & 11.39 & 1.58 & \textbf{1.43} & \underline{1.46} \\
+  02 & 21.00 & 13.03 & 23.96 & 18.29 & 10.58 & \textbf{8.07} & \textbf{8.07} \\
+  05 & 6.58 & 3.68 & 11.37 & 11.21 & \textbf{1.70} & \underline{1.94} & \underline{1.94} \\
+  06 & 3.40 & 1.68 & 13.27 & 14.76 & 1.48 & \textbf{1.26} & \textbf{1.26} \\
+  07 & 1.90 & 0.65 & 7.48 & 7.70 & \underline{0.46} & 0.56 & \textbf{0.44} \\
+  08$^{*}$ & 10.03 & 10.01 & 17.04 & 14.27 & \textbf{4.03} & \underline{10.03} & \underline{10.03} \\
+  09 & 7.69 & 7.71 & 15.97 & 12.31 & 4.66 & \textbf{3.32} & \textbf{3.32} \\
+  \hline
+  Total (n=7) & 28.80 & 19.07 & 40.06 & 34.96 & \textbf{12.56} & \underline{13.58} & \underline{13.58} \\
+  Mean (n=7) & 9.09 & 5.85 & 14.32 & 12.85 & \textbf{3.50} & 3.80 & \underline{3.79} \\
+  \hline
+  \end{tabular*}
+  \caption[KITTI ATE, VINS-Fusion backbone]{KITTI ATE (m), VINS-Fusion backbone. Same 7
+    sequences and the same ``Raw (ours)'' vs. ``VINS+PGO (pub.)'' distinction as
+    \mytabref{tab:experiments-kitti-orb}. VINS-Fusion odometry is confirmed deterministic (5
+    independent regenerations, bit-identical output), so no min-max range is needed here.
+    $^{*}$Sequence 08 is a genuine detection miss for this backbone, zero intra- or
+    cross-session edges found, so single-session and multi-session both equal raw odometry;
+    kept in rather than hidden. Bold marks the best result in a row, underline the second-best.}
+  \label{tab:experiments-kitti-vins}
+\end{table}
+
 \missingfig{KITTI trajectory comparison matrix: raw odometry, single-session, and multi-session
   output vs. GT, for both backbones, across all 7 loop-closure sequences.}
 
