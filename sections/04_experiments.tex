@@ -45,18 +45,19 @@ marks this per dataset; \mysecref{sec:method-gate}'s two-tier gate and every ATE
 
 \begin{table}[htb]
   \centering
-  \small
-  \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}} p{2.3cm}p{2.5cm}p{1.6cm}p{2.4cm}p{1.7cm}p{1.6cm}}
+  \footnotesize
+  \renewcommand{\arraystretch}{1.05}
+  \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}} llllll}
   \hline
-  \textbf{Dataset} & \textbf{Agent} & \textbf{Env.} & \textbf{Camera(s)} & \textbf{Sessions} & \textbf{Multi-sess.\ GT} \\
+  \textbf{Dataset} & \textbf{Agent} & \textbf{Env.} & \textbf{Camera(s)} & \textbf{Sessions} & \textbf{Multi-GT} \\
   \hline
-  KITTI & car & outdoor & \texttt{image\_2} (1/4) & 11 (7 eval.) & No \\
-  HGE (HoloLens) & handheld/head-worn AR & indoor $+$ outdoor & \texttt{hetlf} (1/4) & 5 & Yes \\
-  HGE (iOS) & handheld AR & indoor $+$ outdoor & \texttt{phone} (1/1) & 5 & Yes \\
+  KITTI & car & outdoor & \texttt{image\_2} (1/4) & 11 (7) & No \\
+  HGE (HoloLens) & AR headset & indoor/outdoor & \texttt{hetlf} (1/4) & 5 & Yes \\
+  HGE (iOS) & AR phone & indoor/outdoor & \texttt{phone} (1/1) & 5 & Yes \\
   HYDRO & legged robot & indoor & \texttt{frontleft} (1/4) & 5 & Yes \\
-  RobotCar & car & outdoor & \texttt{stereo\_centre} (1/1) & 4 (2 splits) & Yes \\
+  RobotCar & car & outdoor & \texttt{stereo\_centre} (1/1) & 4 (2 spl.) & Yes \\
   VBR & car & outdoor & \texttt{camera\_left} (1/2) & 8 & No \\
-  EuRoC & aerial vehicle (MAV) & indoor & \texttt{cam0} (1/2) & 11 (3 rooms) & Partial \\
+  EuRoC & MAV & indoor & \texttt{cam0} (1/2) & 11 (3 rm.) & Partial \\
   \hline
   \end{tabular*}
   \caption[Dataset overview]{Used/available cameras, agent, environment, session counts, and
