@@ -32,3 +32,39 @@ per-sequence trajectory visualizations and other detailed breakdowns.
     caveat: zero intra- or cross-session edges found for this sequence on this backbone).}
   \label{fig:appendix-kitti-vins}
 \end{figure}
+
+\section{HGE Trajectory Comparison}
+\label{sec:appendix-hge-traj}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.9\textwidth]{images/07_appendix/hge_hololens_grid.png}
+  \caption[HGE trajectory grid, HoloLens sessions]{HGE trajectory grid, HoloLens sessions
+    (device-isolated \texttt{hl\_split} run): native odometry, single-session, and multi-session
+    output (green) against GT (red), GT-aligned. Session \texttt{568}'s native odometry drifts
+    heavily and is visibly corrected in the multi-session column, matching \mytabref{tab:experiments-hge-ate}'s
+    2.09\,m $\to$ 0.29\,m improvement.}
+  \label{fig:appendix-hge-hololens}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.9\textwidth]{images/07_appendix/hge_ios_grid.png}
+  \caption[HGE trajectory grid, iOS sessions]{Same layout as \myfigref{fig:appendix-hge-hololens},
+    the 4 iOS/ARKit sessions of the device-isolated \texttt{ios\_split} run
+    (\mytabref{tab:experiments-hge-mixed}'s real 4-session iOS list, not the older 5-session pick
+    behind \mysecref{sec:experiments-hge}'s Datasets-section figure).}
+  \label{fig:appendix-hge-ios}
+\end{figure}
+
+\section{HYDRO Trajectory Comparison}
+\label{sec:appendix-hydro-traj}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.9\textwidth]{images/07_appendix/hydro_grid.png}
+  \caption[HYDRO trajectory grid]{HYDRO trajectory grid, all 5 sessions, same layout as
+    \myfigref{fig:appendix-hge-hololens}. All 5 sessions form one connected component
+    (\mytabref{tab:experiments-hydro-ate}).}
+  \label{fig:appendix-hydro-traj}
+\end{figure}
