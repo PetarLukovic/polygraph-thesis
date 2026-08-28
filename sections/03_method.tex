@@ -30,6 +30,18 @@
 % mislabeling, the two-separate-depth-lifts conflation, and the "maximum clique" mischaracterization
 % of the translation-consensus vote, which is really a mode-seeking vote around a single anchor).
 %
+% 3.5 now also has a real Case Study subsection (2026-08-28) with 3 real figures: sparse
+% matching + essential-matrix RANSAC, depth + scale-consistency filter, and the
+% translation-consensus vote across all 10 real MST pairs -- one real committed HYDRO
+% cross-session cluster pair (spot_2024-05-17-16-43/cluster8 <-> spot_2024-05-17-14-39/cluster5),
+% replayed step by step with the real production PoseEstimator/matcher/depth cache, not
+% schematic. Cross-verified against the real run's own pose_estimation.log: this replay's own
+% final consensus translation matches the logged edge to 6 decimal places. Generation scripts:
+% /local/home/plukovic/.claude/jobs/7015ebb3/tmp/make_pe_case_study.py (the real run, GPU +
+% cached models needed), fix_lift_and_consensus.py (the cluster-frame lift the first pass
+% skipped -- real bug, real fix, see its own docstring), plot_pe_case_study.py (the 3 figures) --
+% none saved anywhere permanent, same caveat as the other generation scripts above.
+%
 % 3.4's own formula WAS wrong until this pass (2026-08-27): checked directly against
 % src/retrieval/cluster_index.py's real code (_match_against) plus configs/kitti/
 % kitti_orb_full.yaml's real production values. Two real corrections made: (1) top_k is
@@ -618,11 +630,72 @@ confirmed match.
   \label{tab:method-pose-estimation-thresholds}
 \end{table}
 
-% REVIEW NOTE (not rendered): both figures pulled out of this section deliberately -- the
-% schematic (pose_estimation_explainer.png) is retired for good (not real data), the real
-% translation-consensus plot (pose_consensus_plot.png) is left on disk under
-% images/03_method/05_pose_estimation/ in case it's worth reusing, just not wired in right now.
-% Section currently has no figures at all, pending the visualization discussion.
+\subsection{Case Study: One Real Cluster Pair}
+\label{sec:method-pose-estimation-case-study}
+
+To make the six-step chain above concrete, this subsection walks through one real cross-session
+candidate exactly as Polygraph actually processed it: cluster 8 of HYDRO session
+\texttt{spot\_2024-05-17-16-43} against cluster 5 of session \texttt{spot\_2024-05-17-14-39}, 38
+keyframes on each side, a real committed edge from this thesis's own production HYDRO run. Every
+number below is real: the same production thresholds from \mytabref{tab:method-pose-estimation-thresholds},
+the same cached MegaLoc descriptors, XFeat/LighterGlue weights, and Metric3D v2 depth cache the
+real run used, replayed step by step so every intermediate (matches, depth, which points survive
+which filter) can be inspected, not just the final committed edge. As a check that this replay is
+faithful and not just illustrative, its own final translation-consensus output, $(1.884,\,
+{-}0.977,\, 3.209)$m, matches the real run's own logged edge to six decimal places.
+
+All $k_{\mathrm{pairs}} = 10$ MST-selected keyframe pairs between these two clusters passed
+every gate in \mysecref{sec:method-pose-estimation} and agreed in the translation-consensus vote,
+$n_{\mathrm{agree}} = 10/10$, the largest possible margin over the $n_{\mathrm{vote}} = 2$
+threshold. \myfigref{fig:method-case-study-consensus} shows how tightly: every pair's own
+independent estimate, lifted into the clusters' shared reference frame, lands within
+$6.3$cm of the consensus mean, two orders of magnitude inside the $\tau_{\mathrm{agree}} = 1.5$m
+agreement threshold. The resulting confirmed edge places the two clusters $3.85$m apart with a
+$47.6°$ relative rotation, a genuine revisit from a different heading, not two nearly-identical
+viewpoints.
+
+\begin{figure}[htb]
+  \centering
+  \includegraphics[width=\textwidth]{images/03_method/05_pose_estimation/case_study_matching.png}
+  \caption[Case study: sparse matching and essential-matrix RANSAC]{Steps 1 to 2 on the single
+    highest-similarity MST pair (of the 10): XFeat/LighterGlue proposes 2181 raw correspondences
+    (grey lines connecting the query image, left, to the retrieved image, right); essential-matrix
+    RANSAC keeps 1230 of them as inliers (green), comfortably above the $n_{\mathrm{sf}} = 10$
+    floor, at a model score of $0.019$, comfortably under $\epsilon_{\mathrm{sf}} = 0.5$.}
+  \label{fig:method-case-study-matching}
+\end{figure}
+
+\begin{figure}[htb]
+  \centering
+  \includegraphics[width=0.85\textwidth]{images/03_method/05_pose_estimation/case_study_depth.png}
+  \caption[Case study: depth lift and scale-consistency filter]{Steps 4 to 5 on the same pair:
+    real Metric3D v2 depth for both images, with every triangulated correspondence overlaid,
+    green where it survives the scale-consistency filter, red where it is discarded. 1224
+    correspondences triangulate; 1215 survive as scale-consistent, comfortably above the
+    $n_{\mathrm{valid}} = 150$ floor. The 9 discarded points cluster where they visibly should:
+    the reflective floor's shadow edge and a bright, saturated doorway.}
+  \label{fig:method-case-study-depth}
+\end{figure}
+
+Step 6's PnP solve on those 1215 points reaches a $0.998$ inlier ratio and a $0.075$ model score
+against this pair's own production gates ($\rho_{\mathrm{abs}} = 0.55$, $\epsilon_{\mathrm{abs}} =
+0.6$ for HYDRO), giving a metric pose $\hat{T}_{k,k'}$ for this pair alone: a translation of only
+$2.5$cm and a rotation of $2.8°$. That is not a mistake, it is the single most-similar keyframe
+pair MST could find, so its own two viewpoints are, unsurprisingly, nearly identical; it is one
+data point among ten, not the cluster-level answer. The $3.85$m, $47.6°$ registration above comes
+only after every pair's own small, local estimate is lifted through its own keyframe's real
+odometry into the clusters' shared reference frame (\mysecref{sec:method-pose-estimation}'s
+translation-consensus step) and averaged.
+
+\begin{figure}[htb]
+  \centering
+  \includegraphics[width=0.85\textwidth]{images/03_method/05_pose_estimation/case_study_consensus.png}
+  \caption[Case study: translation-consensus vote across all 10 pairs]{Every one of the 10
+    MST-selected pairs' own lifted translation estimate, plotted as distance from the consensus
+    mean. All 10 agree; the agreement threshold $\tau_{\mathrm{agree}} = 1.5$m sits two orders of
+    magnitude above this axis.}
+  \label{fig:method-case-study-consensus}
+\end{figure}
 
 \section{The Two-Tier Consensus Gate}
 \label{sec:method-gate}
