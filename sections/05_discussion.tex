@@ -6,12 +6,69 @@
 \chapter{Discussion}
 \label{chap:discussion}
 
-The discussion section gives an interpretation of what you have done \cite{day2006wap}:
+\section{What the Results Show}
+\label{sec:discussion-results}
 
-\begin{itemize}
- \item \textit{What do your results mean?} Here you discuss, but you do not recapitulate results. Describe principles, relationships and generalizations shown. Also, mention inconsistencies or exceptions you found.
- \item \textit{How do your results relate to other's work?} Show how your work agrees or disagrees with other's work. You can rely on the information you presented in the ``related work'' section.
- \item \textit{What are the implications and applications of your work?} State how your methods may be applied and what implications might be. 
-\end{itemize}
+Cross-session fusion helps most where a session genuinely revisits shared space and carries real
+drift to correct. HGE session \texttt{hl\_568} goes from 2.09 meters raw to 0.29 meters once fused
+with the rest of its component. HYDRO's total ATE roughly halves, from 0.73 to 0.34 meters, spread
+across several sessions rather than one outlier. Where no real revisit exists, fusion cannot help
+by construction. Every KITTI sequence except 00 and 07 stays identical between single-session and
+multi-session mode, since those are the only two that ever meet again. Reference-anchored error
+stays small everywhere it can be measured, 0.32 meters and 0.68 degrees on HGE, 0.17 meters and
+0.34 degrees on HYDRO. Sessions end up not just individually accurate but placed correctly
+relative to each other.
 
-\noindent Make sure that the introduction/related work and the discussion section act as a pair, i.e. ``be sure the discussion section answers what the introduction section asked'' \cite{day2006wap}. 
+\section{Comparison to 2GO}
+\label{sec:discussion-2go}
+
+Polygraph and 2GO \cite{lim2025twogo} target the same underlying problem, large-scale pose-graph
+optimization, extended here to genuinely independent sessions instead of one continuous capture,
+and run online instead of offline (\mysecref{sec:relatedwork-2go}). Clustering and pose estimation
+are not the contribution on their own. They exist to decide which candidate edges are even worth
+proposing to the optimizer, admitting only the robust ones instead of every possible pair. On
+KITTI's VINS-Fusion backbone the pipeline matches or beats 2GO's own published result on five of
+seven sequences. The larger difference is speed. On 2GO's own slowest reported case,
+\texttt{ciampino\_train0}, this pipeline finishes three and a half times faster while committing
+34 edges against their 3403. Filtering which edges reach the optimizer is a direct cause of that
+speedup, not an unrelated side benefit.
+
+\section{Limitations}
+\label{sec:discussion-limitations}
+
+EuRoC is the one dataset where this pipeline shows a genuine limitation. Its rooms are small and
+its own odometry is already close to ground truth before the pipeline ever runs. Single-session
+and multi-session output end up close to those same raw odometry numbers, because there is little
+drift left to correct. This is exactly the regime where a dense SLAM system like ORB-SLAM3's Atlas
+has the most to work with, a fully maintained 3D map pays off most when the scene is small and
+every session overlaps heavily with every other one. Atlas wins every split in
+\mysecref{sec:experiments-main-euroc}, and the gap, while never larger than 12 centimeters, is a
+genuine sign that this pipeline's sparse, map-less approach has less to offer once odometry is
+already this good.
+
+RobotCar's hard split shows a related but different pattern, VINS-Fusion multi-session mode
+actually regresses there. This is not treated as a core limitation here. RobotCar's own odometry
+is unusually poor to begin with, closer to a stress test than a typical deployment, and better
+session splits are planned before drawing a firm conclusion from it.
+
+\section{Design Choices}
+\label{sec:discussion-design}
+
+Two design choices stand out from the ablations. More cameras only help when they add genuinely
+new viewpoints. HYDRO's rig spans nearly 360 degrees and cuts single-session ATE by nearly a
+fifth, while KITTI's second camera, the other half of the same stereo rig, moves the result by
+less than a centimeter. The choice of matcher and depth source barely matters for accuracy once
+the full pipeline runs end to end, all three methods land within a few percent of each other on
+every dataset tested. LightGlue stays the production default because it is two to five times
+faster than the alternatives for no real accuracy cost, not because it is more accurate.
+
+\section{Implications and Future Work}
+\label{sec:discussion-future}
+
+A few results here are not final. The EuRoC anchoring table is missing a Maplab comparison,
+planned for a later pass. A retrieval ablation is queued and not yet reflected in any table in
+this chapter. RobotCar will be re-evaluated on better session splits, the same treatment VBR is
+getting, before either dataset's results are treated as settled. None of this changes the two
+central findings above, cross-session fusion helps wherever sessions genuinely revisit shared
+space, and doing so with far fewer, more selective edges than 2GO or a dense map like Atlas needs
+is both accurate enough and substantially faster.
