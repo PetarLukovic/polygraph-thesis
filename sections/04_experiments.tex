@@ -355,10 +355,74 @@ devices too), against native HoloLens/ARKit odometry, since regenerated ORB-SLAM
 odometry failed on this dataset outright and no external per-session baseline exists. Reports
 both ATE and ref-anchored error (translation and rotation) per session, grouped by which
 connected component each session ends up in.
-% TODO: Table 3 (HoloLens ATE + ref-anchored error), Table 15 (device-isolated vs. mixed ATE),
-% plus the trajectory-comparison figure for both devices.
-\missingfig{HGE trajectory comparison matrix: native odometry, single-session, and multi-session
-  output vs. GT, for both HoloLens and iPad sessions.}
+
+\begin{table}[htb]
+  \centering
+  \footnotesize
+  \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}} llrrrrr}
+  \hline
+  \textbf{Session} & \textbf{Group} & \textbf{Raw} & \textbf{Single} & \textbf{Multi} & \textbf{Ref-anch. trans (m)} & \textbf{Ref-anch. rot (\textdegree)} \\
+  \hline
+  \texttt{hl\_996} & A & \textbf{0.32} & \textbf{0.32} & \textbf{0.32} & 0.39 & 0.57 \\
+  \texttt{hl\_139} & A (ref) & 0.53 & \underline{0.51} & \textbf{0.44} & -- & -- \\
+  \texttt{hl\_693} & B & \textbf{0.22} & \textbf{0.22} & \textbf{0.22} & 0.26 & 0.58 \\
+  \texttt{hl\_295} & B (ref) & 0.13 & \textbf{0.12} & \textbf{0.12} & -- & -- \\
+  \texttt{hl\_568} & A & \underline{2.09} & \underline{2.09} & \textbf{0.29} & 0.30 & 0.89 \\
+  \hline
+  Total (L2-norm, $n{=}5$) & -- & 2.19 & 2.18 & 0.67 & 0.32 (mean) & 0.68 (mean) \\
+  \hline
+  \end{tabular*}
+  \caption[HGE HoloLens ATE and ref-anchored error]{HGE ATE (m), HoloLens sessions only,
+    device-isolated multi-session graph (\texttt{hl\_split}). Session identifiers abbreviated to
+    their unique numeric suffix. ``Group'' is the connected component each session settles into;
+    ``(ref)'' marks the session each component's ref-anchored error is measured against, so it has
+    no ref-anchored value of its own. Bold marks the best result among Raw/Single/Multi in a row,
+    underline the second-best; ref-anchored columns are not ranked (nothing to compare
+    within a row).}
+  \label{tab:experiments-hge-ate}
+\end{table}
+
+\begin{table}[htb]
+  \centering
+  \footnotesize
+  \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}} lrrrrr}
+  \hline
+  \textbf{Session} & \textbf{Raw} & \textbf{Single} & \textbf{Multi (split)} & \textbf{Multi (mixed, kf3)} & \textbf{Multi (mixed, kf4)} \\
+  \hline
+  \multicolumn{6}{l}{\textit{HoloLens}} \\
+  \texttt{hl\_139} & 0.53 & \underline{0.51} & 0.44 & \textbf{0.43} & \textbf{0.43} \\
+  \texttt{hl\_568} & \underline{2.09} & \underline{2.09} & \textbf{0.29} & 0.32 & 0.32 \\
+  \texttt{hl\_996} & \textbf{0.32} & \textbf{0.32} & \textbf{0.32} & \textbf{0.32} & \textbf{0.32} \\
+  \texttt{hl\_693} & \underline{0.22} & \underline{0.22} & \underline{0.22} & \underline{0.22} & \textbf{0.21} \\
+  \texttt{hl\_295} & \underline{0.13} & \textbf{0.12} & \textbf{0.12} & 0.14 & \textbf{0.12} \\
+  \hline
+  HL Total (L2-norm, $n{=}5$) & 2.19 & 2.18 & 0.67 & 0.68 & 0.67 \\
+  HL Mean ($n{=}5$) & 0.66 & 0.65 & 0.28 & 0.29 & 0.28 \\
+  \hline
+  \multicolumn{6}{l}{\textit{iOS}} \\
+  \texttt{ios\_01-18} & \underline{0.85} & 0.78 & 0.78 & \underline{0.76} & \textbf{0.74} \\
+  \texttt{ios\_01-20} & \textbf{0.35} & \textbf{0.35} & \underline{0.36} & \underline{0.36} & \underline{0.36} \\
+  \texttt{ios\_07-01} & 0.35 & \underline{0.33} & \underline{0.33} & \textbf{0.31} & 0.32 \\
+  \texttt{ios\_06-24} & 0.67 & 0.67 & 0.67 & \underline{0.64} & \textbf{0.55} \\
+  \hline
+  iOS Total (L2-norm, $n{=}4$) & 1.19 & 1.13 & 1.13 & 1.10 & 1.04 \\
+  iOS Mean ($n{=}4$) & 0.55 & 0.53 & 0.53 & 0.52 & 0.49 \\
+  \hline
+  Combined Total (L2-norm, $n{=}9$) & 2.49 & 2.46 & 1.31 & 1.29 & 1.24 \\
+  Combined Mean ($n{=}9$) & 0.61 & 0.60 & 0.39 & 0.39 & 0.38 \\
+  \hline
+  \end{tabular*}
+  \caption[HGE device-isolated vs. mixed multi-session ATE]{HGE ATE (m), all 9 sessions, same
+    Raw/Single columns throughout; ``Multi (split)'' is the device-isolated graph of
+    \mytabref{tab:experiments-hge-ate} (iOS sessions run through their own \texttt{ios\_split}
+    equivalent), ``Multi (mixed, kf3/kf4)'' additionally allows HoloLens--iOS cross-session edges
+    in one shared graph at \texttt{min\_kf\_pairs}$=3$/$4$. iOS session identifiers abbreviated to
+    their capture date. Bold marks the best result in a row, underline the second-best.}
+  \label{tab:experiments-hge-mixed}
+\end{table}
+
+The real per-session trajectory comparison (native odometry vs. single-session vs. multi-session
+output, both devices) is in \mysecref{sec:appendix-hge-traj}.
 
 \subsection{HYDRO}
 \label{sec:experiments-main-hydro}
@@ -367,9 +431,34 @@ Same structure as HGE (native Spot odometry as the only baseline, ATE plus ref-a
 over the 5 HYDRO sessions. All 5 sessions end up in a single connected component once
 cross-session edges are formed, so there is exactly one reference session and no group split to
 report.
-% TODO: Table 4 (HYDRO ATE + ref-anchored error), plus the trajectory-comparison figure.
-\missingfig{HYDRO trajectory comparison matrix: native odometry, single-session, and
-  multi-session output vs. GT.}
+
+\begin{table}[htb]
+  \centering
+  \footnotesize
+  \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}} llrrrrr}
+  \hline
+  \textbf{Session} & \textbf{Group} & \textbf{Raw} & \textbf{Single} & \textbf{Multi} & \textbf{Ref-anch. trans (m)} & \textbf{Ref-anch. rot (\textdegree)} \\
+  \hline
+  \texttt{11-24\_11-13} & 1 (ref) & 0.17 & 0.14 & \textbf{0.11} & -- & -- \\
+  \texttt{11-24\_11-26} & 1 & 0.44 & \underline{0.25} & \textbf{0.14} & 0.15 & 0.49 \\
+  \texttt{11-24\_11-43} & 1 & \underline{0.24} & \underline{0.24} & \textbf{0.18} & 0.18 & 0.29 \\
+  \texttt{05-17\_14-39} & 1 & \underline{0.18} & \underline{0.18} & \textbf{0.15} & 0.16 & 0.28 \\
+  \texttt{05-17\_16-43} & 1 & 0.47 & \underline{0.36} & \textbf{0.16} & 0.18 & 0.29 \\
+  \hline
+  Total (L2-norm, $n{=}5$) & -- & 0.73 & 0.55 & 0.34 & 0.17 (mean) & 0.34 (mean) \\
+  \hline
+  \end{tabular*}
+  \caption[HYDRO ATE and ref-anchored error]{HYDRO ATE (m), all 5 Spot sessions, one connected
+    component. Session identifiers abbreviated to capture date and time. ``(ref)'' marks the
+    session the component's ref-anchored error is measured against. Bold marks the best result
+    among Raw/Single/Multi in a row, underline the second-best; ref-anchored columns are not
+    ranked.}
+  \label{tab:experiments-hydro-ate}
+\end{table}
+
+The real per-session trajectory comparison (native odometry vs. single-session vs. multi-session
+output) is in \mysecref{sec:appendix-hydro-traj}; \mysecref{sec:appendix-hydro-anchor} shows the
+ref-anchoring itself, visualized against the real site scan.
 
 \subsection{RobotCar}
 \label{sec:experiments-main-robotcar}
@@ -380,10 +469,77 @@ larger than the other datasets (tens of metres of single-session ATE even in day
 night), so several thresholds tuned on HGE/HYDRO/KITTI needed real, evidence-based widening
 specific to this dataset. That investigation, and a genuine backbone-dependent divergence on the
 hard split, is summarized here and detailed in the appendix.
-% TODO: Table 7 (easy split, VINS-Fusion vs. VO, ATE + ref-anchored error) and Table 8 (hard
-% split), plus the trajectory-comparison figure for both splits and backbones.
-\missingfig{RobotCar trajectory comparison matrix: raw odometry, single-session, and
-  multi-session output vs. RTK GT, both splits, both backbones.}
+
+\begin{table}[htb]
+  \centering
+  \footnotesize
+  \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}} lrrrrr}
+  \hline
+  \textbf{Session} & \textbf{Raw} & \textbf{Single} & \textbf{Multi} & \textbf{Anchor trans (m)} & \textbf{Anchor rot (\textdegree)} \\
+  \hline
+  \multicolumn{6}{l}{\textit{VINS-Fusion}} \\
+  \texttt{10-30\_13-52} (ref) & 76.84 & \textbf{37.41} & \underline{45.18} & -- & -- \\
+  \texttt{10-30\_11-56} & \underline{83.34} & \underline{83.34} & \textbf{79.70} & 1122.98 & 129.86 \\
+  \texttt{11-10\_11-55} & 53.68 & \underline{51.22} & \textbf{45.39} & 58.13 & 135.27 \\
+  \hline
+  Total (L2-norm, $n{=}3$) & 125.43 & 104.73 & 102.24 & 590.56 (mean) & 132.56 (mean) \\
+  \hline
+  \multicolumn{6}{l}{\textit{RobotCar VO}} \\
+  \texttt{10-30\_13-52} (ref) & 186.88 & \underline{46.23} & \textbf{43.45} & -- & -- \\
+  \texttt{10-30\_11-56} & \textbf{76.24} & \textbf{76.24} & \underline{78.46} & 1012.88 & 174.22 \\
+  \texttt{11-10\_11-55} & \underline{121.26} & \underline{121.26} & \textbf{42.72} & 54.62 & 176.30 \\
+  \hline
+  Total (L2-norm, $n{=}3$) & 235.46 & 150.51 & 99.34 & -- & -- \\
+  \hline
+  \end{tabular*}
+  \caption[RobotCar easy split, ATE and ref-anchored error]{RobotCar ATE (m), easy split (3
+    daytime sessions), VINS-Fusion above, RobotCar's own published visual odometry (VO) below,
+    same reference session for both. Session identifiers abbreviated to capture date and time.
+    \texttt{10-30\_11-56} sits far off both backbones' ref-anchored estimate, a genuine weak-connectivity
+    case (only 4--9 cross-session edges found for it vs. 20--29 for the other two sessions, traced
+    to a real 2.82\% raw drift rate on this session vs. 0.82--0.88\% for the others, confirmed
+    backbone-independent). VO's raw odometry is worse overall than VINS-Fusion's (235.46 vs.
+    125.43 total), but multi-session fusion gives VO a real $\sim$34\% total-ATE reduction (150.51
+    $\to$ 99.34) on this split. Bold marks the best result among Raw/Single/Multi in a row,
+    underline the second-best; ref-anchored columns are not ranked.}
+  \label{tab:experiments-robotcar-easy}
+\end{table}
+
+\begin{table}[htb]
+  \centering
+  \footnotesize
+  \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}} lrrrrr}
+  \hline
+  \textbf{Session} & \textbf{Raw} & \textbf{Single} & \textbf{Multi} & \textbf{Anchor trans (m)} & \textbf{Anchor rot (\textdegree)} \\
+  \hline
+  \multicolumn{6}{l}{\textit{VINS-Fusion}} \\
+  \texttt{10-30\_13-52} (ref) & \underline{76.84} & \textbf{59.23} & 214.51 & -- & -- \\
+  \texttt{10-30\_11-56} & \textbf{83.34} & \textbf{83.34} & \underline{180.70} & 1072.27 & 159.57 \\
+  \texttt{12-16\_18-44} (night) & 285.24 & \underline{247.06} & \textbf{212.83} & 216.69 & 149.34 \\
+  \hline
+  Total (L2-norm, $n{=}3$) & 306.94 & 267.38 & 352.08 & 644.48 (mean) & 154.45 (mean) \\
+  \hline
+  \multicolumn{6}{l}{\textit{RobotCar VO}} \\
+  \texttt{10-30\_13-52} (ref) & 186.88 & \underline{34.71} & \textbf{33.34} & -- & -- \\
+  \texttt{10-30\_11-56} & \textbf{76.24} & \textbf{76.24} & \underline{71.70} & 1402.76 & 171.62 \\
+  \texttt{12-16\_18-44} (night) & 393.23 & \textbf{262.27} & \underline{262.51} & 459.96 & 174.27 \\
+  \hline
+  Total (L2-norm, $n{=}3$) & 442.00 & 275.32 & 274.14 & -- & -- \\
+  \hline
+  \end{tabular*}
+  \caption[RobotCar hard split, ATE and ref-anchored error]{RobotCar ATE (m), hard split (2
+    daytime, 1 night session), same reference and layout as \mytabref{tab:experiments-robotcar-easy},
+    \texttt{11-10\_11-55} swapped for the night session \texttt{12-16\_18-44}. VINS-Fusion multi-session
+    mode genuinely regresses this split: single-session is honestly better than multi-session
+    (267.38 vs. 352.08 total), and the reference session itself gets corrupted by fusion (59.23
+    $\to$ 214.51). VO shows no such regression on total ATE (275.32 $\to$ 274.14, flat) and
+    protects its own reference session (34.71 $\to$ 33.34), but its weaker sessions still sit
+    further from their correct relative position (1402.76\,m / 459.96\,m ref-anchored translation)
+    than VINS-Fusion's do (1072.27\,m / 216.69\,m). Neither backbone achieves usable cross-session
+    anchoring on this split. Bold marks the best result among Raw/Single/Multi in a row, underline
+    the second-best; ref-anchored columns are not ranked.}
+  \label{tab:experiments-robotcar-hard}
+\end{table}
 
 \subsection{VBR}
 \label{sec:experiments-main-vbr}
@@ -394,10 +550,61 @@ variants, and 2GO itself). Includes the real per-dataset threshold retuning this
 (VBR's sessions are an order of magnitude larger than KITTI's, and a blind default copied across
 every dataset caused real retrieval starvation before it was diagnosed and fixed) as a
 methodology note, not a result.
-% TODO: Table 12 (ORB-SLAM3 & VINS-Fusion backbones, ATE, one row per sequence, laid out like
-% 2GO's own paper table), plus the trajectory-comparison figure.
-\missingfig{VBR trajectory comparison grid: raw odometry vs. single-session output vs. GT, all 8
-  sequences, both backbones.}
+
+\begin{table}[htb]
+  \centering
+  \footnotesize
+  \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}} lrrrrrr}
+  \hline
+  \textbf{Seq} & \textbf{Raw (ours)} & \textbf{ORB-SLAM3 (pub.)} & \textbf{Maplab-BIN} & \textbf{Maplab-SP} & \textbf{2GO} & \textbf{Single (ours)} \\
+  \hline
+  \texttt{campus\_train0} & 27.99 & 11.94 & 30.73 & 28.22 & \textbf{9.32} & \underline{11.26} \\
+  \texttt{campus\_train1} & 16.41 & \textbf{7.99} & 30.88 & 27.42 & \underline{8.98} & 18.48 \\
+  \texttt{ciampino\_train0} & 83.19 & 68.11 & 83.89 & 81.77 & \underline{18.29} & \textbf{16.64} \\
+  \texttt{ciampino\_train1} & 26.49 & \underline{13.83} & 27.61 & 25.00 & \textbf{13.25} & 13.85 \\
+  \texttt{colosseo\_train0} & 11.32 & 9.67 & 9.40 & 10.29 & \textbf{6.80} & \underline{6.93} \\
+  \texttt{diag\_train0} & \multicolumn{6}{l}{\ \ tracking loss (320/10034 frames before local map lost) -- no ORB-SLAM3 result} \\
+  \texttt{pincio\_train0} & 6.01 & \textbf{2.08} & 6.31 & 6.91 & \underline{2.79} & 3.08 \\
+  \texttt{spagna\_train0} & 11.49 & \textbf{5.62} & 11.95 & 12.01 & \underline{6.48} & 6.33 \\
+  \hline
+  \end{tabular*}
+  \caption[VBR ATE, ORB-SLAM3 backbone]{VBR ATE (m), ORB-SLAM3 backbone, $n=7$
+    (\texttt{diag\_train0} excluded, real tracking loss confirmed on our own regenerated run,
+    matching 2GO's own paper). Aggregate (L2-norm) is 32.17 (ours) vs. 2GO's own 27.81; our first
+    individual-sequence win on this backbone is \texttt{ciampino\_train0} (16.64 vs. 18.29).
+    \texttt{campus\_train1} is a genuine, unresolved regression: single-session (18.48) is worse
+    than its own raw odometry (16.41), only 3 intra-session edges found, decay-invariant across a
+    full threshold sweep. Bold marks the best result in a row, underline the second-best.}
+  \label{tab:experiments-vbr-orb}
+\end{table}
+
+\begin{table}[htb]
+  \centering
+  \footnotesize
+  \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}} lrrrrrr}
+  \hline
+  \textbf{Seq} & \textbf{Raw (ours)} & \textbf{VINS+PGO (pub.)} & \textbf{Maplab-BIN} & \textbf{Maplab-SP} & \textbf{2GO} & \textbf{Single (ours)} \\
+  \hline
+  \texttt{campus\_train0} & 46.86 & 43.84 & 49.46 & 46.28 & \underline{12.30} & \textbf{11.86} \\
+  \texttt{campus\_train1} & 38.40 & 23.40 & 44.43 & 34.93 & \underline{9.60} & \textbf{7.14} \\
+  \texttt{ciampino\_train0} & 124.26 & 95.95 & 130.20 & 130.94 & \underline{22.84} & \textbf{21.97} \\
+  \texttt{ciampino\_train1} & 39.66 & 34.68 & 40.94 & 40.79 & \textbf{14.20} & \underline{17.98} \\
+  \texttt{colosseo\_train0} & 29.05 & 13.37 & 21.48 & 21.47 & \textbf{6.00} & \underline{7.66} \\
+  \texttt{diag\_train0} & 36.24 & 33.10 & 27.17 & 27.23 & \underline{26.70} & \textbf{21.85} \\
+  \texttt{pincio\_train0} & 13.30 & 7.75 & 11.22 & 11.23 & \textbf{3.18} & \underline{6.06} \\
+  \texttt{spagna\_train0} & 21.71 & 13.22 & 20.83 & 20.35 & \textbf{3.73} & \underline{4.92} \\
+  \hline
+  \end{tabular*}
+  \caption[VBR ATE, VINS-Fusion backbone]{VBR ATE (m), VINS-Fusion backbone, $n=8$ (all
+    sequences, including \texttt{diag\_train0}, which has no ORB-SLAM3 counterpart in
+    \mytabref{tab:experiments-vbr-orb}). Aggregate (L2-norm) is 39.93 (ours) vs. 2GO's own 41.71,
+    the first VBR backbone where our reproduction beats 2GO overall; single-session already beats
+    2GO on \texttt{campus\_train0} (11.86 vs. 12.30) and \texttt{ciampino\_train0} (21.97 vs.
+    22.84). 2GO remains ahead on the other 6 rows, some by a wide margin (e.g.
+    \texttt{pincio\_train0}, 6.06 vs. 3.18). Bold marks the best result in a row, underline the
+    second-best.}
+  \label{tab:experiments-vbr-vins}
+\end{table}
 
 \subsection{EuRoC}
 \label{sec:experiments-main-euroc}
@@ -408,10 +615,52 @@ as its own isolated multi-session graph and compared against ORB-SLAM3's own nat
 mode (Atlas, sequential map-merging via its own place recognition) on ref-anchored consistency
 and loop/merge-edge accuracy, with a COVINS-G number included wherever its own paper reports a
 directly comparable one.
-% TODO: Table 13 (ref-anchored anchoring accuracy, ours vs. ORB-SLAM3 Atlas, per room group),
-% plus whichever trajectory/edge-count figure best shows the anchoring-accuracy story.
-\missingfig{EuRoC anchoring-accuracy figure: ref-anchored trajectories per room group, ours vs.
-  ORB-SLAM3 Atlas.}
+
+\begin{table}[htb]
+  \centering
+  \footnotesize
+  \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}} lrrrrrr}
+  \hline
+  \textbf{Split} & \textbf{Ours trans (m)} & \textbf{Ours rot (\textdegree)} & \textbf{Ours edges} & \textbf{Atlas trans (m)} & \textbf{Atlas rot (\textdegree)} & \textbf{Atlas edges} \\
+  \hline
+  MH01--03 & 0.143 & 1.09 & 10 & \textbf{0.071} & \textbf{1.48} & 476 \\
+  MH01--05 & 0.231 & 1.20 & 43 & \textbf{0.112} & \textbf{1.17} & 915 \\
+  V101--103 & 0.104 & 3.44 & 13 & \textbf{0.047} & \textbf{2.22} & 148 \\
+  V201--203 & 0.068 & 2.30 & 11 & \textbf{0.038} & \textbf{0.88} & 65 \\
+  \hline
+  Avg (8 sessions) & 0.158 & 2.04 & -- & \textbf{0.077} & \textbf{1.36} & -- \\
+  \hline
+  \end{tabular*}
+  \caption[EuRoC ref-anchored anchoring accuracy, ours vs. ORB-SLAM3 Atlas]{EuRoC trans./rot.\
+    RMSE, mean over each split's non-reference sessions, ours vs. ORB-SLAM3's own native
+    multi-session mode (Atlas). ``Ours edges'' = graph-committed cross-session cluster-pair
+    constraints; ``Atlas edges'' = cross-session covisibility edges at weight $\geq 100$,
+    ORB-SLAM3's own hardcoded cutoff for a strong covisibility edge. No COVINS-G number exists at
+    this per-room granularity, so no best/second marking; Atlas's own numbers are highlighted
+    directly since it wins every split.}
+  \label{tab:experiments-euroc-anchoring}
+\end{table}
+
+\begin{table}[htb]
+  \centering
+  \footnotesize
+  \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}} llrrr}
+  \hline
+  \textbf{Method} & \textbf{Front-end} & \textbf{\#Edges} & \textbf{Trans err (m)} & \textbf{Rot err (\textdegree)} \\
+  \hline
+  COVINS-G, PnP & VINS-mono & 852 & 0.69 $\pm$ 0.60 & 3.44 $\pm$ 3.5 \\
+  COVINS-G, 17-point & VINS-mono & 1823 & \underline{0.10 $\pm$ 0.17} & \underline{1.09 $\pm$ 1.25} \\
+  COVINS-G, PnP & ORB-SLAM3 & 505 & 0.23 $\pm$ 0.32 & 1.56 $\pm$ 3.7 \\
+  COVINS-G, 17-point & ORB-SLAM3 & 406 & \textbf{0.07 $\pm$ 0.12} & \textbf{1.01 $\pm$ 0.9} \\
+  Ours & stereo-inertial & 43 & 0.48 $\pm$ 0.29 & 1.61 $\pm$ 0.96 \\
+  \hline
+  \end{tabular*}
+  \caption[EuRoC loop-edge accuracy vs. COVINS-G]{Per committed cross-session edge, raw
+    pre-optimization pose accuracy vs. GT, MH only, matching COVINS-G's own Table I scope exactly.
+    Ours: single MH-isolated run, stereo-inertial backbone, 43 graph-committed edges. Bold marks
+    the best result jointly across all 5 rows, underline the second-best.}
+  \label{tab:experiments-euroc-covins}
+\end{table}
 
 \section{Ablation Studies}
 \label{sec:experiments-ablation}
@@ -429,8 +678,64 @@ retrieval and pose estimation instead, on HGE, HYDRO, and KITTI, to see whether 
 per keyframe buys real accuracy or just more compute. Reports single-/multi-session ATE, intra-
 and cross-session edge counts, connected components, and (HGE/HYDRO only, since KITTI has no
 shared GT frame to anchor against) anchoring error, per camera combination.
-% TODO: Table 5 (HGE camera-pairing ATE + anchoring error) and Table 6 (HYDRO camera-pairing ATE
-% + anchoring error), plus KITTI's own camera-pairing table.
+
+\begin{table}[htb]
+  \centering
+  \footnotesize
+  \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}} lrrrrrl}
+  \hline
+  \textbf{Cameras} & \textbf{Single ATE (m)} & \textbf{Multi ATE (m)} & \textbf{Intra edges} & \textbf{Cross edges} & \textbf{Components} & \textbf{Anchoring error (mean)} \\
+  \hline
+  \texttt{hetlf} (baseline) & 0.657 & \underline{0.279} & 30 & 238 & 2 & 0.323\,m / 0.712\textdegree \\
+  \texttt{hetlf+hetrf} & 0.657 & 0.285 & 29 & 296 & 2 & 0.316\,m / 0.676\textdegree \\
+  \texttt{hetlf+hetrr} & 0.657 & 0.281 & 62 & 390 & 2 & 0.307\,m / 0.670\textdegree \\
+  all 4 & 0.657 & \textbf{0.278} & 63 & 484 & 2 & 0.361\,m / 0.765\textdegree \\
+  \hline
+  \end{tabular*}
+  \caption[HGE camera-pairing ATE and anchoring error]{HGE camera-pairing ablation:
+    \texttt{retrieval.cams} lets a session emit one keyframe per (frame, camera) instead of one
+    per frame. Single ATE is identical across rows (single-session mode always uses the baseline
+    camera alone); bold/underline mark the best/second-best Multi ATE only.}
+  \label{tab:ablation-cameras-hge}
+\end{table}
+
+\begin{table}[htb]
+  \centering
+  \footnotesize
+  \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}} lrrrrrl}
+  \hline
+  \textbf{Cameras} & \textbf{Single ATE (m)} & \textbf{Multi ATE (m)} & \textbf{Intra edges} & \textbf{Cross edges} & \textbf{Components} & \textbf{Anchoring error (mean)} \\
+  \hline
+  \texttt{frontleft} (baseline) & 0.265 & 0.154 & 52 & 1500 & 1 & 0.174\,m / 0.337\textdegree \\
+  \texttt{frontleft+frontright} & \underline{0.242} & \underline{0.151} & 100 & 1762 & 1 & 0.167\,m / 0.334\textdegree \\
+  \texttt{frontleft+right} & 0.243 & 0.152 & 117 & 1842 & 1 & 0.179\,m / 0.330\textdegree \\
+  all 4 cameras & \textbf{0.217} & \textbf{0.145} & 360 & 3602 & 1 & 0.158\,m / 0.315\textdegree \\
+  \hline
+  \end{tabular*}
+  \caption[HYDRO camera-pairing ATE and anchoring error]{HYDRO camera-pairing ablation, same
+    method as \mytabref{tab:ablation-cameras-hge}. \texttt{frontleft}/\texttt{frontright} are the
+    true front stereo pair; \texttt{left}/\texttt{right} are wide-FOV, roughly
+    178\textdegree{} apart. Bold marks the best result per column, underline the second-best.}
+  \label{tab:ablation-cameras-hydro}
+\end{table}
+
+\begin{table}[htb]
+  \centering
+  \footnotesize
+  \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}} lrrrrr}
+  \hline
+  \textbf{Cameras} & \textbf{Single ATE (m)} & \textbf{Multi ATE (m)} & \textbf{Intra edges} & \textbf{Cross edges} & \textbf{Components} \\
+  \hline
+  \texttt{image\_2} (baseline, run 1) & \underline{2.698} & \underline{2.685} & 253 & 80 & 10 \\
+  \texttt{image\_2+image\_3} & \textbf{2.691} & \textbf{2.676} & 274 & 94 & 10 \\
+  \hline
+  \end{tabular*}
+  \caption[KITTI camera-pairing ATE]{KITTI camera-pairing ablation. \texttt{image\_2}/\texttt{image\_3}
+    are the left/right cameras of the same physical stereo rig. No shared GT frame across
+    sequences, so no anchoring-error column (\mysecref{sec:experiments-kitti}). Bold marks the
+    best result per column, underline the second-best.}
+  \label{tab:ablation-cameras-kitti}
+\end{table}
 
 \subsection{Pose Estimation Method}
 \label{sec:experiments-ablation-pe}
@@ -443,8 +748,143 @@ multi-session KITTI runs end to end. Reports, per method and dataset: success ra
 breakdown of \emph{why} a pair was rejected (no match, essential-matrix stage, insufficient
 points, final PnP stage), translation/rotation error on successful pairs, and matching plus total
 per-pair time.
-% TODO: Table 8 (matcher x depth accuracy, timing, and rejection breakdown, per dataset) and
-% Table 9 (full KITTI single-/multi-session runs per method).
+
+\begin{table}[htb]
+  \centering
+  \scriptsize
+  \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}} lrrrrrrrrr}
+  \hline
+  \textbf{Method} & \textbf{Success} & \textbf{No match} & \textbf{Ess.-mat.} & \textbf{Insuff.\ pts} & \textbf{PnP rej.} & \textbf{Trans.\ med./mean (m)} & \textbf{Rot.\ med./mean (\textdegree)} & \textbf{Total (s)} & \textbf{Match.\ (s)} \\
+  \hline
+  \multicolumn{10}{l}{\textit{HGE}} \\
+  LG+M3D & \underline{76.8\%} & 0.4\% & 2.0\% & 20.5\% & 0.3\% & 0.219 / \underline{0.544} & 0.29 / \underline{1.48} & \textbf{0.471} & \textbf{0.027} \\
+  LoFTR+M3D & 75.4\% & 0.0\% & 0.0\% & 24.0\% & 0.6\% & 0.175 / \textbf{0.426} & 0.24 / \textbf{1.36} & \underline{0.481} & \underline{0.041} \\
+  MASt3R+M3D & \textbf{91.8\%} & 0.0\% & 0.0\% & 2.9\% & 5.3\% & 0.201 / 0.961 & 0.34 / 1.68 & 0.683 & 0.196 \\
+  \hline
+  \multicolumn{10}{l}{\textit{KITTI}} \\
+  LG+M3D & \textbf{77.6\%} & 0.0\% & 0.0\% & 3.6\% & 18.8\% & 0.827 / \underline{47.716} & 0.27 / \underline{10.01} & \underline{0.600} & \textbf{0.025} \\
+  LoFTR+M3D & \underline{66.6\%} & 0.0\% & 0.0\% & 2.5\% & 30.9\% & 0.833 / 49.947 & 0.27 / 10.49 & 0.695 & \underline{0.068} \\
+  MASt3R+M3D & 62.8\% & 0.0\% & 0.0\% & 0.6\% & 36.6\% & 0.729 / \textbf{43.743} & 0.24 / \textbf{9.19} & \textbf{0.587} & 0.131 \\
+  \hline
+  \multicolumn{10}{l}{\textit{HYDRO}} \\
+  LG+M3D & \textbf{44.5\%} & 7.8\% & 24.5\% & 22.9\% & 0.2\% & 0.035 / \underline{0.070} & 0.41 / \underline{0.55} & \textbf{0.270} & \textbf{0.021} \\
+  LoFTR+M3D & \underline{42.7\%} & 0.0\% & 0.3\% & 55.0\% & 2.0\% & 0.033 / 0.069 & 0.42 / 0.52 & \underline{0.620} & \underline{0.042} \\
+  MASt3R+M3D & 33.7\% & 0.0\% & 0.2\% & 55.0\% & 11.1\% & 0.029 / \textbf{0.045} & 0.37 / \textbf{0.44} & 0.634 & 0.227 \\
+  \hline
+  \multicolumn{10}{l}{\textit{Overall (pooled, $n{=}2994$ pairs)}} \\
+  LG+M3D & \textbf{66.3\%} (1984/2994) & 2.7\% & 8.9\% & 15.7\% & 6.4\% & 0.262 / 18.840 & 0.31 / 4.60 & \textbf{0.447} & \textbf{0.024} \\
+  LoFTR+M3D & 61.6\% (1843/2994) & 0.0\% & 0.1\% & 27.2\% & 11.2\% & 0.211 / \underline{18.212} & 0.28 / \underline{4.46} & \underline{0.598} & \underline{0.050} \\
+  MASt3R+M3D & \underline{62.8\%} (1879/2994) & 0.0\% & 0.1\% & 19.5\% & 17.7\% & 0.230 / \textbf{15.073} & 0.31 / \textbf{3.97} & 0.635 & 0.185 \\
+  \hline
+  \end{tabular*}
+  \caption[Matcher $\times$ depth accuracy, timing, and rejection breakdown]{1000 fixed real
+    candidate keyframe pairs per dataset, 3 methods (LG = LightGlue, all through Metric3D depth),
+    production pose-estimation thresholds throughout. Success through PnP rej.\ are the 5 mutually
+    exclusive outcomes of \texttt{PoseEstimator.estimate\_pair()} in pipeline order, so each row
+    sums to $\sim$100\%; the 4 rejection-stage columns are diagnostic, not ranked. Trans./Rot.\
+    columns include only successful, GT-comparable pairs. Bold marks the best result per dataset
+    group, underline the second-best (Success/accuracy/speed columns only).}
+  \label{tab:ablation-pe-accuracy}
+\end{table}
+
+\begin{table}[htb]
+  \centering
+  \footnotesize
+  \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}} lrrrrr}
+  \hline
+  \textbf{Seq / Session} & \textbf{Raw odom} & \textbf{2GO} & \textbf{LightGlue+M3D} & \textbf{LoFTR+M3D} & \textbf{MASt3R+M3D} \\
+  \hline
+  \multicolumn{6}{l}{\textit{KITTI (ORB-SLAM3, multi-session)}} \\
+  00 & 5.28 & 1.82 & \underline{1.21} (97+49) & 1.24 (102+43) & \textbf{1.28} (86+34) \\
+  02 & 7.34 & 8.04 & \underline{4.82} (75+0) & 5.09 (49+0) & \textbf{4.93} (46+0) \\
+  05 & 2.14 & \textbf{0.92} & \underline{0.99} (42+0) & 0.98 (45+0) & 0.93 (49+0) \\
+  06 & 2.07 & \textbf{0.62} & \underline{0.88} (29+0) & 0.81 (43+0) & 0.76 (15+0) \\
+  07 & 1.29 & \underline{0.41} & \textbf{0.32} (5+49) & 0.41 (4+43) & 0.34 (6+34) \\
+  08 & 3.28 & \underline{3.78} & \textbf{2.95} (3+0) & 3.28 (0+0) & 3.28 (0+0) \\
+  09 & 2.72 & 1.84 & \textbf{1.79} (3+0) & \underline{1.81} (4+0) & 2.72 (0+0) \\
+  \hline
+  Total (L2-norm, $n{=}7$) & 10.51 & 9.33 & \textbf{6.20} (254+98) & \underline{6.58} (247+86) & 6.76 (202+68) \\
+  \hline
+  \multicolumn{6}{l}{\textit{HGE (multi-session)}} \\
+  \texttt{hl\_996} & 0.32 & -- & \textbf{0.32} (17+47) & \textbf{0.32} (17+5) & \textbf{0.32} (26+39) \\
+  \texttt{hl\_139} & 0.53 & -- & \textbf{0.44} (6+52) & \textbf{0.44} (6+49) & \textbf{0.44} (6+56) \\
+  \texttt{hl\_693} & 0.22 & -- & \textbf{0.22} (12+27) & \textbf{0.22} (12+23) & \underline{0.21} (12+37) \\
+  \texttt{hl\_295} & 0.13 & -- & \textbf{0.12} (11+27) & \underline{0.13} (24+28) & 0.14 (16+37) \\
+  \texttt{hl\_568} & 2.09 & -- & \textbf{0.29} (0+99) & \textbf{0.29} (0+49) & \textbf{0.29} (0+95) \\
+  \hline
+  Total (L2-norm, $n{=}5$) & 2.19 & -- & \textbf{0.66} & \underline{0.67} & \underline{0.67} \\
+  \hline
+  \multicolumn{6}{l}{\textit{HYDRO (multi-session)}} \\
+  \texttt{11-24\_11-13} & 0.17 & -- & \underline{0.11} (11+425) & \underline{0.11} (11+449) & \textbf{0.12} (9+391) \\
+  \texttt{11-24\_11-26} & 0.44 & -- & \textbf{0.14} (38+121) & \textbf{0.14} (31+136) & \textbf{0.14} (41+108) \\
+  \texttt{11-24\_11-43} & 0.24 & -- & \textbf{0.18} (10+528) & \textbf{0.18} (10+576) & \textbf{0.18} (23+497) \\
+  \texttt{05-17\_14-39} & 0.18 & -- & \textbf{0.15} (9+209) & \textbf{0.15} (13+236) & \textbf{0.15} (33+211) \\
+  \texttt{05-17\_16-43} & 0.47 & -- & 0.17 (19+211) & \textbf{0.16} (61+251) & 0.17 (31+191) \\
+  \hline
+  Total (L2-norm, $n{=}5$) & 0.73 & -- & \textbf{0.34} & \textbf{0.34} & \underline{0.35} \\
+  \hline
+  \end{tabular*}
+  \caption[Full-pipeline pose-estimation-method comparison]{ATE (m) with \texttt{pose\_estimation.method}
+    swapped as the only change from production, multi-session mode, ORB-SLAM3 backbone.
+    Edge counts in parentheses are intra+cross. KITTI: 2GO's own published number; HGE/HYDRO have
+    no per-session 2GO reference, only the aggregate mean already cited in
+    \mytabref{tab:experiments-hge-ate}/\mytabref{tab:experiments-hydro-ate}. Bold marks the best
+    result per row (including 2GO where present), underline the second-best.}
+  \label{tab:ablation-pe-kitti}
+\end{table}
+
+\begin{table}[htb]
+  \centering
+  \footnotesize
+  \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}} llrr}
+  \hline
+  \textbf{Dataset} & \textbf{Method} & \textbf{Components} & \textbf{Mean ref-anch.\ trans (m) / rot (\textdegree)} \\
+  \hline
+  HGE & LightGlue+M3D & 2 & 0.31 / 0.69 \\
+  HGE & LoFTR+M3D & 2 & 0.38 / 0.67 \\
+  HGE & MASt3R+M3D & 2 & 0.31 / 0.69 \\
+  \hline
+  HYDRO & LightGlue+M3D & 1 & 0.17 / 0.34 \\
+  HYDRO & LoFTR+M3D & 1 & 0.17 / 0.33 \\
+  HYDRO & MASt3R+M3D & 1 & 0.18 / 0.35 \\
+  \hline
+  \end{tabular*}
+  \caption[HGE/HYDRO ref-anchored consistency by PE method]{Same multi-session runs as
+    \mytabref{tab:ablation-pe-kitti}. Each connected component's reference session is Umeyama-fit
+    to GT, that fixed transform applied to the rest of the component, then measured against each
+    session's own GT (same method as \mytabref{tab:experiments-hge-ate}/\mytabref{tab:experiments-hydro-ate}).
+    ``Components'' is the number of connected components the multi-session graph settled into for
+    that method.}
+  \label{tab:ablation-pe-anchoring}
+\end{table}
+
+\begin{table}[htb]
+  \centering
+  \footnotesize
+  \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}} llrr}
+  \hline
+  \textbf{Dataset} & \textbf{Method} & \textbf{Wall time (s)} & \textbf{vs.\ LightGlue} \\
+  \hline
+  KITTI & LightGlue+M3D & 470.8 & 1.00$\times$ \\
+  KITTI & LoFTR+M3D & 917.6 & 1.95$\times$ \\
+  KITTI & MASt3R+M3D & 677.6 & 1.44$\times$ \\
+  \hline
+  HGE & LightGlue+M3D & 275.7 & 1.00$\times$ \\
+  HGE & LoFTR+M3D & 1506.3 & 5.46$\times$ \\
+  HGE & MASt3R+M3D & 1424.6 & 5.17$\times$ \\
+  \hline
+  HYDRO & LightGlue+M3D & 1050.4 & 1.00$\times$ \\
+  HYDRO & LoFTR+M3D & 2171.5 & 2.07$\times$ \\
+  HYDRO & MASt3R+M3D & 2754.4 & 2.62$\times$ \\
+  \hline
+  \end{tabular*}
+  \caption[PE-method full-pipeline wall time]{Real elapsed wall time for the whole pipeline
+    invocation, same multi-session runs as \mytabref{tab:ablation-pe-kitti}, all nine on the same
+    GPU (RTX 4090). Accuracy is essentially tied across all three methods
+    (\mytabref{tab:ablation-pe-kitti}, \mytabref{tab:ablation-pe-anchoring}); this table is the
+    reason LightGlue stays the production default despite that tie.}
+  \label{tab:ablation-pe-timing}
+\end{table}
 
 \subsection{Timing}
 \label{sec:experiments-ablation-timing}
@@ -452,5 +892,67 @@ per-pair time.
 Full 11-session KITTI wall-clock time, both backbones, both modes, on two GPUs (a Quadro RTX 6000
 and an RTX 4090), broken down by pipeline phase (retrieval, pose estimation, graph optimization,
 other), plus a hardware-matched runtime comparison against 2GO's own published number.
-% TODO: Table 10 (KITTI wall time and phase breakdown by backbone, mode, and GPU) and the
-% hardware-matched comparison against 2GO.
+
+\begin{table}[htb]
+  \centering
+  \scriptsize
+  \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}} lrrrr}
+  \hline
+  \textbf{Metric} & \textbf{ORB-SLAM3, single} & \textbf{ORB-SLAM3, multi} & \textbf{VINS-Fusion, single} & \textbf{VINS-Fusion, multi} \\
+  \hline
+  Recording (s) & 2407.31 & 2407.31 & 2407.31 & 2407.31 \\
+  Odom.\ gen.\ (s) & 2613.4 & 2613.4 & 954.0 & 954.0 \\
+  Wall, Quadro (s) & 1189.64 & 1322.08 & 1076.28 & 1225.76 \\
+  Wall, 4090 (s) & 529.75 & 601.75 & 505.41 & 662.04 \\
+  Speedup & 2.25$\times$ & 2.20$\times$ & 2.13$\times$ & 1.85$\times$ \\
+  RTF (Quadro / 4090) & 49.4\% / 22.0\% & 54.9\% / 25.0\% & 44.7\% / 21.0\% & 50.9\% / 27.5\% \\
+  Retrieval (Quadro / 4090) & 0.31\% / 5.15\% & 1.32\% / 3.08\% & 0.34\% / 1.05\% & 1.38\% / 9.47\% \\
+  Pose est.\ (Quadro / 4090) & 55.11\% / 56.77\% & 62.12\% / 64.42\% & 56.36\% / 58.02\% & 61.96\% / 55.14\% \\
+  Graph opt.\ (Quadro / 4090) & 1.10\% / 1.46\% & 1.08\% / 1.52\% & 1.08\% / 3.52\% & 1.01\% / 1.41\% \\
+  Other (Quadro / 4090) & 43.48\% / 36.62\% & 35.49\% / 30.99\% & 42.22\% / 37.41\% & 35.65\% / 33.98\% \\
+  Desc.\ cache hit & 0.0\% (0/4055) & 0.0\% (0/4055) & 0.0\% (0/4043) & 0.0\% (0/4043) \\
+  Depth cache hit & 62.8\% (1119/1782) & 64.0\% (1356/2120) & 64.8\% (1126/1738) & 65.5\% (1355/2068) \\
+  \hline
+  \end{tabular*}
+  \caption[KITTI wall time and phase breakdown]{All 11 KITTI sequences, single invocation each.
+    Wall time is real elapsed clock time including I/O, not compute time alone. Odom.\ gen.\ is a
+    one-time upstream cost, not re-run per invocation. Phase percentages read from each run's own
+    \texttt{timings.json}; ``Other'' is the remainder against wall time. All runs use
+    \texttt{--fresh\_cache}, so cache-hit numbers reflect within-run reuse only, no cross-run
+    caching.}
+  \label{tab:ablation-timing-kitti}
+\end{table}
+
+\begin{table}[htb]
+  \centering
+  \footnotesize
+  \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}} lrrrrr}
+  \hline
+  \textbf{Run} & \textbf{Odom.\ gen.\ (s)} & \textbf{Runtime (s)} & \textbf{Recording (s)} & \textbf{RTF} & \textbf{LC-edges} \\
+  \hline
+  \multicolumn{6}{l}{\textit{KITTI-00, VINS-Fusion odometry}} \\
+  2GO paper (CL Absolute) & -- (not reported) & 387.16 & 469 & 82.5\% & 517 \\
+  Ours, unbatched & 179.7 (179.2--189.7, $n{=}4$) & 134.3 (127.7--136.6, $n{=}5$) & 470.6 & 28.5\% (27.1--29.0\%) & 142 \\
+  Ours, batched (\texttt{batch\_depth}) & 179.7 (179.2--189.7, $n{=}4$) & 157.9 (134.8--160.9, $n{=}5$) & 470.6 & 33.5\% (28.6--34.2\%) & 142 \\
+  \hline
+  \multicolumn{6}{l}{\textit{KITTI-00, ORB-SLAM3 odometry (no published 2GO number)}} \\
+  Ours, unbatched & 501.3 (501.0--506.3, $n{=}5$) & 142.4 (135.5--168.1, $n{=}5$) & 470.6 & 30.3\% (28.8--35.7\%) & 134 \\
+  Ours, batched (\texttt{batch\_depth}) & 501.3 (501.0--506.3, $n{=}5$) & 137.6 (137.3--143.9, $n{=}5$) & 470.6 & 29.2\% (29.2--30.6\%) & 134 \\
+  \hline
+  \multicolumn{6}{l}{\textit{\texttt{ciampino\_train0}, VINS-Fusion odometry (2GO's own slowest reported case)}} \\
+  2GO paper (CL Absolute) & -- (not reported) & 2067.31 & 1549 & 133.5\% & 3403 \\
+  Ours & 1791.0 & 586.57 & 1549 & 37.9\% & 34 \\
+  \hline
+  \multicolumn{6}{l}{\textit{\texttt{ciampino\_train0}, ORB-SLAM3 odometry (no published 2GO number)}} \\
+  Ours & 2497.2 & 480.90 & 1549 & 31.0\% & 299 \\
+  \hline
+  \end{tabular*}
+  \caption[Isolated-sequence runtime vs.\ 2GO, same GPU model]{Both systems on an RTX 4090. 2GO's
+    own CL--Absolute variant (LightGlue matching + metric monocular depth lift, no dense
+    reconstruction) is the directly-comparable one. Runtime cells are 5-repeat-trial campaigns
+    (median, min--max). Odom.\ gen.\ here is KITTI-00-specific, not the full 11-session total of
+    \mytabref{tab:ablation-timing-kitti}. On 2GO's own slowest reported case
+    (\texttt{ciampino\_train0}), our runtime is real and substantially lower (586.57\,s vs.\
+    2067.31\,s) at a real RTF of 37.9\% vs.\ their reported 133.5\%.}
+  \label{tab:ablation-timing-2go}
+\end{table}
