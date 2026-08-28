@@ -266,9 +266,60 @@ validate the cross-session alignment itself the way HGE/HYDRO/RobotCar can.
   \caption[KITTI ATE, ORB-SLAM3 backbone]{KITTI ATE (m), ORB-SLAM3 backbone. ``Raw (ours)'' is
     our own regenerated ORB-SLAM3 run's raw odometry, a different number from ``ORB-SLAM3
     (pub.)'', the ORB-SLAM3 paper's own externally published result. Total is the L2-norm across
-    all 7 sequences, Mean the arithmetic mean of the same 7. Bold marks the best result in a row,
-    underline the second-best.}
+    all 7 sequences, Mean the arithmetic mean of the same 7, separated from the per-sequence
+    rows by the rule above so they read as summary rows, not an 8th sequence. Bold marks the
+    best result in a row, underline the second-best.}
   \label{tab:experiments-kitti-orb}
+\end{table}
+
+ORB-SLAM3 is non-deterministic, so \mytabref{tab:experiments-kitti-orb}'s ``Single (ours)''/
+``Multi (ours)'' columns are themselves a mean over 5 independently regenerated odometry runs.
+\mytabref{tab:experiments-kitti-orb-runs} shows every one of those 5 runs individually, for full
+transparency about the run-to-run spread the mean is hiding.
+
+\begin{table}[htb]
+  \centering
+  \scriptsize
+  \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}} lrrrrrrrr}
+  \hline
+  \multicolumn{9}{c}{\textbf{Single-session}} \\
+  \hline
+  \textbf{Seq} & \textbf{Run 1} & \textbf{Run 2} & \textbf{Run 3} & \textbf{Run 4} & \textbf{Run 5} & \textbf{Mean} & \textbf{Min} & \textbf{Max} \\
+  \hline
+  00 & 1.24 & 1.22 & 1.28 & 1.24 & 1.29 & 1.25 & 1.22 & 1.29 \\
+  02 & 4.78 & 5.22 & 4.66 & 4.82 & 4.79 & 4.85 & 4.66 & 5.22 \\
+  05 & 1.00 & 1.05 & 1.02 & 1.05 & 0.95 & 1.02 & 0.95 & 1.05 \\
+  06 & 0.88 & 0.87 & 0.94 & 0.92 & 0.86 & 0.90 & 0.86 & 0.94 \\
+  07 & 0.45 & 0.43 & 0.49 & 0.45 & 0.47 & 0.46 & 0.43 & 0.49 \\
+  08 & 2.92 & 3.39 & 3.86 & 3.59 & 2.36 & 3.22 & 2.36 & 3.86 \\
+  09 & 1.79 & 1.85 & 1.78 & 1.91 & 1.88 & 1.84 & 1.78 & 1.91 \\
+  \hline
+  Total & 6.17 & 6.76 & 6.60 & 6.59 & 5.96 & 6.42 & 5.96 & 6.76 \\
+  Mean & 1.87 & 2.00 & 2.00 & 2.00 & 1.80 & 1.93 & 1.80 & 2.00 \\
+  \hline
+  \multicolumn{9}{c}{\textbf{Multi-session}} \\
+  \hline
+  \textbf{Seq} & \textbf{Run 1} & \textbf{Run 2} & \textbf{Run 3} & \textbf{Run 4} & \textbf{Run 5} & \textbf{Mean} & \textbf{Min} & \textbf{Max} \\
+  \hline
+  00 & 1.23 & 1.22 & 1.27 & 1.23 & 1.28 & 1.25 & 1.22 & 1.28 \\
+  02 & 4.78 & 5.22 & 4.66 & 4.82 & 4.79 & 4.85 & 4.66 & 5.22 \\
+  05 & 1.00 & 1.05 & 1.02 & 1.05 & 0.95 & 1.02 & 0.95 & 1.05 \\
+  06 & 0.88 & 0.87 & 0.94 & 0.92 & 0.86 & 0.90 & 0.86 & 0.94 \\
+  07 & 0.31 & 0.32 & 0.34 & 0.34 & 0.35 & 0.33 & 0.31 & 0.35 \\
+  08 & 2.92 & 3.39 & 3.86 & 3.59 & 2.36 & 3.22 & 2.36 & 3.86 \\
+  09 & 1.79 & 1.85 & 1.78 & 1.91 & 1.88 & 1.84 & 1.78 & 1.91 \\
+  \hline
+  Total & 6.16 & 6.75 & 6.59 & 6.58 & 5.95 & 6.41 & 5.95 & 6.75 \\
+  Mean & 1.84 & 1.99 & 1.98 & 1.98 & 1.78 & 1.92 & 1.78 & 1.99 \\
+  \hline
+  \end{tabular*}
+  \caption[KITTI ORB-SLAM3, all 5 individual regenerated-odometry runs]{Every one of the 5
+    independently regenerated ORB-SLAM3 odometry runs behind \mytabref{tab:experiments-kitti-orb}'s
+    ``Single (ours)''/``Multi (ours)'' columns, single-session mode above, multi-session mode
+    below. Mean/Min/Max computed across the 5 runs per row; Total/Mean rows are the same
+    L2-norm/arithmetic-mean convention as \mytabref{tab:experiments-kitti-orb}, computed once per
+    run then summarized the same way across runs.}
+  \label{tab:experiments-kitti-orb-runs}
 \end{table}
 
 \begin{table}[htb]
@@ -286,16 +337,13 @@ validate the cross-session alignment itself the way HGE/HYDRO/RobotCar can.
   08$^{*}$ & 10.03 & 10.01 & 17.04 & 14.27 & \textbf{4.03} & \underline{10.03} & \underline{10.03} \\
   09 & 7.69 & 7.71 & 15.97 & 12.31 & 4.66 & \textbf{3.32} & \textbf{3.32} \\
   \hline
-  Total (n=7) & 28.80 & 19.07 & 40.06 & 34.96 & \textbf{12.56} & \underline{13.58} & \underline{13.58} \\
-  Mean (n=7) & 9.09 & 5.85 & 14.32 & 12.85 & \textbf{3.50} & 3.80 & \underline{3.79} \\
-  \hline
   \end{tabular*}
   \caption[KITTI ATE, VINS-Fusion backbone]{KITTI ATE (m), VINS-Fusion backbone. Same 7
     sequences and the same ``Raw (ours)'' vs. ``VINS+PGO (pub.)'' distinction as
     \mytabref{tab:experiments-kitti-orb}. VINS-Fusion odometry is confirmed deterministic (5
     independent regenerations, bit-identical output), so no min-max range is needed here.
     $^{*}$Sequence 08 is a genuine detection miss for this backbone, zero intra- or
-    cross-session edges found, so single-session and multi-session both equal raw odometry;
+    cross-session edges found, so single-session and multi-session both equal raw odometry,
     kept in rather than hidden. Bold marks the best result in a row, underline the second-best.}
   \label{tab:experiments-kitti-vins}
 \end{table}
@@ -419,35 +467,136 @@ The per-sequence ATE numbers in \mytabref{tab:experiments-kitti-orb} and
 \mytabref{tab:experiments-kitti-vins} are point summaries, one number per sequence. This
 subsection instead plots every one of the 7 loop-closure sequences' full trajectories, real
 raw odometry, real single-session output, and real multi-session output, each aligned into GT
-the same way the ATE numbers themselves are (Umeyama, no scale correction). Every sequence is
-rotated in-plane to its own principal axis before plotting, so a near-straight sequence like 06
-does not force a page-filling, mostly-empty panel just to preserve true-north orientation; only
-each trajectory's shape relative to GT matters here, not its compass heading. Because sequences
-00 and 07 are the only pair with a real cross-session overlap
-(\mysecref{sec:experiments-kitti}), the single- and multi-session columns are visually
-identical for every other sequence, by construction, not a plotting error. Where a real,
-if small, improvement does exist, the multi-session panel's inset zooms into the single point
-along the trajectory where the single- and multi-session estimates diverge most, so that
-improvement stays visible even at full-trajectory scale.
+the same way the ATE numbers themselves are (Umeyama, no scale correction), one figure per
+sequence per backbone (14 total) so each gets the page width to itself rather than being
+squeezed into a shared grid. Every sequence is rotated in-plane to its own principal axis before
+plotting, so a near-straight sequence like 06 does not force a mostly-empty panel just to
+preserve true-north orientation; only each trajectory's shape relative to GT matters here, not
+its compass heading. Because sequences 00 and 07 are the only pair with a real cross-session
+overlap (\mysecref{sec:experiments-kitti}), the single- and multi-session columns are visually
+identical for every other sequence, by construction, not a plotting error. Every panel carries
+its own inset, zoomed on the trajectory's last stretch, where accumulated drift (and so the
+raw-vs-corrected difference) is largest, positioned to overflow past its panel's own edge
+rather than being squeezed to fit inside it.
 
 \begin{figure}[htb]
   \centering
-  \includegraphics[width=0.82\textwidth]{images/04_experiments/04_ablation/kitti_ablation_grid_orb.png}
-  \caption[KITTI trajectory grid, ORB-SLAM3 backbone]{All 7 loop-closure KITTI sequences, ORB-SLAM3
-    backbone: raw odometry, single-session, and multi-session output (green), against GT (red),
-    GT-aligned. Inset on the multi-session column zooms into the point of largest single-vs-multi
-    divergence along that sequence.}
-  \label{fig:experiments-ablation-kitti-orb}
+  \includegraphics[width=\textwidth]{images/04_experiments/04_ablation/kitti_traj_orb_00.png}
+  \caption[KITTI seq 00, ORB-SLAM3]{KITTI sequence 00, ORB-SLAM3 backbone: raw odometry,
+    single-session, and multi-session output (green) against GT (red), GT-aligned, each with an
+    inset zoomed on the trajectory's final stretch.}
+  \label{fig:experiments-ablation-kitti-orb-00}
 \end{figure}
 
 \begin{figure}[htb]
   \centering
-  \includegraphics[width=0.82\textwidth]{images/04_experiments/04_ablation/kitti_ablation_grid_vins.png}
-  \caption[KITTI trajectory grid, VINS-Fusion backbone]{Same layout as
-    \myfigref{fig:experiments-ablation-kitti-orb}, VINS-Fusion backbone. Sequence 08's raw
-    odometry visibly drifts from GT and stays uncorrected in both the single- and
-    multi-session columns, the same drift pattern in all three panels
-    (\mytabref{tab:experiments-kitti-vins}'s detection-miss caveat: zero intra- or
-    cross-session edges found for this sequence on this backbone).}
-  \label{fig:experiments-ablation-kitti-vins}
+  \includegraphics[width=\textwidth]{images/04_experiments/04_ablation/kitti_traj_orb_02.png}
+  \caption[KITTI seq 02, ORB-SLAM3]{KITTI sequence 02, ORB-SLAM3 backbone, same layout as
+    \myfigref{fig:experiments-ablation-kitti-orb-00}.}
+  \label{fig:experiments-ablation-kitti-orb-02}
+\end{figure}
+
+\begin{figure}[htb]
+  \centering
+  \includegraphics[width=\textwidth]{images/04_experiments/04_ablation/kitti_traj_orb_05.png}
+  \caption[KITTI seq 05, ORB-SLAM3]{KITTI sequence 05, ORB-SLAM3 backbone, same layout as
+    \myfigref{fig:experiments-ablation-kitti-orb-00}.}
+  \label{fig:experiments-ablation-kitti-orb-05}
+\end{figure}
+
+\begin{figure}[htb]
+  \centering
+  \includegraphics[width=\textwidth]{images/04_experiments/04_ablation/kitti_traj_orb_06.png}
+  \caption[KITTI seq 06, ORB-SLAM3]{KITTI sequence 06, ORB-SLAM3 backbone, same layout as
+    \myfigref{fig:experiments-ablation-kitti-orb-00}. A near-straight there-and-back drive, the
+    real reason this sequence needed the in-plane rotation described above.}
+  \label{fig:experiments-ablation-kitti-orb-06}
+\end{figure}
+
+\begin{figure}[htb]
+  \centering
+  \includegraphics[width=\textwidth]{images/04_experiments/04_ablation/kitti_traj_orb_07.png}
+  \caption[KITTI seq 07, ORB-SLAM3]{KITTI sequence 07, ORB-SLAM3 backbone, same layout as
+    \myfigref{fig:experiments-ablation-kitti-orb-00}. One of only two sequences with a real
+    cross-session edge (\mysecref{sec:experiments-kitti}): the multi-session inset visibly
+    hugs GT tighter at the end than raw or single-session do, matching
+    \mytabref{tab:experiments-kitti-orb}'s $0.46\to0.33$m improvement.}
+  \label{fig:experiments-ablation-kitti-orb-07}
+\end{figure}
+
+\begin{figure}[htb]
+  \centering
+  \includegraphics[width=\textwidth]{images/04_experiments/04_ablation/kitti_traj_orb_08.png}
+  \caption[KITTI seq 08, ORB-SLAM3]{KITTI sequence 08, ORB-SLAM3 backbone, same layout as
+    \myfigref{fig:experiments-ablation-kitti-orb-00}.}
+  \label{fig:experiments-ablation-kitti-orb-08}
+\end{figure}
+
+\begin{figure}[htb]
+  \centering
+  \includegraphics[width=\textwidth]{images/04_experiments/04_ablation/kitti_traj_orb_09.png}
+  \caption[KITTI seq 09, ORB-SLAM3]{KITTI sequence 09, ORB-SLAM3 backbone, same layout as
+    \myfigref{fig:experiments-ablation-kitti-orb-00}.}
+  \label{fig:experiments-ablation-kitti-orb-09}
+\end{figure}
+
+\begin{figure}[htb]
+  \centering
+  \includegraphics[width=\textwidth]{images/04_experiments/04_ablation/kitti_traj_vins_00.png}
+  \caption[KITTI seq 00, VINS-Fusion]{KITTI sequence 00, VINS-Fusion backbone, same layout as
+    \myfigref{fig:experiments-ablation-kitti-orb-00}.}
+  \label{fig:experiments-ablation-kitti-vins-00}
+\end{figure}
+
+\begin{figure}[htb]
+  \centering
+  \includegraphics[width=\textwidth]{images/04_experiments/04_ablation/kitti_traj_vins_02.png}
+  \caption[KITTI seq 02, VINS-Fusion]{KITTI sequence 02, VINS-Fusion backbone, same layout as
+    \myfigref{fig:experiments-ablation-kitti-orb-00}.}
+  \label{fig:experiments-ablation-kitti-vins-02}
+\end{figure}
+
+\begin{figure}[htb]
+  \centering
+  \includegraphics[width=\textwidth]{images/04_experiments/04_ablation/kitti_traj_vins_05.png}
+  \caption[KITTI seq 05, VINS-Fusion]{KITTI sequence 05, VINS-Fusion backbone, same layout as
+    \myfigref{fig:experiments-ablation-kitti-orb-00}.}
+  \label{fig:experiments-ablation-kitti-vins-05}
+\end{figure}
+
+\begin{figure}[htb]
+  \centering
+  \includegraphics[width=\textwidth]{images/04_experiments/04_ablation/kitti_traj_vins_06.png}
+  \caption[KITTI seq 06, VINS-Fusion]{KITTI sequence 06, VINS-Fusion backbone, same layout as
+    \myfigref{fig:experiments-ablation-kitti-orb-00}.}
+  \label{fig:experiments-ablation-kitti-vins-06}
+\end{figure}
+
+\begin{figure}[htb]
+  \centering
+  \includegraphics[width=\textwidth]{images/04_experiments/04_ablation/kitti_traj_vins_07.png}
+  \caption[KITTI seq 07, VINS-Fusion]{KITTI sequence 07, VINS-Fusion backbone, same layout as
+    \myfigref{fig:experiments-ablation-kitti-orb-00}. The other sequence with a real
+    cross-session edge; matches \mytabref{tab:experiments-kitti-vins}'s $0.56\to0.44$m
+    improvement.}
+  \label{fig:experiments-ablation-kitti-vins-07}
+\end{figure}
+
+\begin{figure}[htb]
+  \centering
+  \includegraphics[width=\textwidth]{images/04_experiments/04_ablation/kitti_traj_vins_08.png}
+  \caption[KITTI seq 08, VINS-Fusion]{KITTI sequence 08, VINS-Fusion backbone, same layout as
+    \myfigref{fig:experiments-ablation-kitti-orb-00}. Raw odometry visibly drifts from GT and
+    stays uncorrected in both the single- and multi-session columns, the same drift pattern in
+    all three panels (\mytabref{tab:experiments-kitti-vins}'s detection-miss caveat: zero
+    intra- or cross-session edges found for this sequence on this backbone).}
+  \label{fig:experiments-ablation-kitti-vins-08}
+\end{figure}
+
+\begin{figure}[htb]
+  \centering
+  \includegraphics[width=\textwidth]{images/04_experiments/04_ablation/kitti_traj_vins_09.png}
+  \caption[KITTI seq 09, VINS-Fusion]{KITTI sequence 09, VINS-Fusion backbone, same layout as
+    \myfigref{fig:experiments-ablation-kitti-orb-00}.}
+  \label{fig:experiments-ablation-kitti-vins-09}
 \end{figure}
