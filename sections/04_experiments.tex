@@ -46,13 +46,13 @@ marks this per dataset; \mysecref{sec:method-gate}'s two-tier gate and every ATE
 \begin{table}[htb]
   \centering
   \small
-  \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}} llllll}
+  \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}} p{2.3cm}p{2.5cm}p{1.6cm}p{2.4cm}p{1.7cm}p{1.6cm}}
   \hline
   \textbf{Dataset} & \textbf{Agent} & \textbf{Env.} & \textbf{Camera(s)} & \textbf{Sessions} & \textbf{Multi-sess.\ GT} \\
   \hline
   KITTI & car & outdoor & \texttt{image\_2} (1/4) & 11 (7 eval.) & No \\
-  HGE (HoloLens) & handheld/head-worn AR & indoor+outdoor & \texttt{hetlf} (1/4) & 5 & Yes \\
-  HGE (iOS) & handheld AR & indoor+outdoor & \texttt{phone} (1/1) & 5 & Yes \\
+  HGE (HoloLens) & handheld/head-worn AR & indoor $+$ outdoor & \texttt{hetlf} (1/4) & 5 & Yes \\
+  HGE (iOS) & handheld AR & indoor $+$ outdoor & \texttt{phone} (1/1) & 5 & Yes \\
   HYDRO & legged robot & indoor & \texttt{frontleft} (1/4) & 5 & Yes \\
   RobotCar & car & outdoor & \texttt{stereo\_centre} (1/1) & 4 (2 splits) & Yes \\
   VBR & car & outdoor & \texttt{camera\_left} (1/2) & 8 & No \\
@@ -95,9 +95,9 @@ single, non-revisiting drives.
 
 \begin{figure}[htb]
   \centering
-  \includegraphics[height=6.5cm]{images/04_experiments/01_datasets/dataset_hge_hololens.png}
+  \includegraphics[height=5.7cm]{images/04_experiments/01_datasets/dataset_hge_hololens.png}
   \hfill
-  \includegraphics[height=6.5cm]{images/04_experiments/01_datasets/dataset_hge_ios.png}
+  \includegraphics[height=5.7cm]{images/04_experiments/01_datasets/dataset_hge_ios.png}
   \caption[HGE ground-truth trajectories, both capture devices]{GT trajectories for both HGE
     capture devices, in the site's own shared frame, over a faint backdrop of the real site scan
     (a horizontal slice of the laser/photogrammetry point cloud at trajectory height). Left: 5
@@ -146,9 +146,9 @@ registered to one shared site frame and the same real site-scan backdrop is avai
 
 \begin{figure}[htb]
   \centering
-  \includegraphics[height=7cm]{images/04_experiments/01_datasets/dataset_robotcar_easy_osm.png}
+  \includegraphics[width=0.49\textwidth]{images/04_experiments/01_datasets/dataset_robotcar_easy_osm.png}
   \hfill
-  \includegraphics[height=7cm]{images/04_experiments/01_datasets/dataset_robotcar_hard_osm.png}
+  \includegraphics[width=0.49\textwidth]{images/04_experiments/01_datasets/dataset_robotcar_hard_osm.png}
   \caption[RobotCar ground-truth trajectories, both splits]{RTK GT trajectories for both
     RobotCar splits, restricted to each session's own RTK-usable stretch, over a real
     OpenStreetMap basemap of central Oxford. Left: easy split (3 daytime sessions). Right: hard
