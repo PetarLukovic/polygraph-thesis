@@ -45,26 +45,23 @@ marks this per dataset; \mysecref{sec:method-gate}'s two-tier gate and every ATE
 
 \begin{table}[htb]
   \centering
+  \small
   \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}} llllll}
   \hline
-  \textbf{Dataset} & \textbf{Agent} & \textbf{Env.} & \textbf{Camera(s) used} & \textbf{Sessions} & \textbf{Multi-session GT} \\
+  \textbf{Dataset} & \textbf{Agent} & \textbf{Env.} & \textbf{Camera(s)} & \textbf{Sessions} & \textbf{Multi-sess.\ GT} \\
   \hline
-  KITTI & car & outdoor & \texttt{image\_2} (1 of 4) & 11 (7 eval.) & No \\
-  HGE (HoloLens) & handheld/head-worn AR & indoor + outdoor & \texttt{hetlf} (1 of 4) & 5 & Yes \\
-  HGE (iOS) & handheld AR & indoor + outdoor & \texttt{phone} (1) & 5 & Yes \\
-  HYDRO & legged robot & indoor & \texttt{frontleft} (1 of 4) & 5 & Yes \\
-  RobotCar & car & outdoor & \texttt{stereo\_centre} (1) & 4 (2 splits) & Yes \\
-  VBR & car & outdoor & \texttt{camera\_left} (1 of 2) & 8 & No \\
-  EuRoC & aerial vehicle (MAV) & indoor & \texttt{cam0} (1 of 2) & 11 (3 rooms) & Partial (per room) \\
+  KITTI & car & outdoor & \texttt{image\_2} (1/4) & 11 (7 eval.) & No \\
+  HGE (HoloLens) & handheld/head-worn AR & indoor+outdoor & \texttt{hetlf} (1/4) & 5 & Yes \\
+  HGE (iOS) & handheld AR & indoor+outdoor & \texttt{phone} (1/1) & 5 & Yes \\
+  HYDRO & legged robot & indoor & \texttt{frontleft} (1/4) & 5 & Yes \\
+  RobotCar & car & outdoor & \texttt{stereo\_centre} (1/1) & 4 (2 splits) & Yes \\
+  VBR & car & outdoor & \texttt{camera\_left} (1/2) & 8 & No \\
+  EuRoC & aerial vehicle (MAV) & indoor & \texttt{cam0} (1/2) & 11 (3 rooms) & Partial \\
   \hline
   \end{tabular*}
-  \caption[Dataset overview]{The six evaluation datasets (HGE counted once per capture device),
-    the agent and environment each was captured in, the single camera Polygraph's retrieval and
-    pose estimation actually run on in the main experiments (parenthetical: how many are
-    available in total, used by \mysecref{sec:experiments-ablation-cameras}'s camera-pairing
-    ablation), how many sessions exist, and whether ground truth places more than one session in
-    one shared coordinate frame at all. ``Partial'' for EuRoC: shared within each of the three
-    rooms, not across rooms (\mysecref{sec:experiments-euroc}).}
+  \caption[Dataset overview]{Used/available cameras, agent, environment, session counts, and
+    multi-session-GT eligibility per dataset. EuRoC's ``Partial'': shared GT frame within each
+    of its three rooms, not across rooms (\mysecref{sec:experiments-euroc}).}
   \label{tab:experiments-datasets-overview}
 \end{table}
 
@@ -98,9 +95,9 @@ single, non-revisiting drives.
 
 \begin{figure}[htb]
   \centering
-  \includegraphics[width=0.49\textwidth]{images/04_experiments/01_datasets/dataset_hge_hololens.png}
+  \includegraphics[height=6.5cm]{images/04_experiments/01_datasets/dataset_hge_hololens.png}
   \hfill
-  \includegraphics[width=0.49\textwidth]{images/04_experiments/01_datasets/dataset_hge_ios.png}
+  \includegraphics[height=6.5cm]{images/04_experiments/01_datasets/dataset_hge_ios.png}
   \caption[HGE ground-truth trajectories, both capture devices]{GT trajectories for both HGE
     capture devices, in the site's own shared frame, over a faint backdrop of the real site scan
     (a horizontal slice of the laser/photogrammetry point cloud at trajectory height). Left: 5
@@ -149,9 +146,9 @@ registered to one shared site frame and the same real site-scan backdrop is avai
 
 \begin{figure}[htb]
   \centering
-  \includegraphics[width=0.49\textwidth]{images/04_experiments/01_datasets/dataset_robotcar_easy_osm.png}
+  \includegraphics[height=7cm]{images/04_experiments/01_datasets/dataset_robotcar_easy_osm.png}
   \hfill
-  \includegraphics[width=0.49\textwidth]{images/04_experiments/01_datasets/dataset_robotcar_hard_osm.png}
+  \includegraphics[height=7cm]{images/04_experiments/01_datasets/dataset_robotcar_hard_osm.png}
   \caption[RobotCar ground-truth trajectories, both splits]{RTK GT trajectories for both
     RobotCar splits, restricted to each session's own RTK-usable stretch, over a real
     OpenStreetMap basemap of central Oxford. Left: easy split (3 daytime sessions). Right: hard
@@ -219,7 +216,7 @@ graphs for exactly this reason. EuRoC's own odometry is already extremely tight 
 tightest of any dataset here), so its main results section reframes the comparison around
 cross-session anchoring accuracy rather than raw ATE, which barely moves.
 
-\newpage
+\clearpage
 
 \section{Main Experiments}
 \label{sec:experiments-main}
