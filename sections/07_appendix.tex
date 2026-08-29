@@ -10,9 +10,19 @@ This appendix collects supplementary material that backs up \mychapterref{chap:e
 own results without being central enough to its narrative to sit in the main text: full
 per-sequence trajectory visualizations and other detailed breakdowns.
 
-\clearpage
 \section{HGE Ref-Anchoring Visualization}
 \label{sec:appendix-hge-anchor}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.6\textwidth]{images/07_appendix/hge_hololens_anchor_combined.png}
+  \caption[HGE HoloLens ref-anchored estimates, all sessions combined]{Both HoloLens components
+    in one shared frame, same style as \myfigref{fig:appendix-hydro-anchor-combined}. The two
+    components sit in genuinely different parts of the site and never share a cross-session edge
+    with each other, only within their own component.}
+  \label{fig:appendix-hge-hololens-anchor-combined}
+\end{figure}
+
 
 \begin{figure}[htbp]
   \centering
@@ -23,16 +33,6 @@ per-sequence trajectory visualizations and other detailed breakdowns.
     (reference \texttt{139}, others \texttt{568}/\texttt{996}) and B (reference \texttt{295},
     other \texttt{693}), each anchored by its own component's fixed transform.}
   \label{fig:appendix-hge-hololens-anchor-individual}
-\end{figure}
-
-\begin{figure}[htbp]
-  \centering
-  \includegraphics[width=0.85\textwidth]{images/07_appendix/hge_hololens_anchor_combined.png}
-  \caption[HGE HoloLens ref-anchored estimates, all sessions combined]{Both HoloLens components
-    in one shared frame, same style as \myfigref{fig:appendix-hydro-anchor-combined}. The two
-    components sit in genuinely different parts of the site and never share a cross-session edge
-    with each other, only within their own component.}
-  \label{fig:appendix-hge-hololens-anchor-combined}
 \end{figure}
 
 \begin{figure}[htbp]
@@ -120,7 +120,6 @@ per-sequence trajectory visualizations and other detailed breakdowns.
   \label{fig:appendix-hydro-anchor-combined}
 \end{figure}
 
-\clearpage
 \section{KITTI Trajectory Comparison}
 \label{sec:appendix-kitti-traj}
 
@@ -261,6 +260,7 @@ results.
   \label{tab:ablation-cameras-kitti}
 \end{table}
 
+\newpage
 \subsection{Pose Estimation Method}
 \label{sec:appendix-ablation-pe}
 
@@ -433,6 +433,7 @@ results.
   \label{tab:ablation-pe-timing}
 \end{table}
 
+\clearpage
 \subsection{Timing}
 \label{sec:appendix-ablation-timing}
 
@@ -502,7 +503,7 @@ results.
   \label{tab:ablation-timing-2go}
 \end{table}
 
-\begin{table}[htb]
+\begin{table}[t]
   \centering
   \footnotesize
   \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}} llrrrr}
