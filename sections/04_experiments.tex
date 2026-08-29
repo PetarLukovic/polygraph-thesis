@@ -823,79 +823,9 @@ defaults, so the accept/reject breakdown is directly meaningful), then as full s
 multi-session KITTI runs end to end. Reports, per method and dataset: success rate and the
 breakdown of \emph{why} a pair was rejected (no match, essential-matrix stage, insufficient
 points, final PnP stage), translation/rotation error on successful pairs, and matching plus total
-per-pair time.
-
-\begin{table}[htb]
-  \centering
-  \footnotesize
-  \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}} lrrrrr}
-  \hline
-  \textbf{Method} & \textbf{Success} & \textbf{No match} & \textbf{Ess.-mat.} & \textbf{Insuff.\ pts} & \textbf{PnP rej.} \\
-  \hline
-  \multicolumn{6}{l}{\textit{HGE}} \\
-  LG+M3D & \underline{76.8\%} & 0.4\% & 2.0\% & 20.5\% & 0.3\% \\
-  LoFTR+M3D & 75.4\% & 0.0\% & 0.0\% & 24.0\% & 0.6\% \\
-  MASt3R+M3D & \textbf{91.8\%} & 0.0\% & 0.0\% & 2.9\% & 5.3\% \\
-  \hline
-  \multicolumn{6}{l}{\textit{KITTI}} \\
-  LG+M3D & \textbf{77.6\%} & 0.0\% & 0.0\% & 3.6\% & 18.8\% \\
-  LoFTR+M3D & \underline{66.6\%} & 0.0\% & 0.0\% & 2.5\% & 30.9\% \\
-  MASt3R+M3D & 62.8\% & 0.0\% & 0.0\% & 0.6\% & 36.6\% \\
-  \hline
-  \multicolumn{6}{l}{\textit{HYDRO}} \\
-  LG+M3D & \textbf{44.5\%} & 7.8\% & 24.5\% & 22.9\% & 0.2\% \\
-  LoFTR+M3D & \underline{42.7\%} & 0.0\% & 0.3\% & 55.0\% & 2.0\% \\
-  MASt3R+M3D & 33.7\% & 0.0\% & 0.2\% & 55.0\% & 11.1\% \\
-  \hline
-  \multicolumn{6}{l}{\textit{Overall (pooled, $n{=}2994$ pairs)}} \\
-  LG+M3D & \textbf{66.3\%} (1984/2994) & 2.7\% & 8.9\% & 15.7\% & 6.4\% \\
-  LoFTR+M3D & 61.6\% (1843/2994) & 0.0\% & 0.1\% & 27.2\% & 11.2\% \\
-  MASt3R+M3D & \underline{62.8\%} (1879/2994) & 0.0\% & 0.1\% & 19.5\% & 17.7\% \\
-  \hline
-  \end{tabular*}
-  \caption[Matcher $\times$ depth rejection breakdown]{1000 fixed real candidate keyframe pairs
-    per dataset, 3 methods (LG = LightGlue, all through Metric3D depth), production
-    pose-estimation thresholds throughout. Success through PnP rej.\ are the 5 mutually exclusive
-    outcomes of \texttt{PoseEstimator.estimate\_pair()} in pipeline order, so each row sums to
-    $\sim$100\%. The 4 rejection-stage columns are diagnostic, not ranked. Bold marks the best
-    Success rate per dataset group, underline the second-best. Accuracy and timing for the same
-    runs are in \mytabref{tab:ablation-pe-accuracy}.}
-  \label{tab:ablation-pe-rejection}
-\end{table}
-
-\begin{table}[htb]
-  \centering
-  \footnotesize
-  \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}} lrrrr}
-  \hline
-  \textbf{Method} & \textbf{Trans.\ med./mean (m)} & \textbf{Rot.\ med./mean (\textdegree)} & \textbf{Total (s)} & \textbf{Match.\ (s)} \\
-  \hline
-  \multicolumn{5}{l}{\textit{HGE}} \\
-  LG+M3D & 0.219 / \underline{0.544} & 0.29 / \underline{1.48} & \textbf{0.471} & \textbf{0.027} \\
-  LoFTR+M3D & 0.175 / \textbf{0.426} & 0.24 / \textbf{1.36} & \underline{0.481} & \underline{0.041} \\
-  MASt3R+M3D & 0.201 / 0.961 & 0.34 / 1.68 & 0.683 & 0.196 \\
-  \hline
-  \multicolumn{5}{l}{\textit{KITTI}} \\
-  LG+M3D & 0.827 / \underline{47.716} & 0.27 / \underline{10.01} & \underline{0.600} & \textbf{0.025} \\
-  LoFTR+M3D & 0.833 / 49.947 & 0.27 / 10.49 & 0.695 & \underline{0.068} \\
-  MASt3R+M3D & 0.729 / \textbf{43.743} & 0.24 / \textbf{9.19} & \textbf{0.587} & 0.131 \\
-  \hline
-  \multicolumn{5}{l}{\textit{HYDRO}} \\
-  LG+M3D & 0.035 / \underline{0.070} & 0.41 / \underline{0.55} & \textbf{0.270} & \textbf{0.021} \\
-  LoFTR+M3D & 0.033 / 0.069 & 0.42 / 0.52 & \underline{0.620} & \underline{0.042} \\
-  MASt3R+M3D & 0.029 / \textbf{0.045} & 0.37 / \textbf{0.44} & 0.634 & 0.227 \\
-  \hline
-  \multicolumn{5}{l}{\textit{Overall (pooled, $n{=}2994$ pairs)}} \\
-  LG+M3D & 0.262 / 18.840 & 0.31 / 4.60 & \textbf{0.447} & \textbf{0.024} \\
-  LoFTR+M3D & 0.211 / \underline{18.212} & 0.28 / \underline{4.46} & \underline{0.598} & \underline{0.050} \\
-  MASt3R+M3D & 0.230 / \textbf{15.073} & 0.31 / \textbf{3.97} & 0.635 & 0.185 \\
-  \hline
-  \end{tabular*}
-  \caption[Matcher $\times$ depth accuracy and timing]{Same runs as
-    \mytabref{tab:ablation-pe-rejection}. Trans./Rot.\ columns include only successful,
-    GT-comparable pairs. Bold marks the best result per dataset group, underline the second-best.}
-  \label{tab:ablation-pe-accuracy}
-\end{table}
+per-pair time. Full per-pair rejection-breakdown and accuracy/timing tables are in
+\mysecref{sec:appendix-ablation-detail} (\mytabref{tab:ablation-pe-rejection},
+\mytabref{tab:ablation-pe-accuracy}).
 
 Success rate does not predict accuracy. MASt3R succeeds on 91.8\% of HGE pairs against
 LightGlue's 76.8\%, but its mean translation error on those successful pairs is almost twice as
@@ -1080,42 +1010,11 @@ from processing the extra cross-session candidate pairs.
     reconstruction) is the directly-comparable one. Odom.\ gen.\ here is KITTI-00-specific, not
     the full 11-session total of \mytabref{tab:ablation-timing-kitti}. ``Ours'' cells are the
     median of a 5-repeat-trial campaign, full median/min/max detail is in
-    \mytabref{tab:ablation-timing-2go-detail}. On 2GO's own slowest reported case
-    (\texttt{ciampino\_train0}, a single run, not a repeat-trial campaign), our runtime is real
-    and substantially lower (586.57\,s vs.\ 2067.31\,s) at a real RTF of 37.9\% vs.\ their
-    reported 133.5\%.}
+    \mysecref{sec:appendix-ablation-detail} (\mytabref{tab:ablation-timing-2go-detail}). On 2GO's
+    own slowest reported case (\texttt{ciampino\_train0}, a single run, not a repeat-trial
+    campaign), our runtime is real and substantially lower (586.57\,s vs.\ 2067.31\,s) at a real
+    RTF of 37.9\% vs.\ their reported 133.5\%.}
   \label{tab:ablation-timing-2go}
-\end{table}
-
-\begin{table}[htb]
-  \centering
-  \footnotesize
-  \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}} llrrrr}
-  \hline
-  \textbf{Run} & \textbf{Metric} & \textbf{Median} & \textbf{Min} & \textbf{Max} & \textbf{$n$} \\
-  \hline
-  \multicolumn{6}{l}{\textit{KITTI-00, VINS-Fusion odometry}} \\
-  Unbatched & Odom.\ gen.\ (s) & 179.7 & 179.2 & 189.7 & 4 \\
-  Unbatched & Runtime (s) & 134.3 & 127.7 & 136.6 & 5 \\
-  Unbatched & RTF & 28.5\% & 27.1\% & 29.0\% & 5 \\
-  Batched (\texttt{batch\_depth}) & Odom.\ gen.\ (s) & 179.7 & 179.2 & 189.7 & 4 \\
-  Batched (\texttt{batch\_depth}) & Runtime (s) & 157.9 & 134.8 & 160.9 & 5 \\
-  Batched (\texttt{batch\_depth}) & RTF & 33.5\% & 28.6\% & 34.2\% & 5 \\
-  \hline
-  \multicolumn{6}{l}{\textit{KITTI-00, ORB-SLAM3 odometry}} \\
-  Unbatched & Odom.\ gen.\ (s) & 501.3 & 501.0 & 506.3 & 5 \\
-  Unbatched & Runtime (s) & 142.4 & 135.5 & 168.1 & 5 \\
-  Unbatched & RTF & 30.3\% & 28.8\% & 35.7\% & 5 \\
-  Batched (\texttt{batch\_depth}) & Odom.\ gen.\ (s) & 501.3 & 501.0 & 506.3 & 5 \\
-  Batched (\texttt{batch\_depth}) & Runtime (s) & 137.6 & 137.3 & 143.9 & 5 \\
-  Batched (\texttt{batch\_depth}) & RTF & 29.2\% & 29.2\% & 30.6\% & 5 \\
-  \hline
-  \end{tabular*}
-  \caption[Isolated-sequence runtime detail, median/min/max]{Full detail behind the ``Ours'' rows
-    of \mytabref{tab:ablation-timing-2go}'s KITTI-00 section, both odometry backbones,
-    5-repeat-trial campaigns. \texttt{ciampino\_train0}'s ``Ours'' rows are single runs, not
-    repeat-trial campaigns, so they have no equivalent detail here.}
-  \label{tab:ablation-timing-2go-detail}
 \end{table}
 
 On 2GO's own slowest reported case, \texttt{ciampino\_train0}, we finish in 586.57 seconds against
