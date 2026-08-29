@@ -15,14 +15,16 @@ per-sequence trajectory visualizations and other detailed breakdowns.
 
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=0.6\textwidth]{images/07_appendix/hge_hololens_anchor_combined.png}
-  \caption[HGE HoloLens ref-anchored estimates, all sessions combined]{Both HoloLens components
-    in one shared frame, same style as \myfigref{fig:appendix-hydro-anchor-combined}. The two
-    components sit in genuinely different parts of the site and never share a cross-session edge
-    with each other, only within their own component.}
-  \label{fig:appendix-hge-hololens-anchor-combined}
+  \includegraphics[width=0.49\textwidth]{images/07_appendix/hge_hololens_anchor_combined.png}
+  \hfill
+  \includegraphics[width=0.49\textwidth]{images/07_appendix/hge_ios_anchor_combined.png}
+  \caption[HGE ref-anchored estimates, both devices, all sessions combined]{Both devices'
+    sessions in their own shared frame, same style as \myfigref{fig:appendix-hydro-anchor-combined}.
+    Left: HoloLens, 2 components that sit in genuinely different parts of the site and never share
+    a cross-session edge with each other, only within their own component. Right: iOS, 1
+    component.}
+  \label{fig:appendix-hge-anchor-combined}
 \end{figure}
-
 
 \begin{figure}[htbp]
   \centering
@@ -44,14 +46,6 @@ per-sequence trajectory visualizations and other detailed breakdowns.
     \mytabref{tab:experiments-hge-anchoring}. The visible GT/estimate gap on \texttt{06-24} is the
     largest of the three, consistent with it having the highest ref-anchored error in that table.}
   \label{fig:appendix-hge-ios-anchor-individual}
-\end{figure}
-
-\begin{figure}[htbp]
-  \centering
-  \includegraphics[width=\textwidth]{images/07_appendix/hge_ios_anchor_combined.png}
-  \caption[HGE iOS ref-anchored estimates, all sessions combined]{All 4 iOS sessions in one
-    shared frame, same style as \myfigref{fig:appendix-hydro-anchor-combined}.}
-  \label{fig:appendix-hge-ios-anchor-combined}
 \end{figure}
 
 \clearpage
@@ -260,7 +254,7 @@ results.
   \label{tab:ablation-cameras-kitti}
 \end{table}
 
-\newpage
+\clearpage
 \subsection{Pose Estimation Method}
 \label{sec:appendix-ablation-pe}
 
@@ -461,7 +455,7 @@ results.
   \caption[KITTI wall time and phase breakdown]{All 11 KITTI sequences, single invocation each.
     Wall time is real elapsed clock time including I/O, not compute time alone. Odom.\ gen.\ is a
     one-time upstream cost, not re-run per invocation. Phase percentages read from each run's own
-    \texttt{timings.json}; ``Other'' is the remainder against wall time. All runs use
+    \texttt{timings.json}. ``Other'' is the remainder against wall time. All runs use
     \texttt{--fresh\_cache}, so cache-hit numbers reflect within-run reuse only, no cross-run
     caching.}
   \label{tab:ablation-timing-kitti}
