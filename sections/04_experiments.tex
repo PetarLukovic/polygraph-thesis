@@ -345,8 +345,7 @@ transparency about the run to run spread the mean is hiding.
     \mytabref{tab:experiments-kitti-orb}. VINS-Fusion odometry is confirmed deterministic (5
     independent regenerations, bit-identical output), so no min-max range is needed here.
     $^{*}$Sequence 08 is a genuine detection miss for this backbone, zero intra- or
-    cross-session edges found, so single-session and multi-session both equal raw odometry,
-    kept in rather than hidden. Bold marks the best result in a row, underline the second-best.}
+    cross-session edges found, so single-session and multi-session both equal raw odometry. Bold marks the best result in a row, underline the second-best.}
   \label{tab:experiments-kitti-vins}
 \end{table}
 
@@ -390,7 +389,7 @@ connected component each session ends up in.
     their unique numeric suffix. ``Group'' is the connected component each session settles into;
     ``(ref)'' marks the session each component's ref-anchored error is measured against, so it has
     no ref-anchored value of its own. Bold marks the best result among Raw/Single/Multi in a row,
-    underline the second-best; ref-anchored columns are not ranked (nothing to compare
+    underline the second-best. Ref-anchored columns are not ranked (nothing to compare
     within a row).}
   \label{tab:experiments-hge-ate}
 \end{table}
@@ -479,7 +478,7 @@ report.
   \caption[HYDRO ATE and ref-anchored error]{HYDRO ATE (m), all 5 Spot sessions, one connected
     component. Session identifiers abbreviated to capture date and time. ``(ref)'' marks the
     session the component's ref-anchored error is measured against. Bold marks the best result
-    among Raw/Single/Multi in a row, underline the second-best; ref-anchored columns are not
+    among Raw/Single/Multi in a row, underline the second-best. Ref-anchored columns are not
     ranked.}
   \label{tab:experiments-hydro-ate}
 \end{table}
