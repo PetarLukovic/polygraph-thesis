@@ -908,46 +908,44 @@ graph instead of judged pair by pair.
 \begin{table}[htb]
   \centering
   \footnotesize
-  \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}} lrrrrr}
+  \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}} lrrrr}
   \hline
-  \textbf{Seq / Session} & \textbf{Raw odom} & \textbf{2GO} & \textbf{LightGlue+M3D} & \textbf{LoFTR+M3D} & \textbf{MASt3R+M3D} \\
+  \textbf{Seq / Session} & \textbf{Raw odom} & \textbf{LightGlue+M3D} & \textbf{LoFTR+M3D} & \textbf{MASt3R+M3D} \\
   \hline
-  \multicolumn{6}{l}{\textit{KITTI (ORB-SLAM3, multi-session)}} \\
-  00 & 5.28 & 1.82 & \underline{1.21} (97+49) & 1.24 (102+43) & \textbf{1.28} (86+34) \\
-  02 & 7.34 & 8.04 & \underline{4.82} (75+0) & 5.09 (49+0) & \textbf{4.93} (46+0) \\
-  05 & 2.14 & \textbf{0.92} & \underline{0.99} (42+0) & 0.98 (45+0) & 0.93 (49+0) \\
-  06 & 2.07 & \textbf{0.62} & \underline{0.88} (29+0) & 0.81 (43+0) & 0.76 (15+0) \\
-  07 & 1.29 & \underline{0.41} & \textbf{0.32} (5+49) & 0.41 (4+43) & 0.34 (6+34) \\
-  08 & 3.28 & \underline{3.78} & \textbf{2.95} (3+0) & 3.28 (0+0) & 3.28 (0+0) \\
-  09 & 2.72 & 1.84 & \textbf{1.79} (3+0) & \underline{1.81} (4+0) & 2.72 (0+0) \\
+  \multicolumn{5}{l}{\textit{KITTI (ORB-SLAM3, multi-session)}} \\
+  00 & 5.28 & \textbf{1.21} (97+49) & \underline{1.24} (102+43) & 1.28 (86+34) \\
+  02 & 7.34 & \textbf{4.82} (75+0) & 5.09 (49+0) & \underline{4.93} (46+0) \\
+  05 & 2.14 & 0.99 (42+0) & \underline{0.98} (45+0) & \textbf{0.93} (49+0) \\
+  06 & 2.07 & 0.88 (29+0) & \underline{0.81} (43+0) & \textbf{0.76} (15+0) \\
+  07 & 1.29 & \textbf{0.32} (5+49) & 0.41 (4+43) & \underline{0.34} (6+34) \\
+  08 & 3.28 & \textbf{2.95} (3+0) & \underline{3.28} (0+0) & \underline{3.28} (0+0) \\
+  09 & 2.72 & \textbf{1.79} (3+0) & \underline{1.81} (4+0) & 2.72 (0+0) \\
   \hline
-  Total (L2-norm, $n{=}7$) & 10.51 & 9.33 & \textbf{6.20} (254+98) & \underline{6.58} (247+86) & 6.76 (202+68) \\
+  Total (L2-norm, $n{=}7$) & 10.51 & \textbf{6.20} (254+98) & \underline{6.58} (247+86) & 6.76 (202+68) \\
   \hline
-  \multicolumn{6}{l}{\textit{HGE (multi-session)}} \\
-  \texttt{hl\_996} & 0.32 & -- & \textbf{0.32} (17+47) & \textbf{0.32} (17+5) & \textbf{0.32} (26+39) \\
-  \texttt{hl\_139} & 0.53 & -- & \textbf{0.44} (6+52) & \textbf{0.44} (6+49) & \textbf{0.44} (6+56) \\
-  \texttt{hl\_693} & 0.22 & -- & \textbf{0.22} (12+27) & \textbf{0.22} (12+23) & \underline{0.21} (12+37) \\
-  \texttt{hl\_295} & 0.13 & -- & \textbf{0.12} (11+27) & \underline{0.13} (24+28) & 0.14 (16+37) \\
-  \texttt{hl\_568} & 2.09 & -- & \textbf{0.29} (0+99) & \textbf{0.29} (0+49) & \textbf{0.29} (0+95) \\
+  \multicolumn{5}{l}{\textit{HGE (multi-session)}} \\
+  \texttt{hl\_996} & 0.32 & \textbf{0.32} (17+47) & \textbf{0.32} (17+5) & \textbf{0.32} (26+39) \\
+  \texttt{hl\_139} & 0.53 & \textbf{0.44} (6+52) & \textbf{0.44} (6+49) & \textbf{0.44} (6+56) \\
+  \texttt{hl\_693} & 0.22 & \underline{0.22} (12+27) & \underline{0.22} (12+23) & \textbf{0.21} (12+37) \\
+  \texttt{hl\_295} & 0.13 & \textbf{0.12} (11+27) & \underline{0.13} (24+28) & 0.14 (16+37) \\
+  \texttt{hl\_568} & 2.09 & \textbf{0.29} (0+99) & \textbf{0.29} (0+49) & \textbf{0.29} (0+95) \\
   \hline
-  Total (L2-norm, $n{=}5$) & 2.19 & -- & \textbf{0.66} & \underline{0.67} & \underline{0.67} \\
+  Total (L2-norm, $n{=}5$) & 2.19 & \textbf{0.66} & \underline{0.67} & \underline{0.67} \\
   \hline
-  \multicolumn{6}{l}{\textit{HYDRO (multi-session)}} \\
-  \texttt{11-24\_11-13} & 0.17 & -- & \underline{0.11} (11+425) & \underline{0.11} (11+449) & \textbf{0.12} (9+391) \\
-  \texttt{11-24\_11-26} & 0.44 & -- & \textbf{0.14} (38+121) & \textbf{0.14} (31+136) & \textbf{0.14} (41+108) \\
-  \texttt{11-24\_11-43} & 0.24 & -- & \textbf{0.18} (10+528) & \textbf{0.18} (10+576) & \textbf{0.18} (23+497) \\
-  \texttt{05-17\_14-39} & 0.18 & -- & \textbf{0.15} (9+209) & \textbf{0.15} (13+236) & \textbf{0.15} (33+211) \\
-  \texttt{05-17\_16-43} & 0.47 & -- & 0.17 (19+211) & \textbf{0.16} (61+251) & 0.17 (31+191) \\
+  \multicolumn{5}{l}{\textit{HYDRO (multi-session)}} \\
+  \texttt{11-24\_11-13} & 0.17 & \textbf{0.11} (11+425) & \textbf{0.11} (11+449) & \underline{0.12} (9+391) \\
+  \texttt{11-24\_11-26} & 0.44 & \textbf{0.14} (38+121) & \textbf{0.14} (31+136) & \textbf{0.14} (41+108) \\
+  \texttt{11-24\_11-43} & 0.24 & \textbf{0.18} (10+528) & \textbf{0.18} (10+576) & \textbf{0.18} (23+497) \\
+  \texttt{05-17\_14-39} & 0.18 & \textbf{0.15} (9+209) & \textbf{0.15} (13+236) & \textbf{0.15} (33+211) \\
+  \texttt{05-17\_16-43} & 0.47 & \underline{0.17} (19+211) & \textbf{0.16} (61+251) & \underline{0.17} (31+191) \\
   \hline
-  Total (L2-norm, $n{=}5$) & 0.73 & -- & \textbf{0.34} & \textbf{0.34} & \underline{0.35} \\
+  Total (L2-norm, $n{=}5$) & 0.73 & \textbf{0.34} & \textbf{0.34} & \underline{0.35} \\
   \hline
   \end{tabular*}
   \caption[Full-pipeline pose-estimation-method comparison]{ATE (m) with \texttt{pose\_estimation.method}
-    swapped as the only change from production, multi-session mode, ORB-SLAM3 backbone.
-    Edge counts in parentheses are intra+cross. KITTI: 2GO's own published number; HGE/HYDRO have
-    no per-session 2GO reference, only the aggregate mean already cited in
-    \mytabref{tab:experiments-hge-ate}/\mytabref{tab:experiments-hydro-ate}. Bold marks the best
-    result per row (including 2GO where present), underline the second-best.}
+    swapped as the only change from production, multi-session mode, ORB-SLAM3 backbone. Edge
+    counts in parentheses are intra+cross. Bold marks the best result among the three methods per
+    row, underline the second-best.}
   \label{tab:ablation-pe-kitti}
 \end{table}
 
