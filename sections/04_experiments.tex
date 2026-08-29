@@ -276,53 +276,9 @@ that actually revisits the same place.
 
 ORB-SLAM3 is non-deterministic, so \mytabref{tab:experiments-kitti-orb}'s ``Single (ours)''/
 ``Multi (ours)'' columns are themselves a mean over 5 independently regenerated odometry runs.
-\mytabref{tab:experiments-kitti-orb-runs} shows every one of those 5 runs individually, for full
-transparency about the run to run spread the mean is hiding.
-
-\begin{table}[htb]
-  \centering
-  \scriptsize
-  \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}} lrrrrrrrr}
-  \hline
-  \multicolumn{9}{c}{\textbf{Single-session}} \\
-  \hline
-  \textbf{Seq} & \textbf{Run 1} & \textbf{Run 2} & \textbf{Run 3} & \textbf{Run 4} & \textbf{Run 5} & \textbf{Mean} & \textbf{Min} & \textbf{Max} \\
-  \hline
-  00 & 1.24 & 1.22 & 1.28 & 1.24 & 1.29 & 1.25 & 1.22 & 1.29 \\
-  02 & 4.78 & 5.22 & 4.66 & 4.82 & 4.79 & 4.85 & 4.66 & 5.22 \\
-  05 & 1.00 & 1.05 & 1.02 & 1.05 & 0.95 & 1.02 & 0.95 & 1.05 \\
-  06 & 0.88 & 0.87 & 0.94 & 0.92 & 0.86 & 0.90 & 0.86 & 0.94 \\
-  07 & 0.45 & 0.43 & 0.49 & 0.45 & 0.47 & 0.46 & 0.43 & 0.49 \\
-  08 & 2.92 & 3.39 & 3.86 & 3.59 & 2.36 & 3.22 & 2.36 & 3.86 \\
-  09 & 1.79 & 1.85 & 1.78 & 1.91 & 1.88 & 1.84 & 1.78 & 1.91 \\
-  \hline
-  Total & 6.17 & 6.76 & 6.60 & 6.59 & 5.96 & 6.42 & 5.96 & 6.76 \\
-  Mean & 1.87 & 2.00 & 2.00 & 2.00 & 1.80 & 1.93 & 1.80 & 2.00 \\
-  \hline
-  \multicolumn{9}{c}{\textbf{Multi-session}} \\
-  \hline
-  \textbf{Seq} & \textbf{Run 1} & \textbf{Run 2} & \textbf{Run 3} & \textbf{Run 4} & \textbf{Run 5} & \textbf{Mean} & \textbf{Min} & \textbf{Max} \\
-  \hline
-  00 & 1.23 & 1.22 & 1.27 & 1.23 & 1.28 & 1.25 & 1.22 & 1.28 \\
-  02 & 4.78 & 5.22 & 4.66 & 4.82 & 4.79 & 4.85 & 4.66 & 5.22 \\
-  05 & 1.00 & 1.05 & 1.02 & 1.05 & 0.95 & 1.02 & 0.95 & 1.05 \\
-  06 & 0.88 & 0.87 & 0.94 & 0.92 & 0.86 & 0.90 & 0.86 & 0.94 \\
-  07 & 0.31 & 0.32 & 0.34 & 0.34 & 0.35 & 0.33 & 0.31 & 0.35 \\
-  08 & 2.92 & 3.39 & 3.86 & 3.59 & 2.36 & 3.22 & 2.36 & 3.86 \\
-  09 & 1.79 & 1.85 & 1.78 & 1.91 & 1.88 & 1.84 & 1.78 & 1.91 \\
-  \hline
-  Total & 6.16 & 6.75 & 6.59 & 6.58 & 5.95 & 6.41 & 5.95 & 6.75 \\
-  Mean & 1.84 & 1.99 & 1.98 & 1.98 & 1.78 & 1.92 & 1.78 & 1.99 \\
-  \hline
-  \end{tabular*}
-  \caption[KITTI ORB-SLAM3, all 5 individual regenerated-odometry runs]{Every one of the 5
-    independently regenerated ORB-SLAM3 odometry runs behind \mytabref{tab:experiments-kitti-orb}'s
-    ``Single (ours)''/``Multi (ours)'' columns, single-session mode above, multi-session mode
-    below. Mean/Min/Max computed across the 5 runs per row. Total/Mean rows are the same
-    L2-norm/arithmetic-mean convention as \mytabref{tab:experiments-kitti-orb}, computed once per
-    run then summarized the same way across runs.}
-  \label{tab:experiments-kitti-orb-runs}
-\end{table}
+Every one of those 5 runs individually is in \mysecref{sec:appendix-kitti-runs}
+(\mytabref{tab:experiments-kitti-orb-runs}), for full transparency about the run to run spread the
+mean is hiding.
 
 \begin{table}[htb]
   \centering
@@ -530,13 +486,8 @@ hard split, is summarized here and detailed in the appendix.
   \caption[RobotCar easy split, ATE and ref-anchored error]{RobotCar ATE (m), easy split (3
     daytime sessions), VINS-Fusion above, RobotCar's own published visual odometry (VO) below,
     same reference session for both. Session identifiers abbreviated to capture date and time.
-    \texttt{10-30\_11-56} sits far off both backbones' ref-anchored estimate, a genuine weak-connectivity
-    case (only 4--9 cross-session edges found for it vs. 20--29 for the other two sessions, traced
-    to a real 2.82\% raw drift rate on this session vs. 0.82--0.88\% for the others, confirmed
-    backbone-independent). VO's raw odometry is worse overall than VINS-Fusion's (235.46 vs.
-    125.43 total), but multi-session fusion gives VO a real $\sim$34\% total-ATE reduction (150.51
-    $\to$ 99.34) on this split. Bold marks the best result among Raw/Single/Multi in a row,
-    underline the second-best; ref-anchored columns are not ranked.}
+    Bold marks the best result among Raw/Single/Multi in a row, underline the second-best;
+    ref-anchored columns are not ranked.}
   \label{tab:experiments-robotcar-easy}
 \end{table}
 
@@ -564,15 +515,9 @@ hard split, is summarized here and detailed in the appendix.
   \end{tabular*}
   \caption[RobotCar hard split, ATE and ref-anchored error]{RobotCar ATE (m), hard split (2
     daytime, 1 night session), same reference and layout as \mytabref{tab:experiments-robotcar-easy},
-    \texttt{11-10\_11-55} swapped for the night session \texttt{12-16\_18-44}. VINS-Fusion multi-session
-    mode genuinely regresses this split: single-session is honestly better than multi-session
-    (267.38 vs. 352.08 total), and the reference session itself gets corrupted by fusion (59.23
-    $\to$ 214.51). VO shows no such regression on total ATE (275.32 $\to$ 274.14, flat) and
-    protects its own reference session (34.71 $\to$ 33.34), but its weaker sessions still sit
-    further from their correct relative position (1402.76\,m / 459.96\,m ref-anchored translation)
-    than VINS-Fusion's do (1072.27\,m / 216.69\,m). Neither backbone achieves usable cross-session
-    anchoring on this split. Bold marks the best result among Raw/Single/Multi in a row, underline
-    the second-best; ref-anchored columns are not ranked.}
+    \texttt{11-10\_11-55} swapped for the night session \texttt{12-16\_18-44}. Bold marks the best
+    result among Raw/Single/Multi in a row, underline the second-best; ref-anchored columns are
+    not ranked.}
   \label{tab:experiments-robotcar-hard}
 \end{table}
 
@@ -580,10 +525,20 @@ RobotCar is the first dataset here where multi-session fusion is not always the 
 improvement. On the easy split, VINS-Fusion's gain comes almost entirely from single-session
 refinement, 125.43 meters raw to 104.73 meters single, with multi-session mode adding only a small
 extra reduction to 102.24 meters. VO benefits from both stages instead, 235.46 meters raw to
-150.51 meters single, then a further drop to 99.34 meters multi-session. The hard split is a
-different story. Swapping in a night session breaks VINS-Fusion multi-session mode outright,
-single-session is honestly the better result there. VO stays flat instead of breaking, but neither
-backbone reaches usable cross-session anchoring once a night session is involved.
+150.51 meters single, then a real $\sim$34\% further drop to 99.34 meters multi-session. Session
+\texttt{10-30\_11-56} sits far off both backbones' ref-anchored estimate on this split, a genuine
+weak-connectivity case, only 4 to 9 cross-session edges found for it against 20 to 29 for the
+other two sessions, traced to a real 2.82\% raw drift rate on this session against 0.82--0.88\%
+for the others, confirmed backbone-independent.
+
+The hard split is a different story. Swapping in a night session breaks VINS-Fusion multi-session
+mode outright, single-session is honestly the better result there (267.38 vs.\ 352.08 total), and
+the reference session itself gets corrupted by fusion, 59.23 meters to 214.51. VO shows no such
+regression, its total stays flat at 275.32 to 274.14 meters and its own reference session stays
+protected, 34.71 to 33.34 meters. Its weaker sessions still sit further from their correct
+relative position than VINS-Fusion's do, 1402.76 and 459.96 meters ref-anchored translation
+against VINS-Fusion's 1072.27 and 216.69. Neither backbone reaches usable cross-session anchoring
+once a night session is involved.
 
 \subsection{VBR}
 \label{sec:experiments-main-vbr}
@@ -743,64 +698,26 @@ column). This ablation adds a second (and, for HGE/HYDRO, up to all four) onboar
 retrieval and pose estimation instead, on HGE, HYDRO, and KITTI, to see whether more viewpoints
 per keyframe buys real accuracy or just more compute. Reports single-/multi-session ATE, intra-
 and cross-session edge counts, connected components, and (HGE/HYDRO only, since KITTI has no
-shared GT frame to anchor against) anchoring error, per camera combination.
-
-\begin{table}[htb]
-  \centering
-  \scriptsize
-  \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}} lrrrrrrr}
-  \hline
-  \textbf{Cameras} & \textbf{Single (m)} & \textbf{Multi (m)} & \textbf{Intra} & \textbf{Cross} & \textbf{Comp.} & \textbf{Anch.\ trans (m)} & \textbf{Anch.\ rot (\textdegree)} \\
-  \hline
-  \texttt{hetlf} (baseline) & 0.657 & \underline{0.279} & 30 & 238 & 2 & 0.323 & 0.712 \\
-  \texttt{hetlf+hetrf} & 0.657 & 0.285 & 29 & 296 & 2 & 0.316 & 0.676 \\
-  \texttt{hetlf+hetrr} & 0.657 & 0.281 & 62 & 390 & 2 & 0.307 & 0.670 \\
-  all 4 & 0.657 & \textbf{0.278} & 63 & 484 & 2 & 0.361 & 0.765 \\
-  \hline
-  \end{tabular*}
-  \caption[HGE camera-pairing ATE and anchoring error]{HGE camera-pairing ablation:
-    \texttt{retrieval.cams} lets a session emit one keyframe per (frame, camera) instead of one
-    per frame. Single ATE is identical across rows (single-session mode always uses the baseline
-    camera alone). Bold/underline mark the best/second-best Multi ATE only.}
-  \label{tab:ablation-cameras-hge}
-\end{table}
-
-\begin{table}[htb]
-  \centering
-  \scriptsize
-  \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}} lrrrrrrr}
-  \hline
-  \textbf{Cameras} & \textbf{Single (m)} & \textbf{Multi (m)} & \textbf{Intra} & \textbf{Cross} & \textbf{Comp.} & \textbf{Anch.\ trans (m)} & \textbf{Anch.\ rot (\textdegree)} \\
-  \hline
-  \texttt{frontleft} (baseline) & 0.265 & 0.154 & 52 & 1500 & 1 & 0.174 & 0.337 \\
-  \texttt{frontleft+frontright} & \underline{0.242} & \underline{0.151} & 100 & 1762 & 1 & 0.167 & 0.334 \\
-  \texttt{frontleft+right} & 0.243 & 0.152 & 117 & 1842 & 1 & 0.179 & 0.330 \\
-  all 4 cameras & \textbf{0.217} & \textbf{0.145} & 360 & 3602 & 1 & 0.158 & 0.315 \\
-  \hline
-  \end{tabular*}
-  \caption[HYDRO camera-pairing ATE and anchoring error]{HYDRO camera-pairing ablation, same
-    method as \mytabref{tab:ablation-cameras-hge}. \texttt{frontleft}/\texttt{frontright} are the
-    true front stereo pair. \texttt{left}/\texttt{right} are wide-FOV, roughly 178\textdegree{}
-    apart. Bold marks the best result per column, underline the second-best.}
-  \label{tab:ablation-cameras-hydro}
-\end{table}
+shared GT frame to anchor against) anchoring error, per camera combination. Full per-combination
+tables for all three datasets are in \mysecref{sec:appendix-ablation-cameras}.
 
 \begin{table}[htb]
   \centering
   \footnotesize
-  \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}} lrrrrr}
+  \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}} llrrrr}
   \hline
-  \textbf{Cameras} & \textbf{Single ATE (m)} & \textbf{Multi ATE (m)} & \textbf{Intra edges} & \textbf{Cross edges} & \textbf{Components} \\
+  \textbf{Dataset} & \textbf{Cameras (baseline $\to$ best)} & \textbf{Single (m)} & \textbf{Multi (m)} & \textbf{Cross edges} & \textbf{Edge mult.} \\
   \hline
-  \texttt{image\_2} (baseline, run 1) & \underline{2.698} & \underline{2.685} & 253 & 80 & 10 \\
-  \texttt{image\_2+image\_3} & \textbf{2.691} & \textbf{2.676} & 274 & 94 & 10 \\
+  HGE & \texttt{hetlf} $\to$ all 4 & 0.657 $\to$ 0.657 & 0.279 $\to$ 0.278 & 238 $\to$ 484 & 2.0$\times$ \\
+  HYDRO & \texttt{frontleft} $\to$ all 4 & 0.265 $\to$ 0.217 & 0.154 $\to$ 0.145 & 1500 $\to$ 3602 & 2.4$\times$ \\
+  KITTI & \texttt{image\_2} $\to$ +\texttt{image\_3} & 2.698 $\to$ 2.691 & 2.685 $\to$ 2.676 & 80 $\to$ 94 & 1.2$\times$ \\
   \hline
   \end{tabular*}
-  \caption[KITTI camera-pairing ATE]{KITTI camera-pairing ablation. \texttt{image\_2}/\texttt{image\_3}
-    are the left/right cameras of the same physical stereo rig. No shared GT frame across
-    sequences, so no anchoring-error column (\mysecref{sec:experiments-kitti}). Bold marks the
-    best result per column, underline the second-best.}
-  \label{tab:ablation-cameras-kitti}
+  \caption[Camera-pairing summary, baseline vs.\ best]{Baseline (production) camera vs.\ the best
+    camera combination per dataset, distilled from the full per-combination tables in
+    \mysecref{sec:appendix-ablation-cameras}. Edge mult.\ is cross-session edges at the best
+    combination over baseline.}
+  \label{tab:ablation-cameras-summary}
 \end{table}
 
 More cameras help most when they add genuinely new viewpoints. HYDRO's four cameras span nearly
@@ -808,9 +725,10 @@ More cameras help most when they add genuinely new viewpoints. HYDRO's four came
 cross-session edges more than doubling from 1500 to 3602. HGE and KITTI barely move. HGE's
 multi-session ATE stays within 0.007 meters across all four camera combinations, and its anchoring
 error is actually worse with all four cameras than with just the baseline, 0.361 meters against
-0.323. KITTI's second camera is the other half of the same stereo rig, so it sees almost the same
-scene as the first, and multi-session ATE only drops from 2.685 to 2.676 meters. More viewpoints
-buy real accuracy only when they are not mostly redundant with the one already in use.
+0.323 (\mysecref{sec:appendix-ablation-cameras}). KITTI's second camera is the other half of the
+same stereo rig, so it sees almost the same scene as the first, and multi-session ATE only drops
+from 2.685 to 2.676 meters. More viewpoints buy real accuracy only when they are not mostly
+redundant with the one already in use.
 
 \subsection{Pose Estimation Method}
 \label{sec:experiments-ablation-pe}
@@ -819,12 +737,12 @@ Swaps \mysecref{sec:method-pose-estimation}'s production matcher (LightGlue) for
 (all three still lifted through the same Metric3D depth), first on a large fixed sample of real
 candidate keyframe pairs per dataset (same production thresholds as the main results, not bare
 defaults, so the accept/reject breakdown is directly meaningful), then as full single-/
-multi-session KITTI runs end to end. Reports, per method and dataset: success rate and the
-breakdown of \emph{why} a pair was rejected (no match, essential-matrix stage, insufficient
-points, final PnP stage), translation/rotation error on successful pairs, and matching plus total
-per-pair time. Full per-pair rejection-breakdown and accuracy/timing tables are in
-\mysecref{sec:appendix-ablation-detail} (\mytabref{tab:ablation-pe-rejection},
-\mytabref{tab:ablation-pe-accuracy}).
+multi-session pipeline runs across all three datasets. Reports, per method and dataset: success
+rate and the breakdown of \emph{why} a pair was rejected (no match, essential-matrix stage,
+insufficient points, final PnP stage), translation/rotation error on successful pairs, matching
+plus total per-pair time, and full-pipeline ATE. Full detail tables (per-pair rejection breakdown,
+per-pair accuracy/timing, full-pipeline ATE, ref-anchored consistency, and wall time) are in
+\mysecref{sec:appendix-ablation-pe}.
 
 Success rate does not predict accuracy. MASt3R succeeds on 91.8\% of HGE pairs against
 LightGlue's 76.8\%, but its mean translation error on those successful pairs is almost twice as
@@ -839,182 +757,38 @@ graph instead of judged pair by pair.
   \footnotesize
   \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}} lrrrr}
   \hline
-  \textbf{Seq / Session} & \textbf{Raw odom} & \textbf{LightGlue+M3D} & \textbf{LoFTR+M3D} & \textbf{MASt3R+M3D} \\
+  \textbf{Method} & \textbf{KITTI total (m)} & \textbf{HGE total (m)} & \textbf{HYDRO total (m)} & \textbf{Wall time, worst case} \\
   \hline
-  \multicolumn{5}{l}{\textit{KITTI (ORB-SLAM3, multi-session)}} \\
-  00 & 5.28 & \textbf{1.21} (97+49) & \underline{1.24} (102+43) & 1.28 (86+34) \\
-  02 & 7.34 & \textbf{4.82} (75+0) & 5.09 (49+0) & \underline{4.93} (46+0) \\
-  05 & 2.14 & 0.99 (42+0) & \underline{0.98} (45+0) & \textbf{0.93} (49+0) \\
-  06 & 2.07 & 0.88 (29+0) & \underline{0.81} (43+0) & \textbf{0.76} (15+0) \\
-  07 & 1.29 & \textbf{0.32} (5+49) & 0.41 (4+43) & \underline{0.34} (6+34) \\
-  08 & 3.28 & \textbf{2.95} (3+0) & \underline{3.28} (0+0) & \underline{3.28} (0+0) \\
-  09 & 2.72 & \textbf{1.79} (3+0) & \underline{1.81} (4+0) & 2.72 (0+0) \\
-  \hline
-  Total (L2-norm, $n{=}7$) & 10.51 & \textbf{6.20} (254+98) & \underline{6.58} (247+86) & 6.76 (202+68) \\
-  \hline
-  \multicolumn{5}{l}{\textit{HGE (multi-session)}} \\
-  \texttt{hl\_996} & 0.32 & \textbf{0.32} (17+47) & \textbf{0.32} (17+5) & \textbf{0.32} (26+39) \\
-  \texttt{hl\_139} & 0.53 & \textbf{0.44} (6+52) & \textbf{0.44} (6+49) & \textbf{0.44} (6+56) \\
-  \texttt{hl\_693} & 0.22 & \underline{0.22} (12+27) & \underline{0.22} (12+23) & \textbf{0.21} (12+37) \\
-  \texttt{hl\_295} & 0.13 & \textbf{0.12} (11+27) & \underline{0.13} (24+28) & 0.14 (16+37) \\
-  \texttt{hl\_568} & 2.09 & \textbf{0.29} (0+99) & \textbf{0.29} (0+49) & \textbf{0.29} (0+95) \\
-  \hline
-  Total (L2-norm, $n{=}5$) & 2.19 & \textbf{0.66} & \underline{0.67} & \underline{0.67} \\
-  \hline
-  \multicolumn{5}{l}{\textit{HYDRO (multi-session)}} \\
-  \texttt{11-24\_11-13} & 0.17 & \textbf{0.11} (11+425) & \textbf{0.11} (11+449) & \underline{0.12} (9+391) \\
-  \texttt{11-24\_11-26} & 0.44 & \textbf{0.14} (38+121) & \textbf{0.14} (31+136) & \textbf{0.14} (41+108) \\
-  \texttt{11-24\_11-43} & 0.24 & \textbf{0.18} (10+528) & \textbf{0.18} (10+576) & \textbf{0.18} (23+497) \\
-  \texttt{05-17\_14-39} & 0.18 & \textbf{0.15} (9+209) & \textbf{0.15} (13+236) & \textbf{0.15} (33+211) \\
-  \texttt{05-17\_16-43} & 0.47 & \underline{0.17} (19+211) & \textbf{0.16} (61+251) & \underline{0.17} (31+191) \\
-  \hline
-  Total (L2-norm, $n{=}5$) & 0.73 & \textbf{0.34} & \textbf{0.34} & \underline{0.35} \\
+  LightGlue+M3D & \textbf{6.20} & \textbf{0.66} & \textbf{0.34} & 1.00$\times$ \\
+  LoFTR+M3D & \underline{6.58} & \underline{0.67} & \textbf{0.34} & 5.46$\times$ (HGE) \\
+  MASt3R+M3D & 6.76 & \underline{0.67} & \underline{0.35} & 5.17$\times$ (HGE) \\
   \hline
   \end{tabular*}
-  \caption[Full-pipeline pose-estimation-method comparison]{ATE (m) with \texttt{pose\_estimation.method}
-    swapped as the only change from production, multi-session mode, ORB-SLAM3 backbone. Edge
-    counts in parentheses are intra+cross. Bold marks the best result among the three methods per
-    row, underline the second-best.}
-  \label{tab:ablation-pe-kitti}
+  \caption[Pose-estimation-method summary]{Full-pipeline total ATE (L2-norm) per method across all
+    three datasets, and the worst-case wall-time multiplier over LightGlue, distilled from the
+    full per-sequence/session tables in \mysecref{sec:appendix-ablation-pe}. Bold marks the best
+    result per column, underline the second-best.}
+  \label{tab:ablation-pe-summary}
 \end{table}
 
-\begin{table}[htb]
-  \centering
-  \footnotesize
-  \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}} llrr}
-  \hline
-  \textbf{Dataset} & \textbf{Method} & \textbf{Components} & \textbf{Mean ref-anch.\ trans (m) / rot (\textdegree)} \\
-  \hline
-  HGE & LightGlue+M3D & 2 & 0.31 / 0.69 \\
-  HGE & LoFTR+M3D & 2 & 0.38 / 0.67 \\
-  HGE & MASt3R+M3D & 2 & 0.31 / 0.69 \\
-  \hline
-  HYDRO & LightGlue+M3D & 1 & 0.17 / 0.34 \\
-  HYDRO & LoFTR+M3D & 1 & 0.17 / 0.33 \\
-  HYDRO & MASt3R+M3D & 1 & 0.18 / 0.35 \\
-  \hline
-  \end{tabular*}
-  \caption[HGE/HYDRO ref-anchored consistency by PE method]{Same multi-session runs as
-    \mytabref{tab:ablation-pe-kitti}. Each connected component's reference session is Umeyama-fit
-    to GT, that fixed transform applied to the rest of the component, then measured against each
-    session's own GT (same method as \mytabref{tab:experiments-hge-ate}/\mytabref{tab:experiments-hydro-ate}).
-    ``Components'' is the number of connected components the multi-session graph settled into for
-    that method.}
-  \label{tab:ablation-pe-anchoring}
-\end{table}
-
-\begin{table}[htb]
-  \centering
-  \footnotesize
-  \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}} llrr}
-  \hline
-  \textbf{Dataset} & \textbf{Method} & \textbf{Wall time (s)} & \textbf{vs.\ LightGlue} \\
-  \hline
-  KITTI & LightGlue+M3D & 470.8 & 1.00$\times$ \\
-  KITTI & LoFTR+M3D & 917.6 & 1.95$\times$ \\
-  KITTI & MASt3R+M3D & 677.6 & 1.44$\times$ \\
-  \hline
-  HGE & LightGlue+M3D & 275.7 & 1.00$\times$ \\
-  HGE & LoFTR+M3D & 1506.3 & 5.46$\times$ \\
-  HGE & MASt3R+M3D & 1424.6 & 5.17$\times$ \\
-  \hline
-  HYDRO & LightGlue+M3D & 1050.4 & 1.00$\times$ \\
-  HYDRO & LoFTR+M3D & 2171.5 & 2.07$\times$ \\
-  HYDRO & MASt3R+M3D & 2754.4 & 2.62$\times$ \\
-  \hline
-  \end{tabular*}
-  \caption[PE-method full-pipeline wall time]{Real elapsed wall time for the whole pipeline
-    invocation, same multi-session runs as \mytabref{tab:ablation-pe-kitti}, all nine on the same
-    GPU (RTX 4090). Accuracy is essentially tied across all three methods
-    (\mytabref{tab:ablation-pe-kitti}, \mytabref{tab:ablation-pe-anchoring}); this table is the
-    reason LightGlue stays the production default despite that tie.}
-  \label{tab:ablation-pe-timing}
-\end{table}
-
-The full pipeline erases most of the pair level differences. KITTI's total ATE spans only 6.20 to
-6.76 meters across the three methods, HGE 0.66 to 0.67, HYDRO 0.34 to 0.35. Ref-anchored error is
-just as close. Wall time is where the methods actually separate. LoFTR and MASt3R take up to 5.46
-times as long as LightGlue on HGE for no real accuracy gain, which is why LightGlue stays the
-production default.
+The full pipeline erases most of the pair level differences. Ref-anchored error is just as close
+across all three methods. Wall time is where the methods actually separate. LoFTR and MASt3R take
+up to 5.46 times as long as LightGlue on HGE for no real accuracy gain, which is why LightGlue
+stays the production default.
 
 \subsection{Timing}
 \label{sec:experiments-ablation-timing}
 
 Full 11-session KITTI wall-clock time, both backbones, both modes, on two GPUs (a Quadro RTX 6000
 and an RTX 4090), broken down by pipeline phase (retrieval, pose estimation, graph optimization,
-other), plus a hardware-matched runtime comparison against 2GO's own published number.
-
-\begin{table}[htb]
-  \centering
-  \scriptsize
-  \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}} lrrrr}
-  \hline
-  \textbf{Metric} & \textbf{ORB-SLAM3, single} & \textbf{ORB-SLAM3, multi} & \textbf{VINS-Fusion, single} & \textbf{VINS-Fusion, multi} \\
-  \hline
-  Recording (s) & 2407.31 & 2407.31 & 2407.31 & 2407.31 \\
-  Odom.\ gen.\ (s) & 2613.4 & 2613.4 & 954.0 & 954.0 \\
-  Wall, Quadro (s) & 1189.64 & 1322.08 & 1076.28 & 1225.76 \\
-  Wall, 4090 (s) & 529.75 & 601.75 & 505.41 & 662.04 \\
-  Speedup & 2.25$\times$ & 2.20$\times$ & 2.13$\times$ & 1.85$\times$ \\
-  RTF (Quadro / 4090) & 49.4\% / 22.0\% & 54.9\% / 25.0\% & 44.7\% / 21.0\% & 50.9\% / 27.5\% \\
-  Retrieval (Quadro / 4090) & 0.31\% / 5.15\% & 1.32\% / 3.08\% & 0.34\% / 1.05\% & 1.38\% / 9.47\% \\
-  Pose est.\ (Quadro / 4090) & 55.11\% / 56.77\% & 62.12\% / 64.42\% & 56.36\% / 58.02\% & 61.96\% / 55.14\% \\
-  Graph opt.\ (Quadro / 4090) & 1.10\% / 1.46\% & 1.08\% / 1.52\% & 1.08\% / 3.52\% & 1.01\% / 1.41\% \\
-  Other (Quadro / 4090) & 43.48\% / 36.62\% & 35.49\% / 30.99\% & 42.22\% / 37.41\% & 35.65\% / 33.98\% \\
-  Desc.\ cache hit & 0.0\% (0/4055) & 0.0\% (0/4055) & 0.0\% (0/4043) & 0.0\% (0/4043) \\
-  Depth cache hit & 62.8\% (1119/1782) & 64.0\% (1356/2120) & 64.8\% (1126/1738) & 65.5\% (1355/2068) \\
-  \hline
-  \end{tabular*}
-  \caption[KITTI wall time and phase breakdown]{All 11 KITTI sequences, single invocation each.
-    Wall time is real elapsed clock time including I/O, not compute time alone. Odom.\ gen.\ is a
-    one-time upstream cost, not re-run per invocation. Phase percentages read from each run's own
-    \texttt{timings.json}; ``Other'' is the remainder against wall time. All runs use
-    \texttt{--fresh\_cache}, so cache-hit numbers reflect within-run reuse only, no cross-run
-    caching.}
-  \label{tab:ablation-timing-kitti}
-\end{table}
+other), plus a hardware-matched runtime comparison against 2GO's own published number. Full phase
+breakdown and per-run detail tables are in \mysecref{sec:appendix-ablation-timing}.
 
 Pose estimation dominates wall time on both GPUs, 55 to 64\% of the total, with retrieval and
 graph optimization together under 10\% in every configuration. The RTX 4090 cuts wall time by
 1.85 to 2.25 times over the Quadro RTX 6000 across all four backbone and mode combinations.
 Multi-session mode adds a modest real cost over single-session, around 11 to 14\% more wall time,
 from processing the extra cross-session candidate pairs.
-
-\begin{table}[htb]
-  \centering
-  \footnotesize
-  \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}} lrrrrr}
-  \hline
-  \textbf{Run} & \textbf{Odom.\ gen.\ (s)} & \textbf{Runtime (s)} & \textbf{Recording (s)} & \textbf{RTF} & \textbf{LC-edges} \\
-  \hline
-  \multicolumn{6}{l}{\textit{KITTI-00, VINS-Fusion odometry}} \\
-  2GO paper (CL Absolute) & -- (not reported) & 387.16 & 469 & 82.5\% & 517 \\
-  Ours, unbatched & 179.7 & 134.3 & 470.6 & 28.5\% & 142 \\
-  Ours, batched (\texttt{batch\_depth}) & 179.7 & 157.9 & 470.6 & 33.5\% & 142 \\
-  \hline
-  \multicolumn{6}{l}{\textit{KITTI-00, ORB-SLAM3 odometry (no published 2GO number)}} \\
-  Ours, unbatched & 501.3 & 142.4 & 470.6 & 30.3\% & 134 \\
-  Ours, batched (\texttt{batch\_depth}) & 501.3 & 137.6 & 470.6 & 29.2\% & 134 \\
-  \hline
-  \multicolumn{6}{l}{\textit{\texttt{ciampino\_train0}, VINS-Fusion odometry (2GO's own slowest reported case)}} \\
-  2GO paper (CL Absolute) & -- (not reported) & 2067.31 & 1549 & 133.5\% & 3403 \\
-  Ours & 1791.0 & 586.57 & 1549 & 37.9\% & 34 \\
-  \hline
-  \multicolumn{6}{l}{\textit{\texttt{ciampino\_train0}, ORB-SLAM3 odometry (no published 2GO number)}} \\
-  Ours & 2497.2 & 480.90 & 1549 & 31.0\% & 299 \\
-  \hline
-  \end{tabular*}
-  \caption[Isolated-sequence runtime vs.\ 2GO, same GPU model]{Both systems on an RTX 4090. 2GO's
-    own CL--Absolute variant (LightGlue matching + metric monocular depth lift, no dense
-    reconstruction) is the directly-comparable one. Odom.\ gen.\ here is KITTI-00-specific, not
-    the full 11-session total of \mytabref{tab:ablation-timing-kitti}. ``Ours'' cells are the
-    median of a 5-repeat-trial campaign, full median/min/max detail is in
-    \mysecref{sec:appendix-ablation-detail} (\mytabref{tab:ablation-timing-2go-detail}). On 2GO's
-    own slowest reported case (\texttt{ciampino\_train0}, a single run, not a repeat-trial
-    campaign), our runtime is real and substantially lower (586.57\,s vs.\ 2067.31\,s) at a real
-    RTF of 37.9\% vs.\ their reported 133.5\%.}
-  \label{tab:ablation-timing-2go}
-\end{table}
 
 On 2GO's own slowest reported case, \texttt{ciampino\_train0}, we finish in 586.57 seconds against
 their 2067.31, three and a half times faster, while committing only 34 loop-closure edges against
