@@ -327,35 +327,43 @@ connected component each session ends up in.
 \begin{table}[htb]
   \centering
   \footnotesize
-  \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}} llrrrrr}
+  \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}} llrr}
   \hline
-  \textbf{Session} & \textbf{Group} & \textbf{Raw} & \textbf{Single} & \textbf{Multi} & \textbf{Ref-anch. trans (m)} & \textbf{Ref-anch. rot (\textdegree)} \\
+  \textbf{Session} & \textbf{Group} & \textbf{Ref-anch. trans (m)} & \textbf{Ref-anch. rot (\textdegree)} \\
   \hline
-  \texttt{hl\_996} & A & \textbf{0.32} & \textbf{0.32} & \textbf{0.32} & 0.39 & 0.57 \\
-  \texttt{hl\_139} & A (ref) & 0.53 & \underline{0.51} & \textbf{0.44} & -- & -- \\
-  \texttt{hl\_693} & B & \textbf{0.22} & \textbf{0.22} & \textbf{0.22} & 0.26 & 0.58 \\
-  \texttt{hl\_295} & B (ref) & 0.13 & \textbf{0.12} & \textbf{0.12} & -- & -- \\
-  \texttt{hl\_568} & A & \underline{2.09} & \underline{2.09} & \textbf{0.29} & 0.30 & 0.89 \\
+  \multicolumn{4}{l}{\textit{HoloLens}} \\
+  \texttt{hl\_139} (ref) & A & -- & -- \\
+  \texttt{hl\_568} & A & 0.30 & 0.89 \\
+  \texttt{hl\_996} & A & 0.39 & 0.57 \\
+  \texttt{hl\_295} (ref) & B & -- & -- \\
+  \texttt{hl\_693} & B & 0.26 & 0.58 \\
   \hline
-  Total (L2-norm, $n{=}5$) & -- & 2.19 & 2.18 & 0.67 & 0.32 (mean) & 0.68 (mean) \\
+  HL Mean ($n{=}3$) & -- & 0.32 & 0.68 \\
+  \hline
+  \multicolumn{4}{l}{\textit{iOS}} \\
+  \texttt{ios\_01-18} (ref) & -- & -- & -- \\
+  \texttt{ios\_01-20} & -- & 0.66 & 0.75 \\
+  \texttt{ios\_07-01} & -- & 0.73 & 1.61 \\
+  \texttt{ios\_06-24} & -- & 1.37 & 2.76 \\
+  \hline
+  iOS Mean ($n{=}3$) & -- & 0.92 & 1.71 \\
   \hline
   \end{tabular*}
-  \caption[HGE HoloLens ATE and ref-anchored error]{HGE ATE (m), HoloLens sessions only,
-    device-isolated multi-session graph (\texttt{hl\_split}). Session identifiers abbreviated to
-    their unique numeric suffix. ``Group'' is the connected component each session settles into;
-    ``(ref)'' marks the session each component's ref-anchored error is measured against, so it has
-    no ref-anchored value of its own. Bold marks the best result among Raw/Single/Multi in a row,
-    underline the second-best. Ref-anchored columns are not ranked (nothing to compare
-    within a row).}
-  \label{tab:experiments-hge-ate}
+  \caption[HGE ref-anchored error, both devices]{HGE ref-anchored translation/rotation error,
+    device-isolated multi-session graphs (\texttt{hl\_split}/\texttt{ios\_split}). ATE for the
+    same sessions is in \mytabref{tab:experiments-hge-mixed}. ``(ref)'' marks each component's own
+    reference session, which has no ref-anchored value of its own. HoloLens splits into two
+    components (A, B); iOS forms one.}
+  \label{tab:experiments-hge-anchoring}
 \end{table}
 
-Nearly all of HGE's error reduction comes from session \texttt{hl\_568}. Its raw HoloLens odometry
-drifts to 2.09 meters. Multi-session mode brings it down to 0.29 meters. The other four sessions
-already sit close to GT before fusion and barely move. Ref-anchored error stays small across both
-connected components. Averaged over the four non-reference sessions it is 0.32 meters translation
-and 0.68 degrees rotation, so both components are not just accurate on their own but placed
-correctly relative to their own reference session.
+HGE's biggest single improvement is session \texttt{hl\_568}, which goes from 2.09 meters raw to
+0.29 meters multi-session (\mytabref{tab:experiments-hge-mixed}). Ref-anchored error stays small
+for HoloLens, 0.32 meters and 0.68 degrees on average. iOS's ref-anchored error is real but
+looser, 0.92 meters and 1.71 degrees, even though iOS's own ATE numbers are smaller than
+HoloLens's. A session can have a tight local trajectory shape and still be placed less precisely
+relative to the rest of its component, exactly what ref-anchored error is meant to catch and ATE
+alone would miss.
 
 \begin{table}[htb]
   \centering
@@ -388,11 +396,12 @@ correctly relative to their own reference session.
   \hline
   \end{tabular*}
   \caption[HGE device-isolated vs. mixed multi-session ATE]{HGE ATE (m), all 9 sessions, same
-    Raw/Single columns throughout; ``Multi (split)'' is the device-isolated graph of
-    \mytabref{tab:experiments-hge-ate} (iOS sessions run through their own \texttt{ios\_split}
-    equivalent), ``Multi (mixed, kf3/kf4)'' additionally allows HoloLens--iOS cross-session edges
-    in one shared graph at \texttt{min\_kf\_pairs}$=3$/$4$. iOS session identifiers abbreviated to
-    their capture date. Bold marks the best result in a row, underline the second-best.}
+    Raw/Single columns throughout; ``Multi (split)'' is the device-isolated \texttt{hl\_split}/
+    \texttt{ios\_split} multi-session result, ``Multi (mixed, kf3/kf4)'' additionally allows
+    HoloLens--iOS cross-session edges in one shared graph at \texttt{min\_kf\_pairs}$=3$/$4$. iOS
+    session identifiers abbreviated to their capture date. Bold marks the best result in a row,
+    underline the second-best. Ref-anchored error for the same sessions is in
+    \mytabref{tab:experiments-hge-anchoring}.}
   \label{tab:experiments-hge-mixed}
 \end{table}
 

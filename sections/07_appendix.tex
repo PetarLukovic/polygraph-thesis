@@ -18,9 +18,9 @@ per-sequence trajectory visualizations and other detailed breakdowns.
   \includegraphics[width=\textwidth]{images/07_appendix/hge_hololens_anchor_individual.png}
   \caption[HGE HoloLens ref-anchored estimate vs.\ GT, per session]{HGE HoloLens non-reference
     sessions, same methodology and layout as \myfigref{fig:appendix-hydro-anchor-individual}. The
-    device splits into 2 disconnected components (\mytabref{tab:experiments-hge-ate}): A
-    (reference \texttt{139}, others \texttt{568}/\texttt{996}) and B (reference \texttt{693},
-    other \texttt{295}), each anchored by its own component's fixed transform.}
+    device splits into 2 disconnected components (\mytabref{tab:experiments-hge-anchoring}): A
+    (reference \texttt{139}, others \texttt{568}/\texttt{996}) and B (reference \texttt{295},
+    other \texttt{693}), each anchored by its own component's fixed transform.}
   \label{fig:appendix-hge-hololens-anchor-individual}
 \end{figure}
 
@@ -39,10 +39,9 @@ per-sequence trajectory visualizations and other detailed breakdowns.
   \includegraphics[width=\textwidth]{images/07_appendix/hge_ios_anchor_individual.png}
   \caption[HGE iOS ref-anchored estimate vs.\ GT, per session]{HGE iOS non-reference sessions
     (\texttt{ios\_split}, reference \texttt{01-18}), same methodology as
-    \myfigref{fig:appendix-hydro-anchor-individual}. No published per-session ref-anchored
-    number exists for iOS (only the HoloLens component in \mytabref{tab:experiments-hge-ate}), so
-    panels are unannotated; the visible GT/estimate gap on \texttt{06-24} and \texttt{07-01} is
-    real and consistent with their higher multi-session ATE in \mytabref{tab:experiments-hge-mixed}.}
+    \myfigref{fig:appendix-hydro-anchor-individual}. Per-panel numbers match
+    \mytabref{tab:experiments-hge-anchoring}. The visible GT/estimate gap on \texttt{06-24} is the
+    largest of the three, consistent with it having the highest ref-anchored error in that table.}
   \label{fig:appendix-hge-ios-anchor-individual}
 \end{figure}
 
@@ -64,7 +63,7 @@ per-sequence trajectory visualizations and other detailed breakdowns.
   \caption[HGE trajectory grid, HoloLens sessions]{HGE trajectory grid, HoloLens sessions
     (device-isolated \texttt{hl\_split} run): native odometry, single-session, and multi-session
     output (green) against GT (red), GT-aligned. Session \texttt{568}'s native odometry drifts
-    heavily and is visibly corrected in the multi-session column, matching \mytabref{tab:experiments-hge-ate}'s
+    heavily and is visibly corrected in the multi-session column, matching \mytabref{tab:experiments-hge-mixed}'s
     2.09\,m $\to$ 0.29\,m improvement.}
   \label{fig:appendix-hge-hololens}
 \end{figure}
@@ -396,7 +395,7 @@ results.
   \caption[HGE/HYDRO ref-anchored consistency by PE method]{Same multi-session runs as
     \mytabref{tab:ablation-pe-kitti}. Each connected component's reference session is Umeyama-fit
     to GT, that fixed transform applied to the rest of the component, then measured against each
-    session's own GT (same method as \mytabref{tab:experiments-hge-ate}/\mytabref{tab:experiments-hydro-ate}).
+    session's own GT (same method as \mytabref{tab:experiments-hge-anchoring}/\mytabref{tab:experiments-hydro-ate}).
     ``Components'' is the number of connected components the multi-session graph settled into for
     that method.}
   \label{tab:ablation-pe-anchoring}
