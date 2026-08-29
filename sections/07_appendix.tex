@@ -260,7 +260,8 @@ results.
 
 \begin{table}[htb]
   \centering
-  \footnotesize
+  \scriptsize
+  \renewcommand{\arraystretch}{0.92}
   \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}} lrrrrr}
   \hline
   \textbf{Method} & \textbf{Success} & \textbf{No match} & \textbf{Ess.-mat.} & \textbf{Insuff.\ pts} & \textbf{PnP rej.} \\
@@ -295,7 +296,7 @@ results.
     runs are in \mytabref{tab:ablation-pe-accuracy}, directly below.}
   \label{tab:ablation-pe-rejection}
 
-  \bigskip
+  \smallskip
 
   \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}} lrrrr}
   \hline
@@ -327,6 +328,7 @@ results.
     GT-comparable pairs. Bold marks the best result per dataset group, underline the second-best.}
   \label{tab:ablation-pe-accuracy}
 \end{table}
+\renewcommand{\arraystretch}{1}
 
 \begin{table}[htb]
   \centering
