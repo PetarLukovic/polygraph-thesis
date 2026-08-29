@@ -7,5 +7,22 @@
 \chapter{Conclusion}
 \label{chap:conclusion}
 
-List the conclusions of your work and give evidence for these. Often, the discussion and the conclusion sections are fused. 
+This thesis set out to extend 2GO's map-less, per-pair pose-graph approach from one continuous
+capture to genuinely independent sessions, processed online. The results across KITTI, HGE, and
+HYDRO confirm that cross-session fusion delivers real accuracy gains wherever sessions actually
+revisit shared space. HGE session \texttt{hl\_568} drops from 2.09 meters raw to 0.29 meters once
+fused with the rest of its component. HYDRO's total ATE roughly halves, from 0.73 to 0.34 meters.
+On KITTI's VINS-Fusion backbone the pipeline matches or beats 2GO's own published result on five
+of seven sequences, and does so three and a half times faster on 2GO's own slowest reported case,
+while committing two orders of magnitude fewer edges.
 
+EuRoC is the honest exception. Its rooms are small and its odometry is already close to ground
+truth, leaving little room for a sparse, map-less approach to improve on what a dense SLAM system
+like ORB-SLAM3's Atlas already achieves there. RobotCar and VBR results are still being finalized
+on better session splits, and a retrieval ablation is queued, so this thesis's picture of the
+pipeline is not yet the complete one.
+
+What is already clear is the core claim. Admitting only robust, useful edges into the optimizer
+instead of every possible candidate pair is enough to match 2GO's own accuracy while running
+substantially faster. A device that revisits the same building, corridor, or city block repeatedly
+no longer has to start from zero every time.
