@@ -20,9 +20,8 @@ per-sequence trajectory visualizations and other detailed breakdowns.
   \includegraphics[width=0.48\textwidth]{images/07_appendix/hge_ios_anchor_combined.png}
   \caption[HGE ref-anchored estimates, both devices, all sessions combined]{Both devices'
     sessions in their own shared frame, same style as \myfigref{fig:appendix-hydro-anchor-combined}.
-    Left: HoloLens, 2 components that sit in genuinely different parts of the site and never share
-    a cross-session edge with each other, only within their own component. Right: iOS, 1
-    component.}
+    Left: HoloLens. Right: iOS. Component/reference breakdown for both is in
+    \mytabref{tab:experiments-hge-anchoring}.}
   \label{fig:appendix-hge-anchor-combined}
 \end{figure}
 
@@ -30,10 +29,8 @@ per-sequence trajectory visualizations and other detailed breakdowns.
   \centering
   \includegraphics[width=\textwidth]{images/07_appendix/hge_hololens_anchor_individual.png}
   \caption[HGE HoloLens ref-anchored estimate vs.\ GT, per session]{HGE HoloLens non-reference
-    sessions, same methodology and layout as \myfigref{fig:appendix-hydro-anchor-individual}. The
-    device splits into 2 disconnected components (\mytabref{tab:experiments-hge-anchoring}): A
-    (reference \texttt{139}, others \texttt{568}/\texttt{996}) and B (reference \texttt{295},
-    other \texttt{693}), each anchored by its own component's fixed transform.}
+    sessions, same methodology and layout as \myfigref{fig:appendix-hydro-anchor-individual}.
+    Component/reference breakdown is in \mytabref{tab:experiments-hge-anchoring}.}
   \label{fig:appendix-hge-hololens-anchor-individual}
 \end{figure}
 
@@ -43,8 +40,7 @@ per-sequence trajectory visualizations and other detailed breakdowns.
   \caption[HGE iOS ref-anchored estimate vs.\ GT, per session]{HGE iOS non-reference sessions
     (\texttt{ios\_split}, reference \texttt{01-18}), same methodology as
     \myfigref{fig:appendix-hydro-anchor-individual}. Per-panel numbers match
-    \mytabref{tab:experiments-hge-anchoring}. The visible GT/estimate gap on \texttt{06-24} is the
-    largest of the three, consistent with it having the highest ref-anchored error in that table.}
+    \mytabref{tab:experiments-hge-anchoring}.}
   \label{fig:appendix-hge-ios-anchor-individual}
 \end{figure}
 
@@ -56,10 +52,10 @@ per-sequence trajectory visualizations and other detailed breakdowns.
   \centering
   \includegraphics[width=\textwidth]{images/07_appendix/hge_hololens_grid.png}
   \caption[HGE trajectory grid, HoloLens sessions]{HGE trajectory grid, HoloLens sessions
-    (device-isolated \texttt{hl\_split} run): native odometry, single-session, and multi-session
-    output (green) against GT (red), GT-aligned. Session \texttt{568}'s native odometry drifts
-    heavily and is visibly corrected in the multi-session column, matching \mytabref{tab:experiments-hge-mixed}'s
-    2.09\,m $\to$ 0.29\,m improvement.}
+    (device-isolated \texttt{hl\_split} run). Native odometry, single-session, and multi-session
+    output (green) against GT (red), GT-aligned. Session \texttt{568}'s heavy native-odometry
+    drift and its multi-session correction (\mytabref{tab:experiments-hge-mixed}) are visible in
+    the bottom row.}
   \label{fig:appendix-hge-hololens}
 \end{figure}
 
@@ -95,11 +91,8 @@ per-sequence trajectory visualizations and other detailed breakdowns.
   \includegraphics[width=0.85\textwidth]{images/07_appendix/hydro_anchor_individual.png}
   \caption[HYDRO ref-anchored estimate vs.\ GT, per session]{HYDRO's 4 non-reference sessions,
     each panel showing that session's ref-anchored estimate (blue) against its own GT (green,
-    faded), over the real site-scan floor plan. Same methodology as
-    \texttt{pipelines/compute\_ref\_anchored.py} (\mytabref{tab:experiments-hydro-ate}'s
-    ref-anchored columns): the reference session (\texttt{11-24\_11-13}) is Umeyama-fit to its
-    own GT once, and that same fixed transform, not an independent per-session fit, is applied to
-    every other session's estimate before comparing it to its own GT.}
+    faded), over the real site-scan floor plan. Ref-anchoring methodology is in
+    \mysecref{sec:experiments-main}. Numbers are in \mytabref{tab:experiments-hydro-ate}.}
   \label{fig:appendix-hydro-anchor-individual}
 \end{figure}
 
@@ -130,10 +123,9 @@ per-sequence trajectory visualizations and other detailed breakdowns.
   \centering
   \includegraphics[width=0.9\textwidth]{images/07_appendix/kitti_grid_vins.png}
   \caption[KITTI trajectory grid, VINS-Fusion backbone]{Same layout as
-    \myfigref{fig:appendix-kitti-orb}, VINS-Fusion backbone. Sequence 08's raw odometry visibly
-    drifts from GT and stays uncorrected in both the single- and multi-session columns, the same
-    drift pattern in all three panels (\mytabref{tab:experiments-kitti-vins}'s detection-miss
-    caveat: zero intra- or cross-session edges found for this sequence on this backbone).}
+    \myfigref{fig:appendix-kitti-orb}, VINS-Fusion backbone. Sequence 08's raw drift stays
+    uncorrected in all three panels, the visible counterpart to
+    \mytabref{tab:experiments-kitti-vins}'s detection-miss caveat.}
   \label{fig:appendix-kitti-vins}
 \end{figure}
 

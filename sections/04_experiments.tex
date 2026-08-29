@@ -230,8 +230,11 @@ per session (\mysecref{sec:method-graph}'s own convention, no scale correction, 
 odometry backbone used here is already metric). Where a dataset is multi-session GT eligible
 (\mytabref{tab:experiments-datasets-overview}), a second, ref-anchored error is also
 reported per non-reference session, isolating how accurately a session was placed relative to the
-rest of its connected component, from ATE's own within session drift. Published baselines are
-included wherever a directly-comparable number exists in prior work.
+rest of its connected component, from ATE's own within session drift. Computed with
+\texttt{pipelines/compute\_ref\_anchored.py}: each connected component's reference session is
+Umeyama-fit to its own GT once, and that same fixed transform, not an independent per-session fit,
+is applied to every other session's estimate before comparing it to its own GT. Published
+baselines are included wherever a directly-comparable number exists in prior work.
 
 \subsection{KITTI}
 \label{sec:experiments-main-kitti}
@@ -359,11 +362,13 @@ connected component each session ends up in.
 
 HGE's biggest single improvement is session \texttt{hl\_568}, which goes from 2.09 meters raw to
 0.29 meters multi-session (\mytabref{tab:experiments-hge-mixed}). Ref-anchored error stays small
-for HoloLens, 0.32 meters and 0.68 degrees on average. iOS's ref-anchored error is real but
-looser, 0.92 meters and 1.71 degrees, even though iOS's own ATE numbers are smaller than
-HoloLens's. A session can have a tight local trajectory shape and still be placed less precisely
-relative to the rest of its component, exactly what ref-anchored error is meant to catch and ATE
-alone would miss.
+for HoloLens, 0.32 meters and 0.68 degrees on average. HoloLens's two components sit in genuinely
+different parts of the site and never share a cross-session edge with each other, only within
+their own component. iOS's ref-anchored error is real but looser, 0.92 meters and 1.71 degrees,
+even though iOS's own ATE numbers are smaller than HoloLens's, and its own worst session,
+\texttt{ios\_06-24}, carries the highest ref-anchored error of any HGE session. A session can have
+a tight local trajectory shape and still be placed less precisely relative to the rest of its
+component, exactly what ref-anchored error is meant to catch and ATE alone would miss.
 
 \begin{table}[htb]
   \centering
