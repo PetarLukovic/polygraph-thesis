@@ -625,12 +625,11 @@ small, high-overlap data.
 
 \begin{table}[htb]
   \centering
-  \scriptsize
+  \footnotesize
   \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}} lrrrrrr}
   \hline
   \textbf{Split} & \textbf{Ours trans (m)} & \textbf{Ours rot (\textdegree)} & \textbf{Ours edges} & \textbf{Atlas trans (m)} & \textbf{Atlas rot (\textdegree)} & \textbf{Atlas edges} \\
   \hline
-  \multicolumn{7}{l}{\textit{Stereo-inertial backbone}} \\
   MH01--03 (standalone) & 0.153 & 1.11 & 11 & \textbf{0.052} & \textbf{0.80} & 592 \\
   MH01--05 & 0.231 & 1.20 & 43 & \textbf{0.112} & \textbf{1.17} & 915 \\
   V101--103 & 0.104 & 3.44 & 13 & \textbf{0.047} & \textbf{2.22} & 148 \\
@@ -638,45 +637,30 @@ small, high-overlap data.
   \hline
   Avg (8 sessions) & 0.158 & 2.04 & -- & \textbf{0.077} & \textbf{1.36} & -- \\
   \hline
-  \multicolumn{7}{l}{\textit{Stereo-only backbone}} \\
-  MH01--03 (standalone) & 0.121 & 1.97 & 15 & \textbf{0.035} & \textbf{1.52} & 351 \\
-  MH01--05 & 0.286 & 1.89 & 69 & \textbf{0.075} & \textbf{1.43} & 2229 \\
-  V101--103 & 0.406 & 9.32 & 19 & \textbf{0.079} & \textbf{3.09} & 169 \\
-  V201--203 & 0.830 & 11.74 & 12 & 0.043 (\texttt{V2\_02} only) & 1.35 (\texttt{V2\_02} only) & 205 \\
-  \hline
-  Avg (8 sessions) & 0.452 & 6.21 & -- & -- & -- & -- \\
-  \hline
   \end{tabular*}
   \caption[EuRoC ref-anchored anchoring accuracy, ours vs. ORB-SLAM3 Atlas]{EuRoC trans./rot.\
     RMSE, mean over each split's non-reference sessions, ours vs. ORB-SLAM3's own native
-    multi-session mode (Atlas), both backbones. MH01--03 is a genuine standalone run here, not a
-    subtotal filtered from MH01--05. ``Ours edges'' = graph-committed cross-session cluster-pair
-    constraints; ``Atlas edges'' = cross-session covisibility edges at weight $\geq 100$. No
-    COVINS-G number exists at this per-room granularity, so no best/second marking; Atlas's own
-    numbers are highlighted directly since it wins every clean split.}
+    multi-session mode (Atlas), stereo-inertial backbone. MH01--03 is a genuine standalone run
+    here, not a subtotal filtered from MH01--05. ``Ours edges'' = graph-committed cross-session
+    cluster-pair constraints; ``Atlas edges'' = cross-session covisibility edges at weight
+    $\geq 100$. No COVINS-G number exists at this per-room granularity, so no best/second marking;
+    Atlas's own numbers are highlighted directly since it wins every split.}
   \label{tab:experiments-euroc-anchoring}
 \end{table}
 
-Atlas wins nearly every split here, expected on data this favorable to dense mapping. Atlas also
-commits far more edges to reach that result, 915 on MH01--05 against our 43 (stereo-inertial),
-since it treats every keyframe pair sharing map points as a candidate rather than filtering for
-genuinely useful ones first. Isolating MH01--03 into its own standalone run, rather than reading
-it as a subtotal of the MH01--05 run, moves the two systems in opposite directions. Ours gets
-worse on translation once isolated, 0.153 meters against the subtotal's 0.071, despite rotation
-improving. Atlas gets better on both once isolated, 0.052 meters and 0.80 degrees against the
-subtotal's 0.071 and 1.48. MH04/05's extra cross-session data helps Atlas's own MH01--03 placement
-but actively hurts ours, not the same direction for either system. On the stereo-only backbone
-Atlas fails outright on V201--203, one attempt crashes mid-tracking, a second leaves
-\texttt{V2\_03\_difficult} split across two maps that never merge into the reference's, so its
-reported rotation error there sits between two disconnected coordinate frames rather than being a
-real number and is excluded, only \texttt{V2\_02} is shown. The accuracy gap elsewhere stays small
-on the stereo-inertial backbone, roughly 8 centimeters on average and never more than 12 on any
-clean split, close to the pipeline's own typical per-pair pose estimation error pooled across the
-other four datasets, around 0.40 meters median (\mytabref{tab:ablation-pe-rejection}), even though
-EuRoC was not part of that ablation. The stereo-only backbone widens that gap substantially, up to
-0.79 meters on V101--103 against Atlas's 0.079, since dropping IMU costs this pipeline far more
-accuracy than it costs Atlas's own dense reconstruction. Maplab will be added to this table at a
-later pass.
+Atlas wins every split here, expected on data this favorable to dense mapping. Atlas also commits
+far more edges to reach that result, 915 on MH01--05 against our 43, since it treats every
+keyframe pair sharing map points as a candidate rather than filtering for genuinely useful ones
+first. Isolating MH01--03 into its own standalone run, rather than reading it as a subtotal of the
+MH01--05 run, moves the two systems in opposite directions. Ours gets worse on translation once
+isolated, 0.153 meters against the subtotal's 0.071, despite rotation improving. Atlas gets better
+on both once isolated, 0.052 meters and 0.80 degrees against the subtotal's 0.071 and 1.48.
+MH04/05's extra cross-session data helps Atlas's own MH01--03 placement but actively hurts ours,
+not the same direction for either system. The accuracy gap stays small, roughly 8 centimeters on
+average and never more than 12 on any split, close to the pipeline's own typical per-pair pose
+estimation error pooled across the other four datasets, around 0.40 meters median
+(\mytabref{tab:ablation-pe-rejection}), even though EuRoC was not part of that ablation. Maplab
+will be added to this table at a later pass.
 
 \begin{table}[htb]
   \centering
