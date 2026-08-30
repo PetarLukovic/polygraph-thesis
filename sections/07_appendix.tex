@@ -252,6 +252,14 @@ results.
 \subsection{Pose Estimation Method}
 \label{sec:appendix-ablation-pe}
 
+\mytabref{tab:ablation-pe-rejection}/\mytabref{tab:ablation-pe-accuracy} are the isolated per-pair
+ablation (fixed candidate pairs, production thresholds, 3 methods). \mytabref{tab:ablation-pe-kitti}
+onward are full single-/multi-session pipeline runs, extended 2026-08-30 with two variants that
+swap the depth source to MASt3R's own pointmap output (\texttt{*+MASt3Rdepth}) and one that skips
+the lifted-depth PnP stage entirely, using MASt3R's cross-view pointmap directly
+(\texttt{MASt3R-native}), 6 methods in total. Where a column has a tied best value, no second
+place is marked. Findings are discussed in \mysecref{sec:experiments-ablation-pe}.
+
 \begin{table}[htb]
   \centering
   \scriptsize
@@ -338,55 +346,79 @@ results.
 \begin{table}[htb]
   \centering
   \footnotesize
-  \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}} lrrrr}
+  \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}} lrrrrr}
   \hline
-  \textbf{Seq / Session} & \textbf{Raw odom} & \textbf{LightGlue+M3D} & \textbf{LoFTR+M3D} & \textbf{MASt3R+M3D} \\
+  \textbf{Seq / Session} & \textbf{Raw odom} & \textbf{2GO} & \textbf{LightGlue+M3D} & \textbf{LoFTR+M3D} & \textbf{MASt3R+M3D} \\
   \hline
-  \multicolumn{5}{l}{\textit{KITTI (ORB-SLAM3, multi-session)}} \\
-  00 & 5.28 & \textbf{1.21} (97+49) & \underline{1.24} (102+43) & 1.28 (86+34) \\
-  02 & 7.34 & \textbf{4.82} (75+0) & 5.09 (49+0) & \underline{4.93} (46+0) \\
-  05 & 2.14 & 0.99 (42+0) & \underline{0.98} (45+0) & \textbf{0.93} (49+0) \\
-  06 & 2.07 & 0.88 (29+0) & \underline{0.81} (43+0) & \textbf{0.76} (15+0) \\
-  07 & 1.29 & \textbf{0.32} (5+49) & 0.41 (4+43) & \underline{0.34} (6+34) \\
-  08 & 3.28 & \textbf{2.95} (3+0) & \underline{3.28} (0+0) & \underline{3.28} (0+0) \\
-  09 & 2.72 & \textbf{1.79} (3+0) & \underline{1.81} (4+0) & 2.72 (0+0) \\
+  \multicolumn{6}{l}{\textit{KITTI (ORB-SLAM3, multi-session)}} \\
+  00 & 5.28 & 1.82 & \textbf{1.21} (97+49) & \underline{1.24} (102+43) & 1.28 (86+34) \\
+  02 & 7.34 & 8.04 & \textbf{4.82} (75+0) & 5.09 (49+0) & \underline{4.93} (46+0) \\
+  05 & 2.14 & \textbf{0.92} & 0.99 (42+0) & \underline{0.98} (45+0) & 0.93 (49+0) \\
+  06 & 2.07 & \textbf{0.62} & 0.88 (29+0) & \underline{0.81} (43+0) & 0.76 (15+0) \\
+  07 & 1.29 & \textbf{0.41} & \underline{0.32} (5+49) & 0.41 (4+43) & 0.34 (6+34) \\
+  08 & 3.28 & 3.78 & \textbf{2.95} (3+0) & \underline{3.28} (0+0) & \underline{3.28} (0+0) \\
+  09 & 2.72 & 1.84 & \textbf{1.79} (3+0) & \underline{1.81} (4+0) & 2.72 (0+0) \\
   \hline
-  Total (L2-norm, $n{=}7$) & 10.51 & \textbf{6.20} (254+98) & \underline{6.58} (247+86) & 6.76 (202+68) \\
+  Total (L2-norm, $n{=}7$) & 10.51 & 9.33 & \textbf{6.20} (254+98) & \underline{6.58} (247+86) & 6.76 (202+68) \\
   \hline
-  \multicolumn{5}{l}{\textit{HGE (multi-session)}} \\
-  \texttt{hl\_996} & 0.32 & \textbf{0.32} (17+47) & \textbf{0.32} (17+5) & \textbf{0.32} (26+39) \\
-  \texttt{hl\_139} & 0.53 & \textbf{0.44} (6+52) & \textbf{0.44} (6+49) & \textbf{0.44} (6+56) \\
-  \texttt{hl\_693} & 0.22 & \underline{0.22} (12+27) & \underline{0.22} (12+23) & \textbf{0.21} (12+37) \\
-  \texttt{hl\_295} & 0.13 & \textbf{0.12} (11+27) & \underline{0.13} (24+28) & 0.14 (16+37) \\
-  \texttt{hl\_568} & 2.09 & \textbf{0.29} (0+99) & \textbf{0.29} (0+49) & \textbf{0.29} (0+95) \\
+  \multicolumn{6}{l}{\textit{HGE (multi-session, no per-session 2GO reference)}} \\
+  \texttt{hl\_996} & 0.32 & -- & \textbf{0.32} (17+47) & \textbf{0.32} (17+5) & \textbf{0.32} (26+39) \\
+  \texttt{hl\_139} & 0.53 & -- & \textbf{0.44} (6+52) & \textbf{0.44} (6+49) & \textbf{0.44} (6+56) \\
+  \texttt{hl\_693} & 0.22 & -- & \underline{0.22} (12+27) & \underline{0.22} (12+23) & \textbf{0.21} (12+37) \\
+  \texttt{hl\_295} & 0.13 & -- & \textbf{0.12} (11+27) & \underline{0.13} (24+28) & 0.14 (16+37) \\
+  \texttt{hl\_568} & 2.09 & -- & \textbf{0.29} (0+99) & \textbf{0.29} (0+49) & \textbf{0.29} (0+95) \\
   \hline
-  Total (L2-norm, $n{=}5$) & 2.19 & \textbf{0.66} & \underline{0.67} & \underline{0.67} \\
+  Total (L2-norm, $n{=}5$) & 2.19 & -- & \textbf{0.66} & \underline{0.67} & \underline{0.67} \\
   \hline
-  \multicolumn{5}{l}{\textit{HGE (iOS, multi-session, 4-session pool)}} \\
-  \texttt{ios\_01-20} & 0.35 & \underline{0.36} (0+11) & \underline{0.36} (0+11) & \textbf{0.35} (0+37) \\
-  \texttt{ios\_07-01} & 0.35 & \underline{0.33} (18+35) & \textbf{0.31} (24+9) & \textbf{0.31} (24+29) \\
-  \texttt{ios\_06-24} & 0.67 & \underline{0.67} (0+30) & \underline{0.67} (0+9) & \textbf{0.64} (0+16) \\
-  \texttt{ios\_01-18} & 0.85 & \textbf{0.78} (6+26) & \underline{0.79} (5+11) & \textbf{0.78} (5+8) \\
+  \multicolumn{6}{l}{\textit{HGE (iOS, multi-session, 4-session pool, no per-session 2GO reference)}} \\
+  \texttt{ios\_01-20} & 0.35 & -- & \underline{0.36} (0+11) & \underline{0.36} (0+11) & \textbf{0.35} (0+37) \\
+  \texttt{ios\_07-01} & 0.35 & -- & \underline{0.33} (18+35) & \textbf{0.31} (24+9) & \textbf{0.31} (24+29) \\
+  \texttt{ios\_06-24} & 0.67 & -- & \underline{0.67} (0+30) & \underline{0.67} (0+9) & \textbf{0.64} (0+16) \\
+  \texttt{ios\_01-18} & 0.85 & -- & \textbf{0.78} (6+26) & \underline{0.79} (5+11) & \textbf{0.78} (5+8) \\
   \hline
-  Total (L2-norm, $n{=}4$) & 1.19 & \underline{1.13} & 1.14 & \textbf{1.11} \\
+  Total (L2-norm, $n{=}4$) & 1.19 & -- & \underline{1.13} & 1.14 & \textbf{1.11} \\
   \hline
-  \multicolumn{5}{l}{\textit{HYDRO (multi-session)}} \\
-  \texttt{11-24\_11-13} & 0.17 & \textbf{0.11} (11+425) & \textbf{0.11} (11+449) & \underline{0.12} (9+391) \\
-  \texttt{11-24\_11-26} & 0.44 & \textbf{0.14} (38+121) & \textbf{0.14} (31+136) & \textbf{0.14} (41+108) \\
-  \texttt{11-24\_11-43} & 0.24 & \textbf{0.18} (10+528) & \textbf{0.18} (10+576) & \textbf{0.18} (23+497) \\
-  \texttt{05-17\_14-39} & 0.18 & \textbf{0.15} (9+209) & \textbf{0.15} (13+236) & \textbf{0.15} (33+211) \\
-  \texttt{05-17\_16-43} & 0.47 & \underline{0.17} (19+211) & \textbf{0.16} (61+251) & \underline{0.17} (31+191) \\
+  \multicolumn{6}{l}{\textit{HYDRO (multi-session, no per-session 2GO reference)}} \\
+  \texttt{11-24\_11-13} & 0.17 & -- & \textbf{0.11} (11+425) & \textbf{0.11} (11+449) & \underline{0.12} (9+391) \\
+  \texttt{11-24\_11-26} & 0.44 & -- & \textbf{0.14} (38+121) & \textbf{0.14} (31+136) & \textbf{0.14} (41+108) \\
+  \texttt{11-24\_11-43} & 0.24 & -- & \textbf{0.18} (10+528) & \textbf{0.18} (10+576) & \textbf{0.18} (23+497) \\
+  \texttt{05-17\_14-39} & 0.18 & -- & \textbf{0.15} (9+209) & \textbf{0.15} (13+236) & \textbf{0.15} (33+211) \\
+  \texttt{05-17\_16-43} & 0.47 & -- & \underline{0.17} (19+211) & \textbf{0.16} (61+251) & \underline{0.17} (31+191) \\
   \hline
-  Total (L2-norm, $n{=}5$) & 0.73 & \textbf{0.34} & \textbf{0.34} & \underline{0.35} \\
+  Total (L2-norm, $n{=}5$) & 0.73 & -- & \textbf{0.34} & \textbf{0.34} & \underline{0.35} \\
   \hline
   \end{tabular*}
   \caption[Full-pipeline pose-estimation-method comparison]{ATE (m) with \texttt{pose\_estimation.method}
     swapped as the only change from production, multi-session mode, ORB-SLAM3 backbone. Edge
-    counts in parentheses are intra+cross. The HGE iOS group here uses an older 4-session pool
-    (added 2026-08-18, before the real 5-session pool in
-    \mytabref{tab:experiments-hge-ios-ate} was picked), not yet rerun on the current one. Bold
-    marks the best result among the three methods per row, underline the second-best.}
+    counts in parentheses are intra+cross. 2GO is their own published per-sequence number, KITTI
+    only. The HGE iOS group uses an older 4-session pool, not the 5-session one in
+    \mytabref{tab:experiments-hge-ios-ate}. Bold/underline mark the best/second-best among the
+    three original methods per row (extended comparison in
+    \mytabref{tab:ablation-pe-extended}).}
   \label{tab:ablation-pe-kitti}
+\end{table}
+
+\begin{table}[htb]
+  \centering
+  \footnotesize
+  \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}} lrrrr}
+  \hline
+  \textbf{Method} & \textbf{KITTI (m)} & \textbf{HGE (m)} & \textbf{HGE iOS (m)} & \textbf{HYDRO (m)} \\
+  \hline
+  LightGlue+M3D (production) & \textbf{6.20} & \textbf{0.66} & \underline{1.13} & \textbf{0.34} \\
+  LoFTR+M3D & \underline{6.58} & \underline{0.67} & 1.14 & \textbf{0.34} \\
+  MASt3R+M3D & 6.76 & \underline{0.67} & \textbf{1.11} & 0.35 \\
+  LightGlue+MASt3Rdepth & 12.04 & 0.68 & 1.14 & \textbf{0.34} \\
+  LoFTR+MASt3Rdepth & 10.98 & 0.68 & 1.14 & \textbf{0.34} \\
+  MASt3R-native & 26.34 & 2.19 & 1.19 & 0.73 \\
+  \hline
+  \end{tabular*}
+  \caption[Full-pipeline ATE, all 6 PE methods]{Total ATE (L2-norm) per method and dataset, same
+    runs and totals as \mytabref{tab:ablation-pe-kitti}, extended with the two depth-source
+    variants and the native-MASt3R variant (\mysecref{sec:experiments-ablation-pe}). Bold marks
+    the best result per column, underline the second-best, no second place marked where the best
+    is itself a tie.}
+  \label{tab:ablation-pe-extended}
 \end{table}
 
 \begin{table}[htb]
@@ -399,26 +431,32 @@ results.
   HGE & LightGlue+M3D & 2 & 0.31 / 0.69 \\
   HGE & LoFTR+M3D & 2 & 0.38 / 0.67 \\
   HGE & MASt3R+M3D & 2 & 0.31 / 0.69 \\
+  HGE & LightGlue+MASt3Rdepth & 2 & \textbf{18.41} / \textbf{34.19} \\
+  HGE & LoFTR+MASt3Rdepth & 2 & \textbf{18.47} / \textbf{34.32} \\
+  HGE & MASt3R-native & 5 & \textbf{33.94} / \textbf{32.73} \\
   \hline
   HYDRO & LightGlue+M3D & 1 & 0.17 / 0.34 \\
   HYDRO & LoFTR+M3D & 1 & 0.17 / 0.33 \\
   HYDRO & MASt3R+M3D & 1 & 0.18 / 0.35 \\
+  HYDRO & LightGlue+MASt3Rdepth & 1 & 0.17 / 0.32 \\
+  HYDRO & LoFTR+MASt3Rdepth & 1 & 0.18 / 0.32 \\
+  HYDRO & MASt3R-native & 4 & \textbf{14.37} / \textbf{44.53} \\
   \hline
   HGE (iOS) & LightGlue+M3D & 1 & 0.92 / 1.71 \\
   HGE (iOS) & LoFTR+M3D & 1 & \textbf{52.81} / \textbf{30.12} \\
   HGE (iOS) & MASt3R+M3D & 1 & 1.26 / 1.95 \\
+  HGE (iOS) & LightGlue+MASt3Rdepth & 1 & 0.67 / 1.21 \\
+  HGE (iOS) & LoFTR+MASt3Rdepth & 3 & \textbf{78.14} / \textbf{41.24} \\
+  HGE (iOS) & MASt3R-native & 4 & \textbf{77.82} / \textbf{50.41} \\
   \hline
   \end{tabular*}
-  \caption[HGE/HYDRO ref-anchored consistency by PE method]{Same multi-session runs as
-    \mytabref{tab:ablation-pe-kitti}. Each connected component's reference session is Umeyama-fit
-    to GT, that fixed transform applied to the rest of the component, then measured against each
-    session's own GT (same method as \mytabref{tab:experiments-hge-ate}/\mytabref{tab:experiments-hydro-ate}).
-    ``Components'' is the number of connected components the multi-session graph settled into for
-    that method. HGE (iOS)'s LoFTR row is a real, striking negative result, bolded as a flag, not
-    a win: it still lands all 4 sessions in 1 component with comparable edge counts to the other
-    two methods, but 2 of the 3 anchored sessions come out catastrophically wrong (74--84\,m,
-    roughly 45\textdegree), a bad-but-locally-corroborated cross-session edge rather than a
-    different graph split. LightGlue and MASt3R both anchor all 3 sessions sanely.}
+  \caption[Ref-anchored consistency, all 6 PE methods]{Same multi-session runs as
+    \mytabref{tab:ablation-pe-kitti}/\mytabref{tab:ablation-pe-extended}. Each connected
+    component's reference session is Umeyama-fit to GT, that fixed transform applied to the rest
+    of the component, then measured against each session's own GT (same method as
+    \mytabref{tab:experiments-hge-ate}/\mytabref{tab:experiments-hydro-ate}). Components is the
+    number of connected components the multi-session graph settled into. Bold flags a catastrophic
+    anchoring failure, discussed in \mysecref{sec:experiments-ablation-pe}, not a ranking.}
   \label{tab:ablation-pe-anchoring}
 \end{table}
 
@@ -429,32 +467,39 @@ results.
   \hline
   \textbf{Dataset} & \textbf{Method} & \textbf{Wall time (s)} & \textbf{vs.\ LightGlue} \\
   \hline
-  KITTI & LightGlue+M3D & 698 & 1.00$\times$ \\
+  KITTI & LightGlue+M3D & \textbf{698} & 1.00$\times$ \\
   KITTI & LoFTR+M3D & 1125 & 1.61$\times$ \\
   KITTI & MASt3R+M3D & 761 & 1.09$\times$ \\
+  KITTI & LightGlue+MASt3Rdepth & 860 & 1.23$\times$ \\
+  KITTI & LoFTR+MASt3Rdepth & 1179 & 1.69$\times$ \\
+  KITTI & MASt3R-native & 795 & 1.14$\times$ \\
   \hline
-  HGE & LightGlue+M3D & 307 & 1.00$\times$ \\
+  HGE & LightGlue+M3D & \textbf{307} & 1.00$\times$ \\
   HGE & LoFTR+M3D & 688 & 2.24$\times$ \\
   HGE & MASt3R+M3D & 739 & 2.41$\times$ \\
+  HGE & LightGlue+MASt3Rdepth & 338 & 1.10$\times$ \\
+  HGE & LoFTR+MASt3Rdepth & 747 & 2.43$\times$ \\
+  HGE & MASt3R-native & 432 & 1.41$\times$ \\
   \hline
   HYDRO & LightGlue+M3D & 1213 & 1.00$\times$ \\
   HYDRO & LoFTR+M3D & 1989 & 1.64$\times$ \\
   HYDRO & MASt3R+M3D & 2428 & 2.00$\times$ \\
+  HYDRO & LightGlue+MASt3Rdepth & 1168 & 0.96$\times$ \\
+  HYDRO & LoFTR+MASt3Rdepth & 2026 & 1.67$\times$ \\
+  HYDRO & MASt3R-native & \textbf{1120} & 0.92$\times$ \\
   \hline
-  HGE (iOS) & LightGlue+M3D & 365 & 1.00$\times$ \\
+  HGE (iOS) & LightGlue+M3D & \textbf{365} & 1.00$\times$ \\
   HGE (iOS) & LoFTR+M3D & 1247 & 3.42$\times$ \\
   HGE (iOS) & MASt3R+M3D & 1489 & 4.08$\times$ \\
+  HGE (iOS) & LightGlue+MASt3Rdepth & 472 & 1.29$\times$ \\
+  HGE (iOS) & LoFTR+MASt3Rdepth & 1465 & 4.01$\times$ \\
+  HGE (iOS) & MASt3R-native & 1553 & 4.25$\times$ \\
   \hline
   \end{tabular*}
-  \caption[PE-method full-pipeline wall time]{Real elapsed wall time for the whole pipeline
-    invocation, same multi-session runs as \mytabref{tab:ablation-pe-kitti}, all twelve on the same
-    GPU (RTX 4090). Redone 2026-08-28/2026-08-30 with fresh, uncached timing under a
-    32-CPU-per-job allocation, replacing an earlier campaign. Accuracy is essentially tied across
-    all three methods on KITTI/HGE/HYDRO (\mytabref{tab:ablation-pe-kitti},
-    \mytabref{tab:ablation-pe-anchoring}), the reason LightGlue stays the production default
-    despite that tie. HGE (iOS) is the outlier: LightGlue is both fastest and the only method that
-    does not catastrophically break cross-session anchoring there
-    (\mytabref{tab:ablation-pe-anchoring}).}
+  \caption[PE-method full-pipeline wall time, all 6 methods]{Real elapsed wall time for the whole
+    pipeline invocation, same multi-session runs as \mytabref{tab:ablation-pe-kitti}, all on the
+    same GPU (RTX 4090). Bold marks the fastest method per dataset, discussed in
+    \mysecref{sec:experiments-ablation-pe}.}
   \label{tab:ablation-pe-timing}
 \end{table}
 
@@ -495,12 +540,9 @@ results.
   \hline
   \end{tabular*}
   \caption[Retrieval-method ATE and edge counts, by dataset]{\texttt{retrieval.method} swapped for
-    BoQ, NetVLAD, or SALAD against the production default (MegaLoc), everything else unchanged,
-    across all four locations, added 2026-08-29. Edge counts are from multi-session mode. HGE
-    (iOS) is the standout: BoQ, NetVLAD, and SALAD all find real cross-session edges (14--22,
-    against MegaLoc's 56), but single and multi ATE barely move between modes for any of them,
-    unlike MegaLoc, whose cross-session edges give a genuine, if modest, multi-session improvement
-    there. Bold marks the best result per column per dataset group, underline the second-best.}
+    BoQ, NetVLAD, or SALAD against the production default (MegaLoc), everything else unchanged.
+    Edge counts are from multi-session mode. Bold marks the best result per column per dataset
+    group, underline the second-best, discussed in \mysecref{sec:experiments-ablation-retrieval}.}
   \label{tab:ablation-retrieval}
 \end{table}
 
@@ -508,40 +550,9 @@ results.
 \subsection{Timing}
 \label{sec:appendix-ablation-timing}
 
-\begin{table}[htb]
-  \centering
-  \scriptsize
-  \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}} lrrrr}
-  \hline
-  \textbf{Metric} & \textbf{ORB-SLAM3, single} & \textbf{ORB-SLAM3, multi} & \textbf{VINS-Fusion, single} & \textbf{VINS-Fusion, multi} \\
-  \hline
-  Recording (s) & 2407.31 & 2407.31 & 2407.31 & 2407.31 \\
-  Odom.\ gen.\ (s) & 2613.4 & 2613.4 & 954.0 & 954.0 \\
-  Wall, Quadro (s) & 1189.64 & 1322.08 & 1076.28 & 1225.76 \\
-  Wall, 4090 (s) & 756.3 & 819.6 & 695.1 & 910.1 \\
-  Speedup & 1.57$\times$ & 1.61$\times$ & 1.55$\times$ & 1.35$\times$ \\
-  RTF (Quadro / 4090) & 49.4\% / 31.4\% & 54.9\% / 34.0\% & 44.7\% / 28.9\% & 50.9\% / 37.8\% \\
-  Retrieval (Quadro / 4090) & 0.31\% / 3.49\% & 1.32\% / 9.24\% & 0.34\% / 4.24\% & 1.38\% / 8.52\% \\
-  Pose est.\ (Quadro / 4090) & 55.11\% / 53.98\% & 62.12\% / 51.56\% & 56.36\% / 48.14\% & 61.96\% / 51.42\% \\
-  Graph opt.\ (Quadro / 4090) & 1.10\% / 0.84\% & 1.08\% / 0.79\% & 1.08\% / 0.78\% & 1.01\% / 0.66\% \\
-  Other (Quadro / 4090) & 43.48\% / 41.69\% & 35.49\% / 38.41\% & 42.22\% / 46.84\% & 35.65\% / 39.40\% \\
-  Desc.\ cache hit & 0.0\% (0/4055) & 0.0\% (0/4055) & 0.0\% (0/4043) & 0.0\% (0/4043) \\
-  Depth cache hit & 63.0\% (1131/1796) & 64.1\% (1368/2134) & 64.6\% (1136/1758) & 65.4\% (1361/2082) \\
-  \hline
-  \end{tabular*}
-  \caption[KITTI wall time and phase breakdown]{All 11 KITTI sequences, single invocation each.
-    Wall time is real elapsed clock time including I/O, not compute time alone. Odom.\ gen.\ is a
-    one-time upstream cost, not re-run per invocation. Phase percentages read from each run's own
-    \texttt{timings.json}. ``Other'' is the remainder against wall time. All runs use
-    \texttt{--fresh\_cache}, so cache-hit numbers reflect within-run reuse only, no cross-run
-    caching. Redone 2026-08-30: the ``Wall, 4090'' row and everything derived from it were stale, a
-    run-name mismatch in the timing harness (the pipeline appends the odometry run tag to an
-    already-tagged config name, but the stats-report step read the un-doubled name) meant every
-    prior regeneration silently read a leftover Quadro-era directory instead of a fresh 4090 run.
-    Fixed, and all four conditions rerun under a 32-CPU-per-job allocation to reduce node-sharing
-    contention.}
-  \label{tab:ablation-timing-kitti}
-\end{table}
+The KITTI wall-time and phase-breakdown table is in the Experiments chapter
+(\mytabref{tab:ablation-timing-kitti}, \mysecref{sec:experiments-ablation-timing}). Below is the
+isolated-sequence runtime comparison against 2GO's own published numbers.
 
 \begin{table}[htb]
   \centering
@@ -568,23 +579,10 @@ results.
   \hline
   \end{tabular*}
   \caption[Isolated-sequence runtime vs.\ 2GO, same GPU model]{Both systems on an RTX 4090. 2GO's
-    own CL--Absolute variant (LightGlue matching plus metric monocular depth lift, no dense
-    reconstruction) is the directly-comparable one. It only publishes a VINS-Fusion number for
-    this sequence, so the ORB-SLAM3 group here is our own extra data point. Odom.\ gen.\ here is
-    KITTI-00-specific, not the full 11-session total of \mytabref{tab:ablation-timing-kitti}.
-    Refreshed 2026-08-30 with fresh 5-repeat trials under a 32-CPU-per-job allocation, replacing
-    an earlier campaign that read a stale run directory (same root cause as
-    \mytabref{tab:ablation-timing-kitti}). Runtime and RTF cells at KITTI-00 are median
-    (min--max) across the 5 trials. Edge and cache counts came back byte-identical to the
-    original campaign within each condition, confirming the algorithm itself stayed
-    deterministic, only wall time moved. Which of batched/unbatched is faster flips for both
-    backbones against the original campaign. VINS-Fusion was faster unbatched before and is now
-    faster batched, a real flip since the new ranges (203--212 against 227--254) do not overlap
-    at all. ORB-SLAM3 was faster batched before and now the median favors unbatched, but the
-    ranges overlap (213--252 against 222--237), so that one is suggestive rather than settled.
-    On 2GO's own slowest reported case (\texttt{ciampino\_train0}, a single run, not a
-    repeat-trial campaign), our runtime is real and substantially lower (586.57\,s against
-    2067.31\,s) at a real RTF of 37.9\% against their reported 133.5\%. Bold marks the faster of
-    batched/unbatched per backbone at KITTI-00.}
+    own CL--Absolute variant is the directly comparable one, it only publishes a VINS-Fusion
+    number for this sequence, so the ORB-SLAM3 group is our own extra data point. Runtime/RTF at
+    KITTI-00 are median (min--max) across 5 repeat trials. Bold marks the faster of
+    batched/unbatched per backbone at KITTI-00, discussed in
+    \mysecref{sec:experiments-ablation-timing}.}
   \label{tab:ablation-timing-2go}
 \end{table}

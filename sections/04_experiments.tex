@@ -769,9 +769,10 @@ defaults, so the accept/reject breakdown is directly meaningful), then as full s
 multi-session pipeline runs across all three datasets. Reports, per method and dataset: success
 rate and the breakdown of \emph{why} a pair was rejected (no match, essential-matrix stage,
 insufficient points, final PnP stage), translation/rotation error on successful pairs, matching
-plus total per-pair time, and full-pipeline ATE. Full detail tables (per-pair rejection breakdown,
-per-pair accuracy/timing, full-pipeline ATE, ref-anchored consistency, and wall time) are in
-\mysecref{sec:appendix-ablation-pe}.
+plus total per-pair time, and full-pipeline ATE. The full-pipeline runs are further extended with
+two matcher/depth-source variants and one fully native MASt3R variant, six methods in total. Full
+detail tables (per-pair rejection breakdown, per-pair accuracy/timing, full-pipeline ATE for all
+six methods, ref-anchored consistency, and wall time) are in \mysecref{sec:appendix-ablation-pe}.
 
 Success rate does not predict accuracy. MASt3R succeeds on 91.8\% of HGE pairs against
 LightGlue's 76.8\%, but its mean translation error on those successful pairs is almost twice as
@@ -810,6 +811,20 @@ different graph split. LightGlue and MASt3R both anchor sanely on the same data
 MASt3R take up to 3.42 and 4.08 times as long as LightGlue respectively, worst case on HGE (iOS),
 for no accuracy gain and, in LoFTR's case, an outright failure, which is why LightGlue stays the
 production default.
+
+The ablation also tested two further alternatives to Metric3D as the lifted-depth source, matching
+depth against MASt3R's own cross-view pointmap for the LightGlue and LoFTR matchers
+(\texttt{*+MASt3Rdepth}), and a fully native variant that skips the lifted-depth PnP stage
+altogether and uses MASt3R's pointmap directly (\texttt{MASt3R-native}). All three are worse almost
+everywhere. MASt3R-native barely bridges sessions at all on HGE and HGE (iOS), 5 and 4 disconnected
+components against the production pipeline's 1 to 2, so its apparently competitive HYDRO wall time
+(1120 seconds against LightGlue's 1213) is not a real speed advantage, it comes from skipping most
+of the cross-session matching work the other methods still do. LightGlue+MASt3Rdepth comes closest
+to production, even edging it out on HGE (iOS) anchoring (0.67 meters against 0.92), but it breaks
+down on HGE HoloLens the same way LoFTR does on HGE (iOS), 18.41 meters against production's 0.31.
+LoFTR+MASt3Rdepth inherits LoFTR+Metric3D's own iOS failure and adds a second one on HGE HoloLens.
+No depth-source swap beats keeping Metric3D. Full six-method detail is in
+\mysecref{sec:appendix-ablation-pe}.
 
 \subsection{Retrieval Method}
 \label{sec:experiments-ablation-retrieval}
@@ -854,8 +869,38 @@ turn them into edges the graph can trust, and on HGE (iOS) only MegaLoc's edges 
 
 Full 11-session KITTI wall-clock time, both backbones, both modes, on two GPUs (a Quadro RTX 6000
 and an RTX 4090), broken down by pipeline phase (retrieval, pose estimation, graph optimization,
-other), plus a hardware-matched runtime comparison against 2GO's own published number. Full phase
-breakdown and per-run detail tables are in \mysecref{sec:appendix-ablation-timing}.
+other), plus a hardware-matched runtime comparison against 2GO's own published number. The
+4090 numbers below are a 2026-08-30 rerun, a run-name mismatch in the timing harness had every
+earlier regeneration silently reading a leftover Quadro-era directory instead. The
+isolated-sequence 2GO comparison detail is in \mysecref{sec:appendix-ablation-timing}.
+
+\begin{table}[htb]
+  \centering
+  \scriptsize
+  \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}} lrrrr}
+  \hline
+  \textbf{Metric} & \textbf{ORB-SLAM3, single} & \textbf{ORB-SLAM3, multi} & \textbf{VINS-Fusion, single} & \textbf{VINS-Fusion, multi} \\
+  \hline
+  Recording (s) & 2407.31 & 2407.31 & 2407.31 & 2407.31 \\
+  Odom.\ gen.\ (s) & 2613.4 & 2613.4 & 954.0 & 954.0 \\
+  Wall, Quadro (s) & 1189.64 & 1322.08 & 1076.28 & 1225.76 \\
+  Wall, 4090 (s) & 756.3 & 819.6 & 695.1 & 910.1 \\
+  Speedup & 1.57$\times$ & 1.61$\times$ & 1.55$\times$ & 1.35$\times$ \\
+  RTF (Quadro / 4090) & 49.4\% / 31.4\% & 54.9\% / 34.0\% & 44.7\% / 28.9\% & 50.9\% / 37.8\% \\
+  Retrieval (Quadro / 4090) & 0.31\% / 3.49\% & 1.32\% / 9.24\% & 0.34\% / 4.24\% & 1.38\% / 8.52\% \\
+  Pose est.\ (Quadro / 4090) & 55.11\% / 53.98\% & 62.12\% / 51.56\% & 56.36\% / 48.14\% & 61.96\% / 51.42\% \\
+  Graph opt.\ (Quadro / 4090) & 1.10\% / 0.84\% & 1.08\% / 0.79\% & 1.08\% / 0.78\% & 1.01\% / 0.66\% \\
+  Other (Quadro / 4090) & 43.48\% / 41.69\% & 35.49\% / 38.41\% & 42.22\% / 46.84\% & 35.65\% / 39.40\% \\
+  Desc.\ cache hit & 0.0\% (0/4055) & 0.0\% (0/4055) & 0.0\% (0/4043) & 0.0\% (0/4043) \\
+  Depth cache hit & 63.0\% (1131/1796) & 64.1\% (1368/2134) & 64.6\% (1136/1758) & 65.4\% (1361/2082) \\
+  \hline
+  \end{tabular*}
+  \caption[KITTI wall time and phase breakdown]{All 11 KITTI sequences, single invocation each.
+    Wall time is real elapsed clock time including I/O. Odom.\ gen.\ is a one-time upstream cost,
+    not re-run per invocation. Phase percentages read from each run's own \texttt{timings.json}.
+    All runs use \texttt{--fresh\_cache}, so cache-hit numbers reflect within-run reuse only.}
+  \label{tab:ablation-timing-kitti}
+\end{table}
 
 Pose estimation dominates wall time on both GPUs, 48 to 62\% of the total, with retrieval and
 graph optimization together under roughly 10\% in every configuration. The RTX 4090 cuts wall time
