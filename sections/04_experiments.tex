@@ -714,9 +714,10 @@ rotation and ahead on translation.
 \section{Ablation Studies}
 \label{sec:experiments-ablation}
 
-Three design choices are isolated from the main results above: how many cameras to feed
+Four design choices are isolated from the main results above: how many cameras to feed
 retrieval and pose estimation, which sparse matcher and depth source to pair for pose estimation,
-and where the pipeline's own wall-clock time actually goes.
+which image retrieval method proposes candidate pairs in the first place, and where the pipeline's
+own wall-clock time actually goes.
 
 \subsection{Camera Pairing}
 \label{sec:experiments-ablation-cameras}
@@ -809,6 +810,44 @@ different graph split. LightGlue and MASt3R both anchor sanely on the same data
 MASt3R take up to 3.42 and 4.08 times as long as LightGlue respectively, worst case on HGE (iOS),
 for no accuracy gain and, in LoFTR's case, an outright failure, which is why LightGlue stays the
 production default.
+
+\subsection{Retrieval Method}
+\label{sec:experiments-ablation-retrieval}
+
+Swaps \mysecref{sec:method-cluster-matching}'s production retrieval method (MegaLoc) for BoQ, NetVLAD, or
+SALAD, everything else unchanged, across all four locations (KITTI, HGE HoloLens, HGE iOS,
+HYDRO). Reports single-/multi-session ATE and intra-/cross-session edge counts per method and
+dataset. Full detail table is in \mysecref{sec:appendix-ablation-retrieval}.
+
+\begin{table}[htb]
+  \centering
+  \footnotesize
+  \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}} llrrr}
+  \hline
+  \textbf{Dataset} & \textbf{Best method} & \textbf{Single (m)} & \textbf{Multi (m)} & \textbf{Cross edges} \\
+  \hline
+  KITTI & MegaLoc (baseline) & 2.702 & 2.689 & 98 \\
+  HGE (HoloLens) & NetVLAD & 0.651 & 0.279 & 308 \\
+  HGE (iOS) & MegaLoc (baseline) & 0.532 & 0.531 & 56 \\
+  HYDRO & MegaLoc (baseline) & 0.236 & 0.148 & 1690 \\
+  \hline
+  \end{tabular*}
+  \caption[Retrieval-method summary, best method per dataset]{Lowest multi-session ATE per
+    dataset across the four retrieval methods, distilled from the full per-method table in
+    \mysecref{sec:appendix-ablation-retrieval}.}
+  \label{tab:ablation-retrieval-summary}
+\end{table}
+
+MegaLoc, the production default, is already at or near the best achievable ATE on three of the
+four locations. HGE HoloLens is the one place an alternative edges it out, and only barely, NetVLAD
+reaches 0.651/0.279 meters against MegaLoc's 0.652/0.280, a difference well inside normal run to
+run noise. HGE (iOS) is the more interesting result. BoQ, NetVLAD, and SALAD all find real
+cross-session edges there, 14 to 22 of them, while finding almost none intra-session for NetVLAD.
+Yet none of that turns into a multi-session accuracy gain, single and multi ATE stay within
+0.01 meters of each other for all three. MegaLoc's own 56 cross-session edges are what actually
+buys its multi-session improvement over single-session on that dataset. More candidate pairs are
+not automatically useful ones, the pipeline's pose-estimation and consistency stages still have to
+turn them into edges the graph can trust, and on HGE (iOS) only MegaLoc's edges clear that bar.
 
 \subsection{Timing}
 \label{sec:experiments-ablation-timing}

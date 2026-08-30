@@ -459,6 +459,52 @@ results.
 \end{table}
 
 \clearpage
+\subsection{Retrieval Method}
+\label{sec:appendix-ablation-retrieval}
+
+\begin{table}[htb]
+  \centering
+  \footnotesize
+  \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}} lrrrr}
+  \hline
+  \textbf{Method} & \textbf{Single ATE (m)} & \textbf{Multi ATE (m)} & \textbf{Intra edges} & \textbf{Cross edges} \\
+  \hline
+  \multicolumn{5}{l}{\textit{KITTI}} \\
+  MegaLoc (baseline) & \textbf{2.702} & \textbf{2.689} & 254 & 98 \\
+  BoQ & \underline{2.728} & \underline{2.715} & 272 & 70 \\
+  NetVLAD & 2.826 & 2.815 & 240 & 76 \\
+  SALAD & 2.737 & 2.725 & 264 & 74 \\
+  \hline
+  \multicolumn{5}{l}{\textit{HGE (HoloLens)}} \\
+  MegaLoc (baseline) & \underline{0.652} & 0.280 & 22 & 264 \\
+  BoQ & 0.658 & 0.282 & 13 & 246 \\
+  NetVLAD & \textbf{0.651} & \textbf{0.279} & 32 & 308 \\
+  SALAD & \underline{0.652} & \textbf{0.279} & 34 & 264 \\
+  \hline
+  \multicolumn{5}{l}{\textit{HGE (iOS)}} \\
+  MegaLoc (baseline) & \textbf{0.532} & \textbf{0.531} & 24 & 56 \\
+  BoQ & 0.542 & 0.542 & 17 & 22 \\
+  NetVLAD & 0.555 & 0.555 & 0 & 18 \\
+  SALAD & \underline{0.534} & \underline{0.535} & 22 & 14 \\
+  \hline
+  \multicolumn{5}{l}{\textit{HYDRO}} \\
+  MegaLoc (baseline) & \textbf{0.236} & \textbf{0.148} & 70 & 1690 \\
+  BoQ & 0.243 & \underline{0.150} & 59 & 1776 \\
+  NetVLAD & 0.260 & 0.152 & 51 & 1598 \\
+  SALAD & \underline{0.240} & 0.154 & 62 & 1460 \\
+  \hline
+  \end{tabular*}
+  \caption[Retrieval-method ATE and edge counts, by dataset]{\texttt{retrieval.method} swapped for
+    BoQ, NetVLAD, or SALAD against the production default (MegaLoc), everything else unchanged,
+    across all four locations, added 2026-08-29. Edge counts are from multi-session mode. HGE
+    (iOS) is the standout: BoQ, NetVLAD, and SALAD all find real cross-session edges (14--22,
+    against MegaLoc's 56), but single and multi ATE barely move between modes for any of them,
+    unlike MegaLoc, whose cross-session edges give a genuine, if modest, multi-session improvement
+    there. Bold marks the best result per column per dataset group, underline the second-best.}
+  \label{tab:ablation-retrieval}
+\end{table}
+
+\clearpage
 \subsection{Timing}
 \label{sec:appendix-ablation-timing}
 
