@@ -252,7 +252,7 @@ results.
 \subsection{Pose Estimation Method}
 \label{sec:appendix-ablation-pe}
 
-\mytabref{tab:ablation-pe-rejection}/\mytabref{tab:ablation-pe-accuracy} are the isolated per-pair
+\mytabref{tab:ablation-pe-rejection} is the isolated per-pair
 ablation (fixed candidate pairs, production thresholds, 3 methods). \mytabref{tab:ablation-pe-kitti}
 onward are full single-/multi-session pipeline runs, extended 2026-08-30 with two variants that
 swap the depth source to MASt3R's own pointmap output (\texttt{*+MASt3Rdepth}) and one that skips
@@ -294,16 +294,6 @@ place is marked. Findings are discussed in \mysecref{sec:experiments-ablation-pe
   MASt3R+M3D & \underline{71.4\%} (2849/3992) & 0.0\% & 0.1\% & 14.7\% & 13.9\% \\
   \hline
   \end{tabular*}
-  \caption[Matcher $\times$ depth rejection breakdown]{1000 fixed real candidate keyframe pairs
-    per dataset (HGE (iOS) added 2026-08-28, its own 4-session pool), 3 methods (LG = LightGlue,
-    all through Metric3D depth), production pose-estimation thresholds throughout. Success through
-    PnP rej.\ are the 5 mutually exclusive outcomes of \texttt{PoseEstimator.estimate\_pair()} in
-    pipeline order, so each row sums to $\sim$100\%. The 4 rejection-stage columns are diagnostic,
-    not ranked. Bold marks the best Success rate per dataset group, underline the second-best.
-    Accuracy and timing for the same runs are in \mytabref{tab:ablation-pe-accuracy}, directly
-    below.}
-  \label{tab:ablation-pe-rejection}
-
   \smallskip
 
   \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}} lrrrr}
@@ -336,10 +326,15 @@ place is marked. Findings are discussed in \mysecref{sec:experiments-ablation-pe
   MASt3R+M3D & 0.334 / \textbf{10.148} & 0.30 / \textbf{2.77} & 0.743 & 0.250 \\
   \hline
   \end{tabular*}
-  \caption[Matcher $\times$ depth accuracy and timing]{Same runs as
-    \mytabref{tab:ablation-pe-rejection}. Trans./Rot.\ columns include only successful,
-    GT-comparable pairs. Bold marks the best result per dataset group, underline the second-best.}
-  \label{tab:ablation-pe-accuracy}
+  \caption[Matcher $\times$ depth rejection, accuracy, and timing]{1000 fixed real candidate
+    keyframe pairs per dataset (HGE (iOS) added 2026-08-28, its own 4-session pool), 3 methods
+    (LG = LightGlue, all through Metric3D depth), production pose-estimation thresholds
+    throughout. Top: Success through PnP rej.\ are the 5 mutually exclusive outcomes of
+    \texttt{PoseEstimator.estimate\_pair()} in pipeline order, so each row sums to $\sim$100\%,
+    the 4 rejection-stage columns are diagnostic, not ranked. Bottom: same runs, Trans./Rot.\
+    columns include only successful, GT-comparable pairs. Bold marks the best result per dataset
+    group in each table, underline the second-best.}
+  \label{tab:ablation-pe-rejection}
 \end{table}
 \renewcommand{\arraystretch}{1}
 
