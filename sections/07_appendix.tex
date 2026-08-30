@@ -195,16 +195,17 @@ results.
   \hline
   \textbf{Cameras} & \textbf{Single (m)} & \textbf{Multi (m)} & \textbf{Intra} & \textbf{Cross} & \textbf{Comp.} & \textbf{Anch.\ trans (m)} & \textbf{Anch.\ rot (\textdegree)} \\
   \hline
-  \texttt{hetlf} (baseline) & 0.657 & \underline{0.279} & 30 & 238 & 2 & 0.323 & 0.712 \\
-  \texttt{hetlf+hetrf} & 0.657 & 0.285 & 29 & 296 & 2 & 0.316 & 0.676 \\
-  \texttt{hetlf+hetrr} & 0.657 & 0.281 & 62 & 390 & 2 & 0.307 & 0.670 \\
-  all 4 & 0.657 & \textbf{0.278} & 63 & 484 & 2 & 0.361 & 0.765 \\
+  \texttt{hetlf} (baseline) & 0.652 & 0.280 & 22 & 264 & 2 & 0.289 & 0.684 \\
+  \texttt{hetlf+hetrf} & 0.651 & 0.283 & 42 & 310 & 2 & 0.326 & 0.710 \\
+  \texttt{hetlf+hetrr} & 0.658 & \underline{0.279} & 22 & 402 & 2 & 0.288 & 0.622 \\
+  all 4 & 0.652 & \textbf{0.278} & 63 & 458 & 2 & 0.354 & 0.769 \\
   \hline
   \end{tabular*}
   \caption[HGE camera-pairing ATE and anchoring error]{HGE camera-pairing ablation:
     \texttt{retrieval.cams} lets a session emit one keyframe per (frame, camera) instead of one
-    per frame. Single ATE is identical across rows (single-session mode always uses the baseline
-    camera alone). Bold/underline mark the best/second-best Multi ATE only.}
+    per frame. Single ATE varies only slightly across rows (real run-to-run noise, single-session
+    mode always uses the baseline camera alone). Bold/underline mark the best/second-best Multi
+    ATE only.}
   \label{tab:ablation-cameras-hge}
 \end{table}
 
@@ -215,10 +216,10 @@ results.
   \hline
   \textbf{Cameras} & \textbf{Single (m)} & \textbf{Multi (m)} & \textbf{Intra} & \textbf{Cross} & \textbf{Comp.} & \textbf{Anch.\ trans (m)} & \textbf{Anch.\ rot (\textdegree)} \\
   \hline
-  \texttt{frontleft} (baseline) & 0.265 & 0.154 & 52 & 1500 & 1 & 0.174 & 0.337 \\
-  \texttt{frontleft+frontright} & \underline{0.242} & \underline{0.151} & 100 & 1762 & 1 & 0.167 & 0.334 \\
-  \texttt{frontleft+right} & 0.243 & 0.152 & 117 & 1842 & 1 & 0.179 & 0.330 \\
-  all 4 cameras & \textbf{0.217} & \textbf{0.145} & 360 & 3602 & 1 & 0.158 & 0.315 \\
+  \texttt{frontleft} (baseline) & 0.236 & 0.148 & 70 & 1690 & 1 & 0.170 & 0.336 \\
+  \texttt{frontleft+frontright} & \underline{0.218} & 0.149 & 102 & 1908 & 1 & 0.171 & 0.355 \\
+  \texttt{frontleft+right} & 0.252 & \underline{0.147} & 71 & 1982 & 1 & \underline{0.167} & \textbf{0.329} \\
+  all 4 cameras & \textbf{0.192} & \textbf{0.145} & 410 & 3954 & 1 & \textbf{0.165} & \underline{0.330} \\
   \hline
   \end{tabular*}
   \caption[HYDRO camera-pairing ATE and anchoring error]{HYDRO camera-pairing ablation, same
@@ -235,14 +236,15 @@ results.
   \hline
   \textbf{Cameras} & \textbf{Single ATE (m)} & \textbf{Multi ATE (m)} & \textbf{Intra edges} & \textbf{Cross edges} & \textbf{Components} \\
   \hline
-  \texttt{image\_2} (baseline, run 1) & \underline{2.698} & \underline{2.685} & 253 & 80 & 10 \\
-  \texttt{image\_2+image\_3} & \textbf{2.691} & \textbf{2.676} & 274 & 94 & 10 \\
+  \texttt{image\_2} (baseline, run 1) & \underline{2.702} & \underline{2.689} & 254 & 98 & 10 \\
+  \texttt{image\_2+image\_3} & \textbf{2.691} & \textbf{2.677} & 258 & 96 & 10 \\
   \hline
   \end{tabular*}
   \caption[KITTI camera-pairing ATE]{KITTI camera-pairing ablation. \texttt{image\_2}/\texttt{image\_3}
     are the left/right cameras of the same physical stereo rig. No shared GT frame across
-    sequences, so no anchoring-error column (\mysecref{sec:experiments-kitti}). Bold marks the
-    best result per column, underline the second-best.}
+    sequences, so no anchoring-error column (\mysecref{sec:experiments-kitti}). Cross edges
+    actually drop slightly with the second camera here (98 to 96), unlike HGE/HYDRO. Bold marks
+    the best result per column, underline the second-best.}
   \label{tab:ablation-cameras-kitti}
 \end{table}
 

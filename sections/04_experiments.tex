@@ -736,27 +736,27 @@ tables for all three datasets are in \mysecref{sec:appendix-ablation-cameras}.
   \hline
   \textbf{Dataset} & \textbf{Cameras (baseline $\to$ best)} & \textbf{Single (m)} & \textbf{Multi (m)} & \textbf{Cross edges} & \textbf{Edge mult.} \\
   \hline
-  HGE & \texttt{hetlf} $\to$ all 4 & 0.657 $\to$ 0.657 & 0.279 $\to$ 0.278 & 238 $\to$ 484 & 2.0$\times$ \\
-  HYDRO & \texttt{frontleft} $\to$ all 4 & 0.265 $\to$ 0.217 & 0.154 $\to$ 0.145 & 1500 $\to$ 3602 & 2.4$\times$ \\
-  KITTI & \texttt{image\_2} $\to$ +\texttt{image\_3} & 2.698 $\to$ 2.691 & 2.685 $\to$ 2.676 & 80 $\to$ 94 & 1.2$\times$ \\
+  HGE & \texttt{hetlf} $\to$ all 4 & 0.652 $\to$ 0.652 & 0.280 $\to$ 0.278 & 264 $\to$ 458 & 1.7$\times$ \\
+  HYDRO & \texttt{frontleft} $\to$ all 4 & 0.236 $\to$ 0.192 & 0.148 $\to$ 0.145 & 1690 $\to$ 3954 & 2.3$\times$ \\
+  KITTI & \texttt{image\_2} $\to$ +\texttt{image\_3} & 2.702 $\to$ 2.691 & 2.689 $\to$ 2.677 & 98 $\to$ 96 & 0.98$\times$ \\
   \hline
   \end{tabular*}
   \caption[Camera-pairing summary, baseline vs.\ best]{Baseline (production) camera vs.\ the best
     camera combination per dataset, distilled from the full per-combination tables in
     \mysecref{sec:appendix-ablation-cameras}. Edge mult.\ is cross-session edges at the best
-    combination over baseline.}
+    combination over baseline, below 1 where they actually drop.}
   \label{tab:ablation-cameras-summary}
 \end{table}
 
 More cameras help most when they add genuinely new viewpoints. HYDRO's four cameras span nearly
-360 degrees, and going from one to four cuts single-session ATE from 0.265 to 0.217 meters, with
-cross-session edges more than doubling from 1500 to 3602. HGE and KITTI barely move. HGE's
-multi-session ATE stays within 0.007 meters across all four camera combinations, and its anchoring
-error is actually worse with all four cameras than with just the baseline, 0.361 meters against
-0.323 (\mysecref{sec:appendix-ablation-cameras}). KITTI's second camera is the other half of the
-same stereo rig, so it sees almost the same scene as the first, and multi-session ATE only drops
-from 2.685 to 2.676 meters. More viewpoints buy real accuracy only when they are not mostly
-redundant with the one already in use.
+360 degrees, and going from one to four cuts single-session ATE from 0.236 to 0.192 meters, with
+cross-session edges more than doubling from 1690 to 3954. HGE and KITTI barely move. HGE's
+multi-session ATE stays within 0.005 meters across all four camera combinations, and its anchoring
+error is actually worse with all four cameras than with just the baseline, 0.354 meters against
+0.289 (\mysecref{sec:appendix-ablation-cameras}). KITTI's second camera is the other half of the
+same stereo rig, so it sees almost the same scene as the first, multi-session ATE only drops from
+2.689 to 2.677 meters, and cross-session edges even drop slightly, 98 to 96. More viewpoints buy
+real accuracy only when they are not mostly redundant with the one already in use.
 
 \subsection{Pose Estimation Method}
 \label{sec:experiments-ablation-pe}
