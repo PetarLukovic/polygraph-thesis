@@ -275,19 +275,25 @@ results.
   LoFTR+M3D & \underline{42.7\%} & 0.0\% & 0.3\% & 55.0\% & 2.0\% \\
   MASt3R+M3D & 33.7\% & 0.0\% & 0.2\% & 55.0\% & 11.1\% \\
   \hline
-  \multicolumn{6}{l}{\textit{Overall (pooled, $n{=}2994$ pairs)}} \\
-  LG+M3D & \textbf{66.3\%} (1984/2994) & 2.7\% & 8.9\% & 15.7\% & 6.4\% \\
-  LoFTR+M3D & 61.6\% (1843/2994) & 0.0\% & 0.1\% & 27.2\% & 11.2\% \\
-  MASt3R+M3D & \underline{62.8\%} (1879/2994) & 0.0\% & 0.1\% & 19.5\% & 17.7\% \\
+  \multicolumn{6}{l}{\textit{HGE (iOS)}} \\
+  LG+M3D & \underline{97.5\%} & 0.0\% & 0.0\% & 1.2\% & 1.3\% \\
+  LoFTR+M3D & \textbf{97.8\%} & 0.0\% & 0.0\% & 1.0\% & 1.2\% \\
+  MASt3R+M3D & 97.2\% & 0.0\% & 0.0\% & 0.1\% & 2.7\% \\
+  \hline
+  \multicolumn{6}{l}{\textit{Overall (pooled, $n{=}3992$ pairs)}} \\
+  LG+M3D & \textbf{74.1\%} (2957/3992) & 2.1\% & 6.6\% & 12.1\% & 5.2\% \\
+  LoFTR+M3D & 70.6\% (2819/3992) & 0.0\% & 0.1\% & 20.6\% & 8.7\% \\
+  MASt3R+M3D & \underline{71.4\%} (2849/3992) & 0.0\% & 0.1\% & 14.7\% & 13.9\% \\
   \hline
   \end{tabular*}
   \caption[Matcher $\times$ depth rejection breakdown]{1000 fixed real candidate keyframe pairs
-    per dataset, 3 methods (LG = LightGlue, all through Metric3D depth), production
-    pose-estimation thresholds throughout. Success through PnP rej.\ are the 5 mutually exclusive
-    outcomes of \texttt{PoseEstimator.estimate\_pair()} in pipeline order, so each row sums to
-    $\sim$100\%. The 4 rejection-stage columns are diagnostic, not ranked. Bold marks the best
-    Success rate per dataset group, underline the second-best. Accuracy and timing for the same
-    runs are in \mytabref{tab:ablation-pe-accuracy}, directly below.}
+    per dataset (HGE (iOS) added 2026-08-28, its own 4-session pool), 3 methods (LG = LightGlue,
+    all through Metric3D depth), production pose-estimation thresholds throughout. Success through
+    PnP rej.\ are the 5 mutually exclusive outcomes of \texttt{PoseEstimator.estimate\_pair()} in
+    pipeline order, so each row sums to $\sim$100\%. The 4 rejection-stage columns are diagnostic,
+    not ranked. Bold marks the best Success rate per dataset group, underline the second-best.
+    Accuracy and timing for the same runs are in \mytabref{tab:ablation-pe-accuracy}, directly
+    below.}
   \label{tab:ablation-pe-rejection}
 
   \smallskip
@@ -311,10 +317,15 @@ results.
   LoFTR+M3D & 0.033 / 0.069 & 0.42 / 0.52 & \underline{0.620} & \underline{0.042} \\
   MASt3R+M3D & 0.029 / \textbf{0.045} & 0.37 / \textbf{0.44} & 0.634 & 0.227 \\
   \hline
-  \multicolumn{5}{l}{\textit{Overall (pooled, $n{=}2994$ pairs)}} \\
-  LG+M3D & 0.262 / 18.840 & 0.31 / 4.60 & \textbf{0.447} & \textbf{0.024} \\
-  LoFTR+M3D & 0.211 / \underline{18.212} & 0.28 / \underline{4.46} & \underline{0.598} & \underline{0.050} \\
-  MASt3R+M3D & 0.230 / \textbf{15.073} & 0.31 / \textbf{3.97} & 0.635 & 0.185 \\
+  \multicolumn{5}{l}{\textit{HGE (iOS)}} \\
+  LG+M3D & 0.532 / \underline{0.707} & 0.34 / \underline{0.57} & \textbf{0.752} & \textbf{0.052} \\
+  LoFTR+M3D & 0.563 / 0.725 & 0.32 / 0.54 & \underline{0.985} & \underline{0.101} \\
+  MASt3R+M3D & 0.442 / \textbf{0.608} & 0.29 / \textbf{0.45} & 1.070 & 0.446 \\
+  \hline
+  \multicolumn{5}{l}{\textit{Overall (pooled, $n{=}3992$ pairs)}} \\
+  LG+M3D & 0.400 / 12.873 & 0.31 / 3.27 & \textbf{0.523} & \textbf{0.031} \\
+  LoFTR+M3D & 0.397 / \underline{12.157} & 0.29 / \underline{3.10} & \underline{0.695} & \underline{0.063} \\
+  MASt3R+M3D & 0.334 / \textbf{10.148} & 0.30 / \textbf{2.77} & 0.743 & 0.250 \\
   \hline
   \end{tabular*}
   \caption[Matcher $\times$ depth accuracy and timing]{Same runs as
@@ -351,6 +362,14 @@ results.
   \hline
   Total (L2-norm, $n{=}5$) & 2.19 & \textbf{0.66} & \underline{0.67} & \underline{0.67} \\
   \hline
+  \multicolumn{5}{l}{\textit{HGE (iOS, multi-session, 4-session pool)}} \\
+  \texttt{ios\_01-20} & 0.35 & \underline{0.36} (0+11) & \underline{0.36} (0+11) & \textbf{0.35} (0+37) \\
+  \texttt{ios\_07-01} & 0.35 & \underline{0.33} (18+35) & \textbf{0.31} (24+9) & \textbf{0.31} (24+29) \\
+  \texttt{ios\_06-24} & 0.67 & \underline{0.67} (0+30) & \underline{0.67} (0+9) & \textbf{0.64} (0+16) \\
+  \texttt{ios\_01-18} & 0.85 & \textbf{0.78} (6+26) & \underline{0.79} (5+11) & \textbf{0.78} (5+8) \\
+  \hline
+  Total (L2-norm, $n{=}4$) & 1.19 & \underline{1.13} & 1.14 & \textbf{1.11} \\
+  \hline
   \multicolumn{5}{l}{\textit{HYDRO (multi-session)}} \\
   \texttt{11-24\_11-13} & 0.17 & \textbf{0.11} (11+425) & \textbf{0.11} (11+449) & \underline{0.12} (9+391) \\
   \texttt{11-24\_11-26} & 0.44 & \textbf{0.14} (38+121) & \textbf{0.14} (31+136) & \textbf{0.14} (41+108) \\
@@ -363,8 +382,10 @@ results.
   \end{tabular*}
   \caption[Full-pipeline pose-estimation-method comparison]{ATE (m) with \texttt{pose\_estimation.method}
     swapped as the only change from production, multi-session mode, ORB-SLAM3 backbone. Edge
-    counts in parentheses are intra+cross. Bold marks the best result among the three methods per
-    row, underline the second-best.}
+    counts in parentheses are intra+cross. The HGE iOS group here uses an older 4-session pool
+    (added 2026-08-18, before the real 5-session pool in
+    \mytabref{tab:experiments-hge-ios-ate} was picked), not yet rerun on the current one. Bold
+    marks the best result among the three methods per row, underline the second-best.}
   \label{tab:ablation-pe-kitti}
 \end{table}
 
@@ -383,13 +404,21 @@ results.
   HYDRO & LoFTR+M3D & 1 & 0.17 / 0.33 \\
   HYDRO & MASt3R+M3D & 1 & 0.18 / 0.35 \\
   \hline
+  HGE (iOS) & LightGlue+M3D & 1 & 0.92 / 1.71 \\
+  HGE (iOS) & LoFTR+M3D & 1 & \textbf{52.81} / \textbf{30.12} \\
+  HGE (iOS) & MASt3R+M3D & 1 & 1.26 / 1.95 \\
+  \hline
   \end{tabular*}
   \caption[HGE/HYDRO ref-anchored consistency by PE method]{Same multi-session runs as
     \mytabref{tab:ablation-pe-kitti}. Each connected component's reference session is Umeyama-fit
     to GT, that fixed transform applied to the rest of the component, then measured against each
     session's own GT (same method as \mytabref{tab:experiments-hge-ate}/\mytabref{tab:experiments-hydro-ate}).
     ``Components'' is the number of connected components the multi-session graph settled into for
-    that method.}
+    that method. HGE (iOS)'s LoFTR row is a real, striking negative result, bolded as a flag, not
+    a win: it still lands all 4 sessions in 1 component with comparable edge counts to the other
+    two methods, but 2 of the 3 anchored sessions come out catastrophically wrong (74--84\,m,
+    roughly 45\textdegree), a bad-but-locally-corroborated cross-session edge rather than a
+    different graph split. LightGlue and MASt3R both anchor all 3 sessions sanely.}
   \label{tab:ablation-pe-anchoring}
 \end{table}
 
@@ -400,24 +429,32 @@ results.
   \hline
   \textbf{Dataset} & \textbf{Method} & \textbf{Wall time (s)} & \textbf{vs.\ LightGlue} \\
   \hline
-  KITTI & LightGlue+M3D & 470.8 & 1.00$\times$ \\
-  KITTI & LoFTR+M3D & 917.6 & 1.95$\times$ \\
-  KITTI & MASt3R+M3D & 677.6 & 1.44$\times$ \\
+  KITTI & LightGlue+M3D & 698 & 1.00$\times$ \\
+  KITTI & LoFTR+M3D & 1125 & 1.61$\times$ \\
+  KITTI & MASt3R+M3D & 761 & 1.09$\times$ \\
   \hline
-  HGE & LightGlue+M3D & 275.7 & 1.00$\times$ \\
-  HGE & LoFTR+M3D & 1506.3 & 5.46$\times$ \\
-  HGE & MASt3R+M3D & 1424.6 & 5.17$\times$ \\
+  HGE & LightGlue+M3D & 307 & 1.00$\times$ \\
+  HGE & LoFTR+M3D & 688 & 2.24$\times$ \\
+  HGE & MASt3R+M3D & 739 & 2.41$\times$ \\
   \hline
-  HYDRO & LightGlue+M3D & 1050.4 & 1.00$\times$ \\
-  HYDRO & LoFTR+M3D & 2171.5 & 2.07$\times$ \\
-  HYDRO & MASt3R+M3D & 2754.4 & 2.62$\times$ \\
+  HYDRO & LightGlue+M3D & 1213 & 1.00$\times$ \\
+  HYDRO & LoFTR+M3D & 1989 & 1.64$\times$ \\
+  HYDRO & MASt3R+M3D & 2428 & 2.00$\times$ \\
+  \hline
+  HGE (iOS) & LightGlue+M3D & 365 & 1.00$\times$ \\
+  HGE (iOS) & LoFTR+M3D & 1247 & 3.42$\times$ \\
+  HGE (iOS) & MASt3R+M3D & 1489 & 4.08$\times$ \\
   \hline
   \end{tabular*}
   \caption[PE-method full-pipeline wall time]{Real elapsed wall time for the whole pipeline
-    invocation, same multi-session runs as \mytabref{tab:ablation-pe-kitti}, all nine on the same
-    GPU (RTX 4090). Accuracy is essentially tied across all three methods
-    (\mytabref{tab:ablation-pe-kitti}, \mytabref{tab:ablation-pe-anchoring}). This table is the
-    reason LightGlue stays the production default despite that tie.}
+    invocation, same multi-session runs as \mytabref{tab:ablation-pe-kitti}, all twelve on the same
+    GPU (RTX 4090). Redone 2026-08-28/2026-08-30 with fresh, uncached timing under a
+    32-CPU-per-job allocation, replacing an earlier campaign. Accuracy is essentially tied across
+    all three methods on KITTI/HGE/HYDRO (\mytabref{tab:ablation-pe-kitti},
+    \mytabref{tab:ablation-pe-anchoring}), the reason LightGlue stays the production default
+    despite that tie. HGE (iOS) is the outlier: LightGlue is both fastest and the only method that
+    does not catastrophically break cross-session anchoring there
+    (\mytabref{tab:ablation-pe-anchoring}).}
   \label{tab:ablation-pe-timing}
 \end{table}
 

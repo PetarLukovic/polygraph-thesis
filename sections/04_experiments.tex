@@ -680,10 +680,10 @@ commits far more edges to reach that result, 915 on MH01--05 against our 43, sin
 keyframe pair sharing map points as a candidate rather than filtering for genuinely useful ones
 first. The accuracy gap stays small, roughly 8 centimeters on average and never more than 12
 centimeters on any split. That is close to the pipeline's own typical per-pair pose estimation
-error on the other three datasets, around 0.26 meters median (\mytabref{tab:ablation-pe-accuracy}),
-even though EuRoC was not part of that ablation. A few centimeters is a small price for admitting
-only robust edges instead of every possible one. Maplab will be added to this table at a later
-pass.
+error pooled across the other four datasets, around 0.40 meters median
+(\mytabref{tab:ablation-pe-accuracy}), even though EuRoC was not part of that ablation. A few
+centimeters is a small price for admitting only robust edges instead of every possible one. Maplab
+will be added to this table at a later pass.
 
 \begin{table}[htb]
   \centering
@@ -788,8 +788,8 @@ graph instead of judged pair by pair.
   \textbf{Method} & \textbf{KITTI total (m)} & \textbf{HGE total (m)} & \textbf{HYDRO total (m)} & \textbf{Wall time, worst case} \\
   \hline
   LightGlue+M3D & \textbf{6.20} & \textbf{0.66} & \textbf{0.34} & 1.00$\times$ \\
-  LoFTR+M3D & \underline{6.58} & \underline{0.67} & \textbf{0.34} & 5.46$\times$ (HGE) \\
-  MASt3R+M3D & 6.76 & \underline{0.67} & \underline{0.35} & 5.17$\times$ (HGE) \\
+  LoFTR+M3D & \underline{6.58} & \underline{0.67} & \textbf{0.34} & 3.42$\times$ (HGE iOS) \\
+  MASt3R+M3D & 6.76 & \underline{0.67} & \underline{0.35} & 4.08$\times$ (HGE iOS) \\
   \hline
   \end{tabular*}
   \caption[Pose-estimation-method summary]{Full-pipeline total ATE (L2-norm) per method across all
@@ -799,10 +799,16 @@ graph instead of judged pair by pair.
   \label{tab:ablation-pe-summary}
 \end{table}
 
-The full pipeline erases most of the pair level differences. Ref-anchored error is just as close
-across all three methods. Wall time is where the methods actually separate. LoFTR and MASt3R take
-up to 5.46 times as long as LightGlue on HGE for no real accuracy gain, which is why LightGlue
-stays the production default.
+The full pipeline erases most of the pair level differences on KITTI, HGE, and HYDRO, where
+ref-anchored error stays close across all three methods (\mysecref{sec:appendix-ablation-pe}).
+HGE (iOS) breaks that pattern. LoFTR still lands all four sessions in one connected component
+there, but two of its three anchored sessions come out catastrophically wrong, tens of meters and
+around 45 degrees off, a bad cross-session edge that stayed locally corroborated rather than a
+different graph split. LightGlue and MASt3R both anchor sanely on the same data
+(\mysecref{sec:appendix-ablation-pe}). Wall time is where the methods otherwise separate. LoFTR and
+MASt3R take up to 3.42 and 4.08 times as long as LightGlue respectively, worst case on HGE (iOS),
+for no accuracy gain and, in LoFTR's case, an outright failure, which is why LightGlue stays the
+production default.
 
 \subsection{Timing}
 \label{sec:experiments-ablation-timing}
