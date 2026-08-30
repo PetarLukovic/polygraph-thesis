@@ -518,15 +518,15 @@ results.
   Recording (s) & 2407.31 & 2407.31 & 2407.31 & 2407.31 \\
   Odom.\ gen.\ (s) & 2613.4 & 2613.4 & 954.0 & 954.0 \\
   Wall, Quadro (s) & 1189.64 & 1322.08 & 1076.28 & 1225.76 \\
-  Wall, 4090 (s) & 529.75 & 601.75 & 505.41 & 662.04 \\
-  Speedup & 2.25$\times$ & 2.20$\times$ & 2.13$\times$ & 1.85$\times$ \\
-  RTF (Quadro / 4090) & 49.4\% / 22.0\% & 54.9\% / 25.0\% & 44.7\% / 21.0\% & 50.9\% / 27.5\% \\
-  Retrieval (Quadro / 4090) & 0.31\% / 5.15\% & 1.32\% / 3.08\% & 0.34\% / 1.05\% & 1.38\% / 9.47\% \\
-  Pose est.\ (Quadro / 4090) & 55.11\% / 56.77\% & 62.12\% / 64.42\% & 56.36\% / 58.02\% & 61.96\% / 55.14\% \\
-  Graph opt.\ (Quadro / 4090) & 1.10\% / 1.46\% & 1.08\% / 1.52\% & 1.08\% / 3.52\% & 1.01\% / 1.41\% \\
-  Other (Quadro / 4090) & 43.48\% / 36.62\% & 35.49\% / 30.99\% & 42.22\% / 37.41\% & 35.65\% / 33.98\% \\
+  Wall, 4090 (s) & 756.3 & 819.6 & 695.1 & 910.1 \\
+  Speedup & 1.57$\times$ & 1.61$\times$ & 1.55$\times$ & 1.35$\times$ \\
+  RTF (Quadro / 4090) & 49.4\% / 31.4\% & 54.9\% / 34.0\% & 44.7\% / 28.9\% & 50.9\% / 37.8\% \\
+  Retrieval (Quadro / 4090) & 0.31\% / 3.49\% & 1.32\% / 9.24\% & 0.34\% / 4.24\% & 1.38\% / 8.52\% \\
+  Pose est.\ (Quadro / 4090) & 55.11\% / 53.98\% & 62.12\% / 51.56\% & 56.36\% / 48.14\% & 61.96\% / 51.42\% \\
+  Graph opt.\ (Quadro / 4090) & 1.10\% / 0.84\% & 1.08\% / 0.79\% & 1.08\% / 0.78\% & 1.01\% / 0.66\% \\
+  Other (Quadro / 4090) & 43.48\% / 41.69\% & 35.49\% / 38.41\% & 42.22\% / 46.84\% & 35.65\% / 39.40\% \\
   Desc.\ cache hit & 0.0\% (0/4055) & 0.0\% (0/4055) & 0.0\% (0/4043) & 0.0\% (0/4043) \\
-  Depth cache hit & 62.8\% (1119/1782) & 64.0\% (1356/2120) & 64.8\% (1126/1738) & 65.5\% (1355/2068) \\
+  Depth cache hit & 63.0\% (1131/1796) & 64.1\% (1368/2134) & 64.6\% (1136/1758) & 65.4\% (1361/2082) \\
   \hline
   \end{tabular*}
   \caption[KITTI wall time and phase breakdown]{All 11 KITTI sequences, single invocation each.
@@ -534,7 +534,12 @@ results.
     one-time upstream cost, not re-run per invocation. Phase percentages read from each run's own
     \texttt{timings.json}. ``Other'' is the remainder against wall time. All runs use
     \texttt{--fresh\_cache}, so cache-hit numbers reflect within-run reuse only, no cross-run
-    caching.}
+    caching. Redone 2026-08-30: the ``Wall, 4090'' row and everything derived from it were stale, a
+    run-name mismatch in the timing harness (the pipeline appends the odometry run tag to an
+    already-tagged config name, but the stats-report step read the un-doubled name) meant every
+    prior regeneration silently read a leftover Quadro-era directory instead of a fresh 4090 run.
+    Fixed, and all four conditions rerun under a 32-CPU-per-job allocation to reduce node-sharing
+    contention.}
   \label{tab:ablation-timing-kitti}
 \end{table}
 
@@ -547,12 +552,12 @@ results.
   \hline
   \multicolumn{6}{l}{\textit{KITTI-00, VINS-Fusion odometry}} \\
   2GO paper (CL Absolute) & -- (not reported) & 387.16 & 469 & 82.5\% & 517 \\
-  Ours, unbatched & 179.7 & 134.3 & 470.6 & 28.5\% & 142 \\
-  Ours, batched (\texttt{batch\_depth}) & 179.7 & 157.9 & 470.6 & 33.5\% & 142 \\
+  Ours, unbatched & 179.7 & 236 (227--254) & 470.6 & 50.2\% (48.2--54.0\%) & 142 \\
+  Ours, batched (\texttt{batch\_depth}) & 179.7 & \textbf{209} (203--212) & 470.6 & 44.4\% (43.1--45.1\%) & 142 \\
   \hline
   \multicolumn{6}{l}{\textit{KITTI-00, ORB-SLAM3 odometry (no published 2GO number)}} \\
-  Ours, unbatched & 501.3 & 142.4 & 470.6 & 30.3\% & 134 \\
-  Ours, batched (\texttt{batch\_depth}) & 501.3 & 137.6 & 470.6 & 29.2\% & 134 \\
+  Ours, unbatched & 501.3 & \textbf{234} (222--237) & 470.6 & 49.7\% (47.2--50.4\%) & 134 \\
+  Ours, batched (\texttt{batch\_depth}) & 501.3 & 247 (213--252) & 470.6 & 52.5\% (45.3--53.6\%) & 134 \\
   \hline
   \multicolumn{6}{l}{\textit{\texttt{ciampino\_train0}, VINS-Fusion odometry (2GO's own slowest reported case)}} \\
   2GO paper (CL Absolute) & -- (not reported) & 2067.31 & 1549 & 133.5\% & 3403 \\
@@ -563,44 +568,23 @@ results.
   \hline
   \end{tabular*}
   \caption[Isolated-sequence runtime vs.\ 2GO, same GPU model]{Both systems on an RTX 4090. 2GO's
-    own CL--Absolute variant (LightGlue matching + metric monocular depth lift, no dense
-    reconstruction) is the directly-comparable one. Odom.\ gen.\ here is KITTI-00-specific, not
-    the full 11-session total of \mytabref{tab:ablation-timing-kitti}. ``Ours'' cells are the
-    median of a 5-repeat-trial campaign, full median/min/max detail is in
-    \mytabref{tab:ablation-timing-2go-detail}. On 2GO's own slowest reported case
-    (\texttt{ciampino\_train0}, a single run, not a repeat-trial campaign), our runtime is real
-    and substantially lower (586.57\,s vs.\ 2067.31\,s) at a real RTF of 37.9\% vs.\ their
-    reported 133.5\%.}
+    own CL--Absolute variant (LightGlue matching plus metric monocular depth lift, no dense
+    reconstruction) is the directly-comparable one. It only publishes a VINS-Fusion number for
+    this sequence, so the ORB-SLAM3 group here is our own extra data point. Odom.\ gen.\ here is
+    KITTI-00-specific, not the full 11-session total of \mytabref{tab:ablation-timing-kitti}.
+    Refreshed 2026-08-30 with fresh 5-repeat trials under a 32-CPU-per-job allocation, replacing
+    an earlier campaign that read a stale run directory (same root cause as
+    \mytabref{tab:ablation-timing-kitti}). Runtime and RTF cells at KITTI-00 are median
+    (min--max) across the 5 trials. Edge and cache counts came back byte-identical to the
+    original campaign within each condition, confirming the algorithm itself stayed
+    deterministic, only wall time moved. Which of batched/unbatched is faster flips for both
+    backbones against the original campaign. VINS-Fusion was faster unbatched before and is now
+    faster batched, a real flip since the new ranges (203--212 against 227--254) do not overlap
+    at all. ORB-SLAM3 was faster batched before and now the median favors unbatched, but the
+    ranges overlap (213--252 against 222--237), so that one is suggestive rather than settled.
+    On 2GO's own slowest reported case (\texttt{ciampino\_train0}, a single run, not a
+    repeat-trial campaign), our runtime is real and substantially lower (586.57\,s against
+    2067.31\,s) at a real RTF of 37.9\% against their reported 133.5\%. Bold marks the faster of
+    batched/unbatched per backbone at KITTI-00.}
   \label{tab:ablation-timing-2go}
-\end{table}
-
-\begin{table}[t]
-  \centering
-  \footnotesize
-  \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}} llrrrr}
-  \hline
-  \textbf{Run} & \textbf{Metric} & \textbf{Median} & \textbf{Min} & \textbf{Max} & \textbf{$n$} \\
-  \hline
-  \multicolumn{6}{l}{\textit{KITTI-00, VINS-Fusion odometry}} \\
-  Unbatched & Odom.\ gen.\ (s) & 179.7 & 179.2 & 189.7 & 4 \\
-  Unbatched & Runtime (s) & 134.3 & 127.7 & 136.6 & 5 \\
-  Unbatched & RTF & 28.5\% & 27.1\% & 29.0\% & 5 \\
-  Batched (\texttt{batch\_depth}) & Odom.\ gen.\ (s) & 179.7 & 179.2 & 189.7 & 4 \\
-  Batched (\texttt{batch\_depth}) & Runtime (s) & 157.9 & 134.8 & 160.9 & 5 \\
-  Batched (\texttt{batch\_depth}) & RTF & 33.5\% & 28.6\% & 34.2\% & 5 \\
-  \hline
-  \multicolumn{6}{l}{\textit{KITTI-00, ORB-SLAM3 odometry}} \\
-  Unbatched & Odom.\ gen.\ (s) & 501.3 & 501.0 & 506.3 & 5 \\
-  Unbatched & Runtime (s) & 142.4 & 135.5 & 168.1 & 5 \\
-  Unbatched & RTF & 30.3\% & 28.8\% & 35.7\% & 5 \\
-  Batched (\texttt{batch\_depth}) & Odom.\ gen.\ (s) & 501.3 & 501.0 & 506.3 & 5 \\
-  Batched (\texttt{batch\_depth}) & Runtime (s) & 137.6 & 137.3 & 143.9 & 5 \\
-  Batched (\texttt{batch\_depth}) & RTF & 29.2\% & 29.2\% & 30.6\% & 5 \\
-  \hline
-  \end{tabular*}
-  \caption[Isolated-sequence runtime detail, median/min/max]{Full detail behind the ``Ours'' rows
-    of \mytabref{tab:ablation-timing-2go}'s KITTI-00 section, both odometry backbones,
-    5-repeat-trial campaigns. \texttt{ciampino\_train0}'s ``Ours'' rows are single runs, not
-    repeat-trial campaigns, so they have no equivalent detail here.}
-  \label{tab:ablation-timing-2go-detail}
 \end{table}

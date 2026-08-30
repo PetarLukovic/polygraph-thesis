@@ -857,14 +857,19 @@ and an RTX 4090), broken down by pipeline phase (retrieval, pose estimation, gra
 other), plus a hardware-matched runtime comparison against 2GO's own published number. Full phase
 breakdown and per-run detail tables are in \mysecref{sec:appendix-ablation-timing}.
 
-Pose estimation dominates wall time on both GPUs, 55 to 64\% of the total, with retrieval and
-graph optimization together under 10\% in every configuration. The RTX 4090 cuts wall time by
-1.85 to 2.25 times over the Quadro RTX 6000 across all four backbone and mode combinations.
-Multi-session mode adds a modest real cost over single-session, around 11 to 14\% more wall time,
-from processing the extra cross-session candidate pairs.
+Pose estimation dominates wall time on both GPUs, 48 to 62\% of the total, with retrieval and
+graph optimization together under roughly 10\% in every configuration. The RTX 4090 cuts wall time
+by 1.35 to 1.61 times over the Quadro RTX 6000 across all four backbone and mode combinations.
+Multi-session mode adds a real cost over single-session, from a modest 8\% more wall time on
+ORB-SLAM3 (RTX 4090) up to around 31\% on VINS-Fusion (RTX 4090), from processing the extra
+cross-session candidate pairs.
 
 On 2GO's own slowest reported case, \texttt{ciampino\_train0}, we finish in 586.57 seconds against
 their 2067.31, three and a half times faster, while committing only 34 loop-closure edges against
-their 3403. The same pattern holds on KITTI-00, 134.3 seconds against 387.16, with 142 edges
-against 517. Filtering candidate edges down to the robust ones before optimization is a large part
-of why this pipeline is faster, not just a cleaner engineering choice.
+their 3403. The same pattern holds on KITTI-00, 236 seconds against 387.16, with 142 edges against
+517. Filtering candidate edges down to the robust ones before optimization is a large part of why
+this pipeline is faster, not just a cleaner engineering choice. A repeat 5-trial rerun of the
+KITTI-00 comparison also flipped which of the pipeline's two optional depth-batching modes is
+faster for each backbone since the original campaign, VINS-Fusion now finishes faster batched and
+ORB-SLAM3 faster unbatched, though only the VINS-Fusion flip is backed by non-overlapping trial
+ranges (\mysecref{sec:appendix-ablation-timing} for the full detail).
