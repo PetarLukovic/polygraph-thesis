@@ -785,46 +785,88 @@ graph instead of judged pair by pair.
 \begin{table}[htb]
   \centering
   \footnotesize
-  \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}} lrrrr}
+  \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}} lrrrrr}
   \hline
-  \textbf{Method} & \textbf{KITTI total (m)} & \textbf{HGE total (m)} & \textbf{HYDRO total (m)} & \textbf{Wall time, worst case} \\
+  \textbf{Method} & \textbf{KITTI (m)} & \textbf{HGE (m)} & \textbf{HGE iOS (m)} & \textbf{HYDRO (m)} & \textbf{Wall, worst case} \\
   \hline
-  LightGlue+M3D & \textbf{6.20} & \textbf{0.66} & \textbf{0.34} & 1.00$\times$ \\
-  LoFTR+M3D & \underline{6.58} & \underline{0.67} & \textbf{0.34} & 3.42$\times$ (HGE iOS) \\
-  MASt3R+M3D & 6.76 & \underline{0.67} & \underline{0.35} & 4.08$\times$ (HGE iOS) \\
+  LightGlue+M3D & \textbf{6.20} & \textbf{0.66} & \underline{1.13} & \textbf{0.34} & \textbf{1.00$\times$} \\
+  LoFTR+M3D & \underline{6.58} & \underline{0.67} & 1.14 & \textbf{0.34} & 3.42$\times$ (iOS) \\
+  MASt3R+M3D & 6.76 & \underline{0.67} & \textbf{1.11} & 0.35 & 4.08$\times$ (iOS) \\
+  LightGlue+MASt3Rdepth & 12.04 & 0.68 & 1.14 & \textbf{0.34} & \underline{1.29$\times$ (iOS)} \\
+  LoFTR+MASt3Rdepth & 10.98 & 0.68 & 1.14 & \textbf{0.34} & 4.01$\times$ (iOS) \\
+  MASt3R-native & 26.34 & 2.19 & 1.19 & 0.73 & 4.25$\times$ (iOS) \\
   \hline
   \end{tabular*}
-  \caption[Pose-estimation-method summary]{Full-pipeline total ATE (L2-norm) per method across all
-    three datasets, and the worst-case wall-time multiplier over LightGlue, distilled from the
+  \caption[Pose-estimation-method summary, all 6 methods]{Full-pipeline total ATE (L2-norm) per
+    method and dataset, and the worst-case wall-time multiplier over LightGlue, distilled from the
     full per-sequence/session tables in \mysecref{sec:appendix-ablation-pe}. Bold marks the best
-    result per column, underline the second-best.}
+    result per column, underline the second-best, no second place marked where the best is itself
+    a tie.}
   \label{tab:ablation-pe-summary}
 \end{table}
 
 The full pipeline erases most of the pair level differences on KITTI, HGE, and HYDRO, where
-ref-anchored error stays close across all three methods (\mysecref{sec:appendix-ablation-pe}).
+ref-anchored error stays close across all three original methods (\mysecref{sec:appendix-ablation-pe}).
 HGE (iOS) breaks that pattern. LoFTR still lands all four sessions in one connected component
 there, but two of its three anchored sessions come out catastrophically wrong, tens of meters and
 around 45 degrees off, a bad cross-session edge that stayed locally corroborated rather than a
-different graph split. LightGlue and MASt3R both anchor sanely on the same data
-(\mysecref{sec:appendix-ablation-pe}). Wall time is where the methods otherwise separate. LoFTR and
-MASt3R take up to 3.42 and 4.08 times as long as LightGlue respectively, worst case on HGE (iOS),
-for no accuracy gain and, in LoFTR's case, an outright failure, which is why LightGlue stays the
-production default.
+different graph split. LightGlue and MASt3R both anchor sanely on the same data.
+
+\begin{table}[htb]
+  \centering
+  \footnotesize
+  \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}} llrr}
+  \hline
+  \textbf{Dataset} & \textbf{Method} & \textbf{Components} & \textbf{Mean ref-anch.\ trans (m) / rot (\textdegree)} \\
+  \hline
+  HGE & LightGlue+M3D & 2 & 0.31 / 0.69 \\
+  HGE & LoFTR+M3D & 2 & 0.38 / 0.67 \\
+  HGE & MASt3R+M3D & 2 & 0.31 / 0.69 \\
+  HGE & LightGlue+MASt3Rdepth & 2 & \textbf{18.41} / \textbf{34.19} \\
+  HGE & LoFTR+MASt3Rdepth & 2 & \textbf{18.47} / \textbf{34.32} \\
+  HGE & MASt3R-native & 5 & \textbf{33.94} / \textbf{32.73} \\
+  \hline
+  HYDRO & LightGlue+M3D & 1 & 0.17 / 0.34 \\
+  HYDRO & LoFTR+M3D & 1 & 0.17 / 0.33 \\
+  HYDRO & MASt3R+M3D & 1 & 0.18 / 0.35 \\
+  HYDRO & LightGlue+MASt3Rdepth & 1 & 0.17 / 0.32 \\
+  HYDRO & LoFTR+MASt3Rdepth & 1 & 0.18 / 0.32 \\
+  HYDRO & MASt3R-native & 4 & \textbf{14.37} / \textbf{44.53} \\
+  \hline
+  HGE (iOS) & LightGlue+M3D & 1 & 0.92 / 1.71 \\
+  HGE (iOS) & LoFTR+M3D & 1 & \textbf{52.81} / \textbf{30.12} \\
+  HGE (iOS) & MASt3R+M3D & 1 & 1.26 / 1.95 \\
+  HGE (iOS) & LightGlue+MASt3Rdepth & 1 & 0.67 / 1.21 \\
+  HGE (iOS) & LoFTR+MASt3Rdepth & 3 & \textbf{78.14} / \textbf{41.24} \\
+  HGE (iOS) & MASt3R-native & 4 & \textbf{77.82} / \textbf{50.41} \\
+  \hline
+  \end{tabular*}
+  \caption[Ref-anchored consistency, all 6 PE methods]{Same multi-session runs as
+    \mytabref{tab:ablation-pe-kitti}. Each connected component's reference session is Umeyama-fit
+    to GT, that fixed transform applied to the rest of the component, then measured against each
+    session's own GT (same method as \mytabref{tab:experiments-hge-ate}/\mytabref{tab:experiments-hydro-ate}).
+    Components is the number of connected components the multi-session graph settled into. Bold
+    flags a catastrophic anchoring failure, not a ranking.}
+  \label{tab:ablation-pe-anchoring}
+\end{table}
+
+Wall time is where the methods otherwise separate. LoFTR and MASt3R take up to 3.42 and 4.08 times
+as long as LightGlue respectively, worst case on HGE (iOS), for no accuracy gain and, in LoFTR's
+case, an outright failure, which is why LightGlue stays the production default.
 
 The ablation also tested two further alternatives to Metric3D as the lifted-depth source, matching
 depth against MASt3R's own cross-view pointmap for the LightGlue and LoFTR matchers
 (\texttt{*+MASt3Rdepth}), and a fully native variant that skips the lifted-depth PnP stage
 altogether and uses MASt3R's pointmap directly (\texttt{MASt3R-native}). All three are worse almost
 everywhere. MASt3R-native barely bridges sessions at all on HGE and HGE (iOS), 5 and 4 disconnected
-components against the production pipeline's 1 to 2, so its apparently competitive HYDRO wall time
-(1120 seconds against LightGlue's 1213) is not a real speed advantage, it comes from skipping most
-of the cross-session matching work the other methods still do. LightGlue+MASt3Rdepth comes closest
-to production, even edging it out on HGE (iOS) anchoring (0.67 meters against 0.92), but it breaks
-down on HGE HoloLens the same way LoFTR does on HGE (iOS), 18.41 meters against production's 0.31.
-LoFTR+MASt3Rdepth inherits LoFTR+Metric3D's own iOS failure and adds a second one on HGE HoloLens.
-No depth-source swap beats keeping Metric3D. Full six-method detail is in
-\mysecref{sec:appendix-ablation-pe}.
+components against the production pipeline's 1 to 2 (table above), so its apparently competitive
+HYDRO wall time (1120 seconds against LightGlue's 1213) is not a real speed advantage, it comes
+from skipping most of the cross-session matching work the other methods still do.
+LightGlue+MASt3Rdepth comes closest to production, even edging it out on HGE (iOS) anchoring (0.67
+meters against 0.92), but it breaks down on HGE HoloLens the same way LoFTR does on HGE (iOS),
+18.41 meters against production's 0.31. LoFTR+MASt3Rdepth inherits LoFTR+Metric3D's own iOS
+failure and adds a second one on HGE HoloLens. No depth-source swap beats keeping Metric3D. Full
+per-sequence detail is in \mysecref{sec:appendix-ablation-pe}.
 
 \subsection{Retrieval Method}
 \label{sec:experiments-ablation-retrieval}
@@ -871,8 +913,7 @@ Full 11-session KITTI wall-clock time, both backbones, both modes, on two GPUs (
 and an RTX 4090), broken down by pipeline phase (retrieval, pose estimation, graph optimization,
 other), plus a hardware-matched runtime comparison against 2GO's own published number. The
 4090 numbers below are a 2026-08-30 rerun, a run-name mismatch in the timing harness had every
-earlier regeneration silently reading a leftover Quadro-era directory instead. The
-isolated-sequence 2GO comparison detail is in \mysecref{sec:appendix-ablation-timing}.
+earlier regeneration silently reading a leftover Quadro-era directory instead.
 
 \begin{table}[htb]
   \centering
@@ -913,8 +954,42 @@ On 2GO's own slowest reported case, \texttt{ciampino\_train0}, we finish in 586.
 their 2067.31, three and a half times faster, while committing only 34 loop-closure edges against
 their 3403. The same pattern holds on KITTI-00, 236 seconds against 387.16, with 142 edges against
 517. Filtering candidate edges down to the robust ones before optimization is a large part of why
-this pipeline is faster, not just a cleaner engineering choice. A repeat 5-trial rerun of the
-KITTI-00 comparison also flipped which of the pipeline's two optional depth-batching modes is
-faster for each backbone since the original campaign, VINS-Fusion now finishes faster batched and
-ORB-SLAM3 faster unbatched, though only the VINS-Fusion flip is backed by non-overlapping trial
-ranges (\mysecref{sec:appendix-ablation-timing} for the full detail).
+this pipeline is faster, not just a cleaner engineering choice.
+
+\begin{table}[htb]
+  \centering
+  \footnotesize
+  \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}} lrrrrr}
+  \hline
+  \textbf{Run} & \textbf{Odom.\ gen.\ (s)} & \textbf{Runtime (s)} & \textbf{Recording (s)} & \textbf{RTF} & \textbf{LC-edges} \\
+  \hline
+  \multicolumn{6}{l}{\textit{KITTI-00, VINS-Fusion odometry}} \\
+  2GO paper (CL Absolute) & -- (not reported) & 387.16 & 469 & 82.5\% & 517 \\
+  Ours, unbatched & 179.7 & 236 (227--254) & 470.6 & 50.2\% (48.2--54.0\%) & 142 \\
+  Ours, batched (\texttt{batch\_depth}) & 179.7 & \textbf{209} (203--212) & 470.6 & 44.4\% (43.1--45.1\%) & 142 \\
+  \hline
+  \multicolumn{6}{l}{\textit{KITTI-00, ORB-SLAM3 odometry (no published 2GO number)}} \\
+  Ours, unbatched & 501.3 & \textbf{234} (222--237) & 470.6 & 49.7\% (47.2--50.4\%) & 134 \\
+  Ours, batched (\texttt{batch\_depth}) & 501.3 & 247 (213--252) & 470.6 & 52.5\% (45.3--53.6\%) & 134 \\
+  \hline
+  \multicolumn{6}{l}{\textit{\texttt{ciampino\_train0}, VINS-Fusion odometry (2GO's own slowest reported case)}} \\
+  2GO paper (CL Absolute) & -- (not reported) & 2067.31 & 1549 & 133.5\% & 3403 \\
+  Ours & 1791.0 & 586.57 & 1549 & 37.9\% & 34 \\
+  \hline
+  \multicolumn{6}{l}{\textit{\texttt{ciampino\_train0}, ORB-SLAM3 odometry (no published 2GO number)}} \\
+  Ours & 2497.2 & 480.90 & 1549 & 31.0\% & 299 \\
+  \hline
+  \end{tabular*}
+  \caption[Isolated-sequence runtime vs.\ 2GO, same GPU model]{Both systems on an RTX 4090. 2GO's
+    own CL--Absolute variant is the directly comparable one, it only publishes a VINS-Fusion
+    number for this sequence, so the ORB-SLAM3 group is our own extra data point. Runtime/RTF at
+    KITTI-00 are median (min--max) across 5 repeat trials. Bold marks the faster of
+    batched/unbatched per backbone at KITTI-00.}
+  \label{tab:ablation-timing-2go}
+\end{table}
+
+A repeat 5-trial rerun of the KITTI-00 comparison also flipped which of the pipeline's two optional
+depth-batching modes is faster for each backbone since the original campaign, VINS-Fusion now
+finishes faster batched and ORB-SLAM3 faster unbatched, though only the VINS-Fusion flip is backed
+by non-overlapping trial ranges (203--212 against 227--254, ORB-SLAM3's 213--252 against 222--237
+do overlap).
