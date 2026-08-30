@@ -819,26 +819,26 @@ different graph split. LightGlue and MASt3R both anchor sanely on the same data.
   \hline
   \textbf{Dataset} & \textbf{Method} & \textbf{Components} & \textbf{Mean ref-anch.\ trans (m) / rot (\textdegree)} \\
   \hline
-  HGE & LightGlue+M3D & 2 & 0.31 / 0.69 \\
-  HGE & LoFTR+M3D & 2 & 0.38 / 0.67 \\
-  HGE & MASt3R+M3D & 2 & 0.31 / 0.69 \\
-  HGE & LightGlue+MASt3Rdepth & 2 & \textbf{18.41} / \textbf{34.19} \\
-  HGE & LoFTR+MASt3Rdepth & 2 & \textbf{18.47} / \textbf{34.32} \\
-  HGE & MASt3R-native & 5 & \textbf{33.94} / \textbf{32.73} \\
+  HGE & LightGlue+M3D & 2 & \textbf{0.31} / \underline{0.69} \\
+  HGE & LoFTR+M3D & 2 & 0.38 / \textbf{0.67} \\
+  HGE & MASt3R+M3D & 2 & \textbf{0.31} / \underline{0.69} \\
+  HGE & LightGlue+MASt3Rdepth & 2 & 18.41 / 34.19 \\
+  HGE & LoFTR+MASt3Rdepth & 2 & 18.47 / 34.32 \\
+  HGE & MASt3R-native & 5 & 33.94 / 32.73 \\
   \hline
-  HYDRO & LightGlue+M3D & 1 & 0.17 / 0.34 \\
-  HYDRO & LoFTR+M3D & 1 & 0.17 / 0.33 \\
+  HYDRO & LightGlue+M3D & 1 & \textbf{0.17} / 0.34 \\
+  HYDRO & LoFTR+M3D & 1 & \textbf{0.17} / 0.33 \\
   HYDRO & MASt3R+M3D & 1 & 0.18 / 0.35 \\
-  HYDRO & LightGlue+MASt3Rdepth & 1 & 0.17 / 0.32 \\
-  HYDRO & LoFTR+MASt3Rdepth & 1 & 0.18 / 0.32 \\
-  HYDRO & MASt3R-native & 4 & \textbf{14.37} / \textbf{44.53} \\
+  HYDRO & LightGlue+MASt3Rdepth & 1 & \textbf{0.17} / \textbf{0.32} \\
+  HYDRO & LoFTR+MASt3Rdepth & 1 & 0.18 / \textbf{0.32} \\
+  HYDRO & MASt3R-native & 4 & 14.37 / 44.53 \\
   \hline
-  HGE (iOS) & LightGlue+M3D & 1 & 0.92 / 1.71 \\
-  HGE (iOS) & LoFTR+M3D & 1 & \textbf{52.81} / \textbf{30.12} \\
+  HGE (iOS) & LightGlue+M3D & 1 & \underline{0.92} / \underline{1.71} \\
+  HGE (iOS) & LoFTR+M3D & 1 & 52.81 / 30.12 \\
   HGE (iOS) & MASt3R+M3D & 1 & 1.26 / 1.95 \\
-  HGE (iOS) & LightGlue+MASt3Rdepth & 1 & 0.67 / 1.21 \\
-  HGE (iOS) & LoFTR+MASt3Rdepth & 3 & \textbf{78.14} / \textbf{41.24} \\
-  HGE (iOS) & MASt3R-native & 4 & \textbf{77.82} / \textbf{50.41} \\
+  HGE (iOS) & LightGlue+MASt3Rdepth & 1 & \textbf{0.67} / \textbf{1.21} \\
+  HGE (iOS) & LoFTR+MASt3Rdepth & 3 & 78.14 / 41.24 \\
+  HGE (iOS) & MASt3R-native & 4 & 77.82 / 50.41 \\
   \hline
   \end{tabular*}
   \caption[Ref-anchored consistency, all 6 PE methods]{Same multi-session runs as
@@ -846,7 +846,8 @@ different graph split. LightGlue and MASt3R both anchor sanely on the same data.
     to GT, that fixed transform applied to the rest of the component, then measured against each
     session's own GT (same method as \mytabref{tab:experiments-hge-ate}/\mytabref{tab:experiments-hydro-ate}).
     Components is the number of connected components the multi-session graph settled into. Bold
-    flags a catastrophic anchoring failure, not a ranking.}
+    marks the best (smallest) result per dataset group and column, underline the second-best, no
+    second place marked where the best is itself a tie.}
   \label{tab:ablation-pe-anchoring}
 \end{table}
 
