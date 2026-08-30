@@ -20,8 +20,8 @@ per-sequence trajectory visualizations and other detailed breakdowns.
   \includegraphics[width=0.48\textwidth]{images/07_appendix/hge_ios_anchor_combined.png}
   \caption[HGE ref-anchored estimates, both devices, all sessions combined]{Both devices'
     sessions in their own shared frame, same style as \myfigref{fig:appendix-hydro-anchor-combined}.
-    Left: HoloLens. Right: iOS. Component/reference breakdown for both is in
-    \mytabref{tab:experiments-hge-anchoring}.}
+    Left: HoloLens, component/reference breakdown in \mytabref{tab:experiments-hge-ate}. Right:
+    iOS, device-isolated, reference breakdown in \mytabref{tab:experiments-hge-ios-ate}.}
   \label{fig:appendix-hge-anchor-combined}
 \end{figure}
 
@@ -30,17 +30,17 @@ per-sequence trajectory visualizations and other detailed breakdowns.
   \includegraphics[width=\textwidth]{images/07_appendix/hge_hololens_anchor_individual.png}
   \caption[HGE HoloLens ref-anchored estimate vs.\ GT, per session]{HGE HoloLens non-reference
     sessions, same methodology and layout as \myfigref{fig:appendix-hydro-anchor-individual}.
-    Component/reference breakdown is in \mytabref{tab:experiments-hge-anchoring}.}
+    Component/reference breakdown is in \mytabref{tab:experiments-hge-ate}.}
   \label{fig:appendix-hge-hololens-anchor-individual}
 \end{figure}
 
 \begin{figure}[htbp]
   \centering
   \includegraphics[width=\textwidth]{images/07_appendix/hge_ios_anchor_individual.png}
-  \caption[HGE iOS ref-anchored estimate vs.\ GT, per session]{HGE iOS non-reference sessions
-    (\texttt{ios\_split}, reference \texttt{01-18}), same methodology as
+  \caption[HGE iOS ref-anchored estimate vs.\ GT, per session]{HGE iOS non-reference sessions,
+    device-isolated (reference \texttt{05-04}), same methodology as
     \myfigref{fig:appendix-hydro-anchor-individual}. Per-panel numbers match
-    \mytabref{tab:experiments-hge-anchoring}.}
+    \mytabref{tab:experiments-hge-ios-ate}.}
   \label{fig:appendix-hge-ios-anchor-individual}
 \end{figure}
 
@@ -54,7 +54,7 @@ per-sequence trajectory visualizations and other detailed breakdowns.
   \caption[HGE trajectory grid, HoloLens sessions]{HGE trajectory grid, HoloLens sessions
     (device-isolated \texttt{hl\_split} run). Native odometry, single-session, and multi-session
     output (green) against GT (red), GT-aligned. Session \texttt{568}'s heavy native-odometry
-    drift and its multi-session correction (\mytabref{tab:experiments-hge-mixed}) are visible in
+    drift and its multi-session correction (\mytabref{tab:experiments-hge-ate}) are visible in
     the bottom row.}
   \label{fig:appendix-hge-hololens}
 \end{figure}
@@ -63,9 +63,9 @@ per-sequence trajectory visualizations and other detailed breakdowns.
   \centering
   \includegraphics[width=\textwidth]{images/07_appendix/hge_ios_grid.png}
   \caption[HGE trajectory grid, iOS sessions]{Same layout as \myfigref{fig:appendix-hge-hololens},
-    the 4 iOS/ARKit sessions of the device-isolated \texttt{ios\_split} run
-    (\mytabref{tab:experiments-hge-mixed}'s real 4-session iOS list, not the older 5-session pick
-    behind \mysecref{sec:experiments-hge}'s Datasets-section figure).}
+    the 5 iOS/ARKit sessions of the device-isolated run (\mytabref{tab:experiments-hge-ios-ate}).
+    Sessions \texttt{05-04} and \texttt{06-14} visibly drift and stay uncorrected, the same two
+    sessions that carry the dataset's worst ATE and ref-anchored error.}
   \label{fig:appendix-hge-ios}
 \end{figure}
 
@@ -385,7 +385,7 @@ results.
   \caption[HGE/HYDRO ref-anchored consistency by PE method]{Same multi-session runs as
     \mytabref{tab:ablation-pe-kitti}. Each connected component's reference session is Umeyama-fit
     to GT, that fixed transform applied to the rest of the component, then measured against each
-    session's own GT (same method as \mytabref{tab:experiments-hge-anchoring}/\mytabref{tab:experiments-hydro-ate}).
+    session's own GT (same method as \mytabref{tab:experiments-hge-ate}/\mytabref{tab:experiments-hydro-ate}).
     ``Components'' is the number of connected components the multi-session graph settled into for
     that method.}
   \label{tab:ablation-pe-anchoring}
