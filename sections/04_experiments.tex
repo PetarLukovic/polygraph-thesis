@@ -53,7 +53,7 @@ marks this per dataset. \mysecref{sec:method-gate}'s two-tier gate and every ATE
   \hline
   KITTI & car & outdoor & \texttt{image\_2} (1/4) & 11 (7) & No \\
   HGE (HoloLens) & AR headset & indoor/outdoor & \texttt{hetlf} (1/4) & 5 & Yes \\
-  HGE (iOS) & AR phone & indoor/outdoor & \texttt{phone} (1/1) & 5 & Yes \\
+  HGE (iOS) & AR phone & indoor/outdoor & \texttt{phone} (1/1) & 4 & Yes \\
   HYDRO & legged robot & indoor & \texttt{frontleft} (1/4) & 5 & Yes \\
   RobotCar & car & outdoor & \texttt{stereo\_centre} (1/1) & 4 (2 spl.) & Yes \\
   VBR & car & outdoor & \texttt{camera\_left} (1/2) & 8 & No \\
@@ -99,7 +99,7 @@ single, non-revisiting drives.
   \caption[HGE ground-truth trajectories, both capture devices]{GT trajectories for both HGE
     capture devices, in the site's own shared frame, over a faint backdrop of the real site scan
     (a horizontal slice of the laser/photogrammetry point cloud at trajectory height). Left: 5
-    HoloLens sessions. Right: 5 iPad/ARKit sessions, picked for real spatial overlap with the
+    HoloLens sessions. Right: 4 iPad/ARKit sessions, picked for real spatial overlap with the
     HoloLens sessions and with each other.}
   \label{fig:experiments-hge-gt}
 \end{figure}
@@ -110,16 +110,18 @@ single, non-revisiting drives.
 HGE is one physical site (part of the LaMAR benchmark \cite{sarlin2022lamar}, an ETH Zurich
 building interior/exterior spanning several floors and an outdoor courtyard) captured twice, by
 two different agents: 5 sessions from a HoloLens 2 (a head-worn AR headset, 4 onboard RGB
-cameras, of which the front-left, \texttt{hetlf}, is used for the main results) and 5 sessions
+cameras, of which the front-left, \texttt{hetlf}, is used for the main results) and 4 sessions
 from an iPhone/iPad running ARKit (a handheld AR device, one camera per session, aliased to a
 single canonical name \texttt{phone} since ARKit assigns a new sensor id every session). Both
 capture types share LaMAR's own site-registered GT frame, so both are multi-session-GT-eligible,
 and the same site scan (a subsampled laser/photogrammetry point cloud) can back both figures
 below to show real corridor and room layout behind the trajectories, not just bare lines.
-One particularity is worth flagging up front. HoloLens and iPad footage differ enough in resolution and
-optics that cross-device matching needed its own fix in \mysecref{sec:method-pose-estimation}'s
-sparse matcher (downsampling the higher-resolution side before matching). \mysecref{sec:experiments-main-hge}
-reports both a device-isolated and a mixed HoloLens+iPad multi-session run for this reason.
+One particularity is worth flagging up front. HoloLens and iPad footage differ enough in
+resolution and optics (480$\times$640 against 1440$\times$1920, roughly 9 times the pixel count)
+that the sparse matcher downsamples the higher-resolution side to the lower-resolution side's own
+detail ceiling before matching, without which cross-device correspondences essentially do not
+exist. \mysecref{sec:experiments-main-hge} runs both devices standalone and merged, at two
+different cross-session edge-trust settings, to see what that merge actually buys each device.
 
 \subsection{HYDRO}
 \label{sec:experiments-hydro}
@@ -320,120 +322,89 @@ output, both backbones) is in \mysecref{sec:appendix-kitti-traj}.
 \subsection{HGE}
 \label{sec:experiments-main-hge}
 
-HoloLens and iPad sessions, evaluated device-isolated (HoloLens alone, iOS alone) and mixed (both
-devices in one graph), against native HoloLens/ARKit odometry, since regenerated
-ORB-SLAM3/VINS-Fusion odometry failed on this dataset outright and no external per-session
-baseline exists. Reports both ATE and ref-anchored error (translation and rotation) per session,
-grouped by which connected component each session ends up in.
+HoloLens (5 sessions) and iOS (4 sessions), against native HoloLens/ARKit odometry, since
+regenerated ORB-SLAM3/VINS-Fusion odometry failed on this dataset outright and no external
+per-session baseline exists. Each session's ATE is tracked through four stages, standalone
+single-session, standalone multi-session (each device run on its own), then mixed with the other
+device once \texttt{min\_kf\_pairs} (the minimum shared keyframe pairs a cross-session edge needs
+to be trusted) is set to 3 and again to 4. Ref-anchored error is tracked the same way, standalone
+versus both mixed settings, since a shared reference frame is what actually exposes placement
+changes that flat ATE does not.
 
 \begin{table}[htb]
   \centering
   \footnotesize
   \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}} llrrrrr}
   \hline
-  \textbf{Session} & \textbf{Group} & \textbf{Raw} & \textbf{Single} & \textbf{Multi} & \textbf{Ref-anch. trans (m)} & \textbf{Ref-anch. rot (\textdegree)} \\
+  \textbf{Session} & \textbf{Device} & \textbf{Raw} & \textbf{Single} & \textbf{Multi} & \textbf{Mixed (kf3)} & \textbf{Mixed (kf4)} \\
   \hline
-  \texttt{hl\_996} & A & \textbf{0.32} & \textbf{0.32} & \textbf{0.32} & 0.39 & 0.57 \\
-  \texttt{hl\_139} (ref) & A & 0.53 & \underline{0.51} & \textbf{0.44} & -- & -- \\
-  \texttt{hl\_693} & B & \textbf{0.22} & \textbf{0.22} & \textbf{0.22} & 0.26 & 0.58 \\
-  \texttt{hl\_295} (ref) & B & \underline{0.13} & \textbf{0.12} & \textbf{0.12} & -- & -- \\
-  \texttt{hl\_568} & A & \underline{2.09} & \underline{2.09} & \textbf{0.29} & 0.30 & 0.89 \\
-  \hline
-  Total (L2-norm, $n{=}5$) & -- & 2.19 & 2.18 & 0.67 & 0.32 (mean) & 0.68 (mean) \\
+  \texttt{hl\_996} & HoloLens & 0.32 & \textbf{0.32} & \textbf{0.32} & \textbf{0.32} & \textbf{0.32} \\
+  \texttt{hl\_139} (ref, A) & HoloLens & 0.53 & 0.51 & \textbf{0.43} & \textbf{0.43} & 0.44 \\
+  \texttt{hl\_693} & HoloLens & 0.22 & \underline{0.22} & \underline{0.22} & \underline{0.22} & \textbf{0.21} \\
+  \texttt{hl\_295} (ref, B) & HoloLens & 0.13 & \textbf{0.12} & \textbf{0.12} & 0.13 & \textbf{0.12} \\
+  \texttt{hl\_568} & HoloLens & 2.09 & 2.09 & \textbf{0.30} & \textbf{0.30} & 0.31 \\
+  \texttt{ios\_01-20} & iOS & 0.35 & \textbf{0.35} & \underline{0.36} & \underline{0.36} & \underline{0.36} \\
+  \texttt{ios\_07-01} & iOS & 0.35 & \underline{0.33} & \underline{0.33} & \textbf{0.31} & \underline{0.33} \\
+  \texttt{ios\_06-24} & iOS & 0.67 & 0.67 & 0.67 & \underline{0.63} & \textbf{0.56} \\
+  \texttt{ios\_01-18} & iOS & 0.85 & \textbf{0.78} & \textbf{0.78} & 0.80 & \textbf{0.78} \\
   \hline
   \end{tabular*}
-  \caption[HGE HoloLens ATE and ref-anchored error]{HGE ATE (m), HoloLens sessions only,
-    device-isolated multi-session graph. Session identifiers abbreviated to their unique numeric
-    suffix. Bold marks the best result among Raw/Single/Multi in a row, underline the
-    second-best; ref-anchored columns are not ranked.}
+  \caption[HGE ATE progression, all 9 sessions]{ATE (m) through 4 stages, all 9 HGE sessions.
+    Single/Multi are each device run standalone (\texttt{hl\_split.yaml}/\texttt{ios\_split.yaml});
+    Mixed (kf3)/(kf4) are the same session's value once all 9 sessions run together at
+    \texttt{min\_kf\_pairs} 3 and 4 (\texttt{mixed\_kf3.yaml}/\texttt{mixed\_kf4.yaml}). Bold marks
+    the best result among Single/Multi/Mixed (kf3)/Mixed (kf4) per row, underline the second-best,
+    no second place marked where the best is itself a tie.}
   \label{tab:experiments-hge-ate}
 \end{table}
 
-HoloLens's biggest single improvement is session \texttt{hl\_568}, which goes from 2.09 meters raw
-to 0.29 meters multi-session. Ref-anchored error stays small, 0.32 meters and 0.68 degrees on
-average. Its two components sit in genuinely different parts of the site and never share a
-cross-session edge with each other, only within their own component.
+Flat ATE moves little past standalone multi-session for either device. HoloLens's biggest single
+improvement is session \texttt{hl\_568}, 2.09 meters raw to 0.30 meters multi-session, and mixing
+barely changes it further. \texttt{hl\_295} is the one honest regression along the way, 0.12 to
+0.13 meters at \texttt{min\_kf\_pairs}\,=\,3, before recovering to 0.12 at 4. \texttt{ios\_01-20}
+is the one session mixing never helps at all, its best result is standalone at 0.35 meters.
 
 \begin{table}[htb]
   \centering
-  \footnotesize
-  \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}} lrrrrr}
+  \scriptsize
+  \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}} llrrrrrr}
   \hline
-  \textbf{Session} & \textbf{Raw} & \textbf{Single} & \textbf{Multi} & \textbf{Ref-anch. trans (m)} & \textbf{Ref-anch. rot (\textdegree)} \\
+  & & \multicolumn{3}{c}{\textbf{Trans (m)}} & \multicolumn{3}{c}{\textbf{Rot (\textdegree)}} \\
+  \textbf{Session} & \textbf{Device} & \textbf{Standalone} & \textbf{kf3} & \textbf{kf4} & \textbf{Standalone} & \textbf{kf3} & \textbf{kf4} \\
   \hline
-  \texttt{ios\_07-03} & \textbf{0.36} & \textbf{0.36} & \textbf{0.36} & 1.91 & 2.38 \\
-  \texttt{ios\_01-20} & \textbf{0.94} & \textbf{0.94} & \textbf{0.94} & 2.30 & 2.34 \\
-  \texttt{ios\_01-25} & \textbf{0.28} & \textbf{0.28} & \textbf{0.28} & 1.88 & 1.33 \\
-  \texttt{ios\_05-04} (ref) & \textbf{3.04} & \textbf{3.04} & \textbf{3.04} & -- & -- \\
-  \texttt{ios\_06-14} & \textbf{3.73} & \textbf{3.73} & \underline{3.81} & 4.72 & 4.60 \\
-  \hline
-  Total (L2-norm, $n{=}5$) & 4.93 & 4.93 & 4.99 & 2.70 (mean) & 2.67 (mean) \\
-  \hline
-  \end{tabular*}
-  \caption[HGE iOS ATE and ref-anchored error]{HGE ATE (m), iOS sessions only, device-isolated
-    multi-session graph, 5 sessions picked for real spatial overlap with each other and with the
-    HoloLens sessions (\texttt{configs/hge/hge\_ios.yaml}). Session identifiers abbreviated to
-    capture date. Bold marks the best result among Raw/Single/Multi in a row, underline the
-    second-best; ref-anchored columns are not ranked.}
-  \label{tab:experiments-hge-ios-ate}
-\end{table}
-
-iOS on its own is an honest negative result. Multi-session mode barely moves ATE off raw odometry
-at all, one session (\texttt{ios\_06-14}) even gets very slightly worse, 3.73 meters to 3.81.
-Ref-anchored error is substantially worse than HoloLens's too, 1.9 to 4.7 meters and 1.3 to 4.6
-degrees here against HoloLens's well under 0.6 meters and 1.3 degrees. Two sessions with real
-intra-session loop closures see almost no correction either. The most likely explanation, not yet
-tested, is that the near-rigid intra-session noise setting copied unchanged from HoloLens's own
-production config over-trusts ARKit's odometry, so even well-corroborated cross-session edges can
-barely move the graph solution.
-
-\begin{table}[htb]
-  \centering
-  \footnotesize
-  \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}} llrrrrr}
-  \hline
-  \textbf{Session} & \textbf{Group} & \textbf{Raw} & \textbf{Multi (iOS-only)} & \textbf{Multi (+HoloLens)} & \textbf{Ref-anch. trans (m)} & \textbf{Ref-anch. rot (\textdegree)} \\
-  \hline
-  \texttt{ios\_07-03} & C (\texttt{hl\_996}) & \textbf{0.36} & \textbf{0.36} & \textbf{0.36} & 0.50 & 1.06 \\
-  \texttt{ios\_01-20} & C (\texttt{hl\_996}) & \textbf{0.94} & \textbf{0.94} & \textbf{0.94} & 0.99 & 1.03 \\
-  \texttt{ios\_01-25} & B (\texttt{hl\_295}) & \textbf{0.28} & \textbf{0.28} & \textbf{0.28} & 0.50 & 1.52 \\
-  \texttt{ios\_05-04} & C (\texttt{hl\_996}) & \textbf{3.04} & \textbf{3.04} & \textbf{3.04} & 3.84 & 5.19 \\
-  \texttt{ios\_06-14} & B (\texttt{hl\_295}) & \textbf{3.73} & \underline{3.81} & \textbf{3.73} & 5.29 & 4.81 \\
-  \hline
-  Total (L2-norm, $n{=}5$) & -- & 4.93 & 4.99 & 4.93 & 2.23 (mean) & 2.72 (mean) \\
+  \texttt{hl\_996} & HoloLens & \textbf{0.39} & \underline{0.99} & 1.45 & \underline{0.57} & 0.68 & \textbf{0.54} \\
+  \texttt{hl\_139} (ref, A) & HoloLens & -- & \textbf{1.32} & \underline{1.69} & -- & \underline{0.80} & \textbf{0.57} \\
+  \texttt{hl\_693} (ref, mixed) & HoloLens & 0.26 & -- & -- & 0.58 & -- & -- \\
+  \texttt{hl\_295} (ref, B) & HoloLens & -- & \underline{0.23} & \textbf{0.16} & -- & \underline{0.68} & \textbf{0.53} \\
+  \texttt{hl\_568} & HoloLens & \textbf{0.30} & \underline{1.28} & 1.68 & \underline{0.89} & 1.19 & \textbf{0.83} \\
+  \texttt{ios\_01-20} & iOS & \underline{0.66} & 0.70 & \textbf{0.54} & \textbf{0.75} & 0.93 & \underline{0.83} \\
+  \texttt{ios\_07-01} & iOS & 0.73 & \textbf{0.43} & \underline{0.52} & 1.61 & \textbf{0.70} & \underline{0.71} \\
+  \texttt{ios\_06-24} & iOS & 1.37 & \underline{0.70} & \textbf{0.60} & 2.76 & \underline{1.58} & \textbf{1.38} \\
+  \texttt{ios\_01-18} (ref, iOS) & iOS & -- & \textbf{0.96} & \underline{1.06} & -- & \textbf{0.54} & \textbf{0.54} \\
   \hline
   \end{tabular*}
-  \caption[HGE iOS ref-anchoring with vs.\ without HoloLens]{Same 5 iOS sessions as
-    \mytabref{tab:experiments-hge-ios-ate}, now allowed to form cross-device edges with the 5
-    HoloLens sessions in one shared graph. Group shows which HoloLens session each iOS session's
-    component anchors to. Bold marks the best result among Raw/Multi(iOS-only)/Multi(+HoloLens) in
-    a row, underline the second-best; ref-anchored columns are not ranked.}
-  \label{tab:experiments-hge-mixed}
+  \caption[HGE ref-anchored consistency, standalone groups merging into one]{Standalone anchors
+    within each device's own reference (HoloLens splits into 2 components, \{139, 568, 996\} and
+    \{295, 693\}; iOS is one component, referenced to \texttt{ios\_01-18}). Mixed (kf3)/(kf4)
+    anchor all 9 sessions in 1 bridged component, referenced to \texttt{hl\_693}, so it goes from a
+    real standalone value to being the reference once merged, while \texttt{hl\_139}/\texttt{hl\_295}/\texttt{ios\_01-18}
+    go the other way. Bold marks the best of the up-to-3 real values per row, underline the
+    second-best, translation and rotation ranked independently.}
+  \label{tab:experiments-hge-anchor}
 \end{table}
 
-Cross-device matching was failing for a real, findable reason. HoloLens's camera
-(480$\times$640) and iOS's (1440$\times$1920, roughly 9 times the pixel count) are different
-enough resolutions that the sparse matcher was finding essentially zero correspondences between
-them at native resolution, confirmed on 12 independently ground-truth-verified true
-correspondences, 9 of which got zero matches. Downsampling the higher-resolution side to the
-lower-resolution side's real detail ceiling before matching recovered real matches on 10 of the
-12. With that fix, the mixed graph genuinely bridges 8 of the 10 sessions into 2 real cross-device
-components, where it previously left iOS fully isolated. Three of the five iOS sessions get a
-real, substantial win from this. \texttt{ios\_07-03} reaches 0.50 meters and 1.06 degrees
-ref-anchored, genuinely HoloLens-production-grade accuracy, and \texttt{ios\_01-20}/\texttt{ios\_01-25}
-both improve substantially on translation too. The other two, \texttt{ios\_05-04} and
-\texttt{ios\_06-14}, do not improve. \texttt{ios\_05-04} carries a separate, still-open issue where
-its two most accurate intra-session loop closures get flagged as outliers ahead of a real, less
-accurate one, a graph-trust problem that cross-device connectivity alone cannot route around. Flat
-ATE still barely moves for any iOS session either way, since the same near-rigid intra-session
-trust that limits single-device correction limits cross-device correction too. Ref-anchored error
-is what actually shows the real placement win here, ATE alone would miss it entirely.
+Merging is a genuine win for iOS placement and a real loss for HoloLens placement, in the same
+table. Every iOS session improves by \texttt{min\_kf\_pairs}\,=\,4, one nearly halves, 1.37 to 0.60
+meters, while every non-reference HoloLens session gets worse, up to five times its standalone
+value. Flat ATE barely shows either direction since each session's own local trajectory changes
+very little, a shared reference frame is what actually exposes it. The net average moves slightly
+worse overall, iOS-standalone mean 0.92 meters to Mixed (kf4) mean 0.96 meters across all 8
+non-reference sessions, so merging is not a clean win, it trades HoloLens's tight local consistency
+for a real improvement in iOS's absolute placement.
 
 The real per-session trajectory comparison (native odometry vs. single-session vs. multi-session
 output, both devices) is in \mysecref{sec:appendix-hge-traj}. \mysecref{sec:appendix-hge-anchor}
-shows the ref-anchoring itself, visualized against the real site scan, for the device-isolated
-runs; the mixed HoloLens+iOS run above was executed on the group's Euler cluster and its poses
-are not available locally for a matching visualization.
+shows the ref-anchoring itself, visualized against the real site scan.
 
 \subsection{HYDRO}
 \label{sec:experiments-main-hydro}

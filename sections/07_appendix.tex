@@ -18,10 +18,9 @@ per-sequence trajectory visualizations and other detailed breakdowns.
   \includegraphics[width=0.50\textwidth]{images/07_appendix/hge_hololens_anchor_combined.png}
   \hfill
   \includegraphics[width=0.49\textwidth]{images/07_appendix/hge_ios_anchor_combined.png}
-  \caption[HGE ref-anchored estimates, both devices, all sessions combined]{Both devices'
+  \caption[HGE ref-anchored estimates, both devices, all sessions combined]{Both devices' standalone
     sessions in their own shared frame, same style as \myfigref{fig:appendix-hydro-anchor-combined}.
-    Left: HoloLens, component/reference breakdown in \mytabref{tab:experiments-hge-ate}. Right:
-    iOS, device-isolated, reference breakdown in \mytabref{tab:experiments-hge-ios-ate}.}
+    Reference/component breakdown in \mytabref{tab:experiments-hge-anchor}.}
   \label{fig:appendix-hge-anchor-combined}
 \end{figure}
 
@@ -38,9 +37,9 @@ per-sequence trajectory visualizations and other detailed breakdowns.
   \centering
   \includegraphics[width=\textwidth]{images/07_appendix/hge_ios_anchor_individual.png}
   \caption[HGE iOS ref-anchored estimate vs.\ GT, per session]{HGE iOS non-reference sessions,
-    device-isolated (reference \texttt{05-04}), same methodology as
+    standalone (reference \texttt{ios\_01-18}), same methodology as
     \myfigref{fig:appendix-hydro-anchor-individual}. Per-panel numbers match
-    \mytabref{tab:experiments-hge-ios-ate}.}
+    \mytabref{tab:experiments-hge-anchor}'s Standalone columns.}
   \label{fig:appendix-hge-ios-anchor-individual}
 \end{figure}
 
@@ -63,9 +62,9 @@ per-sequence trajectory visualizations and other detailed breakdowns.
   \centering
   \includegraphics[width=\textwidth]{images/07_appendix/hge_ios_grid.png}
   \caption[HGE trajectory grid, iOS sessions]{Same layout as \myfigref{fig:appendix-hge-hololens},
-    the 5 iOS/ARKit sessions of the device-isolated run (\mytabref{tab:experiments-hge-ios-ate}).
-    Sessions \texttt{05-04} and \texttt{06-14} visibly drift and stay uncorrected, the same two
-    sessions that carry the dataset's worst ATE and ref-anchored error.}
+    the 4 iOS/ARKit sessions of the standalone run (\mytabref{tab:experiments-hge-ate}). Tracking
+    stays tight for all 4 sessions across all three columns, matching how little flat ATE moves
+    for iOS in that table.}
   \label{fig:appendix-hge-ios}
 \end{figure}
 
@@ -389,8 +388,8 @@ place is marked. Findings are discussed in \mysecref{sec:experiments-ablation-pe
     own depth in place of Metric3D. MASt3R-nat skips the lifted-depth PnP stage entirely and uses
     MASt3R's cross-view pointmap directly. Edge counts (intra+cross) in parentheses are shown for
     the three original methods only, connectivity for all six is in
-    \mytabref{tab:ablation-pe-anchoring}'s Components column instead. The HGE iOS group uses an
-    older 4-session pool, not the 5-session one in \mytabref{tab:experiments-hge-ios-ate}.
+    \mytabref{tab:ablation-pe-anchoring}'s Components column instead. The HGE iOS group uses the
+    same 4-session pool as \mytabref{tab:experiments-hge-ate}.
     Bold/underline mark the best/second-best across all six methods per row, no second place
     marked where the best is itself a tie.}
   \label{tab:ablation-pe-kitti}
