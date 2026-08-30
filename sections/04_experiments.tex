@@ -951,12 +951,6 @@ Multi-session mode adds a real cost over single-session, from a modest 8\% more 
 ORB-SLAM3 (RTX 4090) up to around 31\% on VINS-Fusion (RTX 4090), from processing the extra
 cross-session candidate pairs.
 
-On 2GO's own slowest reported case, \texttt{ciampino\_train0}, we finish in 586.57 seconds against
-their 2067.31, three and a half times faster, while committing only 34 loop-closure edges against
-their 3403. The same pattern holds on KITTI-00, 236 seconds against 387.16, with 142 edges against
-517. Filtering candidate edges down to the robust ones before optimization is a large part of why
-this pipeline is faster, not just a cleaner engineering choice.
-
 \begin{table}[htb]
   \centering
   \footnotesize
@@ -988,6 +982,12 @@ this pipeline is faster, not just a cleaner engineering choice.
     batched/unbatched per backbone at KITTI-00.}
   \label{tab:ablation-timing-2go}
 \end{table}
+
+On 2GO's own slowest reported case, \texttt{ciampino\_train0}, we finish in 586.57 seconds against
+their 2067.31, three and a half times faster, while committing only 34 loop-closure edges against
+their 3403. The same pattern holds on KITTI-00, 236 seconds against 387.16, with 142 edges against
+517. Filtering candidate edges down to the robust ones before optimization is a large part of why
+this pipeline is faster, not just a cleaner engineering choice.
 
 A repeat 5-trial rerun of the KITTI-00 comparison also flipped which of the pipeline's two optional
 depth-batching modes is faster for each backbone since the original campaign, VINS-Fusion now
