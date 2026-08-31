@@ -76,10 +76,9 @@ high level, what happens to one keyframe and one cluster as they move through th
 in the order data actually flows: keyframing, clustering, cluster matching, pose estimation,
 the two-tier gate, and pose-graph optimization.
 
-\section{Problem Statement and Pipeline Overview}
+\section{Method Overview}
 \label{sec:method-overview}
-
-\subsection{Notation and Problem Statement}
+\subsection{Notation and Problem Setup}
 
 Let $S = \{1, \dots, N\}$ index the $N$ sessions to be fused. Each session $s \in S$ is
 tracked independently by a single-session visual(inertial) odometry backbone
@@ -340,7 +339,7 @@ denotes a session and $C$ one of its clusters, with $s$ usually the session the 
 just closed in and $s'$ the other session it is being matched against, and correspondingly for
 their clusters.
 
-\subsection{Step by Step, Within One Session}
+\subsection{Per session matching}
 
 For one other eligible session $s'$, in order:
 \begin{enumerate}
