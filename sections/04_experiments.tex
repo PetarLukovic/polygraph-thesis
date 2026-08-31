@@ -79,7 +79,8 @@ marks this per dataset. \mysecref{sec:method-gate}'s two-tier gate and every ATE
   \label{fig:experiments-kitti-gt}
 \end{figure}
 
-KITTI \cite{geiger2012kitti} is 11 outdoor driving sequences (00 through 10) recorded from an
+\myfigref{fig:experiments-kitti-gt} shows all 7 loop-closure sequences' GT trajectories. KITTI
+\cite{geiger2012kitti} is 11 outdoor driving sequences (00 through 10) recorded from an
 instrumented car around Karlsruhe, using its left color camera (\texttt{image\_2}) for retrieval
 and pose estimation, stereo for odometry generation. Every sequence is its own independent drive
 with its own zeroed-out GT origin. Nothing in KITTI's own ground truth places two sequences in a
@@ -136,7 +137,8 @@ different cross-session edge-trust settings, to see what that merge actually buy
   \label{fig:experiments-hydro-gt}
 \end{figure}
 
-HYDRO is 5 indoor sessions from CroCoDL \cite{blum2025crocodl}, captured by a Boston Dynamics
+\myfigref{fig:experiments-hydro-gt} shows all 5 sessions' GT trajectories. HYDRO is 5 indoor
+sessions from CroCoDL \cite{blum2025crocodl}, captured by a Boston Dynamics
 Spot quadruped walking the same building complex on different days (two sessions from
 2023-11-24, two from 2024-05-17, roughly six months apart). Spot carries 4 onboard cameras
 (front-left, front-right, and two wide-FOV side cameras roughly 178\textdegree{} apart). The
@@ -165,8 +167,9 @@ car, recorded months apart under different weather, season, and lighting. The si
 stereo camera (\texttt{stereo\_centre}) is used for retrieval and pose estimation. RTK GPS gives
 every session a genuinely shared world frame, so RobotCar is multi-session-GT-eligible, and, since
 it is street-level outdoor driving, its GT overlays cleanly onto a real street map rather than a
-site scan. The figure below uses free OpenStreetMap tiles as backdrop instead of a laser scan
-(RobotCar has no scan mesh in this codebase, unlike HGE/HYDRO). Two splits are drawn from four
+site scan. \myfigref{fig:experiments-robotcar-gt} uses free OpenStreetMap tiles as backdrop instead
+of a laser scan (RobotCar has no scan mesh in this codebase, unlike HGE/HYDRO). Two splits are
+drawn from four
 distinct sessions, sharing two sessions between them: an \emph{easy} split (3 daytime sessions)
 and a \emph{hard} split (2 daytime, 1 night session, with real heavy heading noise), specifically
 to test single- and multi-session robustness under real day/night appearance change.
@@ -174,7 +177,8 @@ to test single- and multi-session robustness under real day/night appearance cha
 \subsection{VBR}
 \label{sec:experiments-vbr}
 
-VBR \cite{vbr}, the Vision Benchmark in Rome, is a larger multi-agent benchmark (it also includes
+\myfigref{fig:experiments-vbr-gt} shows all 8 training routes' GT trajectories. VBR \cite{vbr},
+the Vision Benchmark in Rome, is a larger multi-agent benchmark (it also includes
 handheld and multi-floor indoor captures). This thesis uses only its 8 outdoor, car-captured
 training routes (\texttt{campus}, \texttt{ciampino} $\times 2$, \texttt{colosseo},
 \texttt{diag}, \texttt{pincio}, \texttt{spagna} $\times$ variants), the same subset 2GO's own
@@ -187,7 +191,8 @@ multi-session-GT-eligible by the same rule, and every VBR result in
 \subsection{EuRoC}
 \label{sec:experiments-euroc}
 
-EuRoC \cite{burri2016euroc} is 11 short indoor flights of a micro aerial vehicle (MAV), Vicon- or
+\myfigref{fig:experiments-euroc-gt} shows all 11 sessions' GT trajectories, grouped by room. EuRoC
+\cite{burri2016euroc} is 11 short indoor flights of a micro aerial vehicle (MAV), Vicon- or
 Leica-tracked, split across three physically distinct rooms: Machine Hall (5 sessions), Vicon
 Room 1 (3 sessions), and Vicon Room 2 (3 sessions), using the first camera of its stereo rig
 (\texttt{cam0}). Ground truth is registered to each room's own fixed motion-capture rig, so
@@ -314,7 +319,8 @@ ORB-SLAM3, losing only on 05 and the detection-miss sequence 08. Raw odometry qu
 not predict which backbone benefits most from cross-session fusion.
 
 The real per-sequence trajectory comparison (raw odometry vs. single-session vs. multi-session
-output, both backbones) is in \mysecref{sec:appendix-kitti-traj}.
+output, both backbones) is in \mysecref{sec:appendix-kitti-traj}
+(\myfigref{fig:appendix-kitti-orb}, \myfigref{fig:appendix-kitti-vins}).
 
 \subsection{HGE}
 \label{sec:experiments-main-hge}
@@ -395,8 +401,11 @@ non-reference sessions, so merging is not a clean win, it trades HoloLens's tigh
 for a real improvement in iOS's absolute placement and single component map.
 
 The real per session trajectory comparison (native odometry vs. single-session vs. multi-session
-output, both devices) is in \mysecref{sec:appendix-hge-traj}. \mysecref{sec:appendix-hge-anchor}
-shows the ref-anchoring itself, visualized against the real site scan.
+output, both devices) is in \mysecref{sec:appendix-hge-traj} (\myfigref{fig:appendix-hge-hololens},
+\myfigref{fig:appendix-hge-ios}). \mysecref{sec:appendix-hge-anchor} shows the ref-anchoring
+itself, visualized against the real site scan
+(\myfigref{fig:appendix-hge-anchor-combined}, \myfigref{fig:appendix-hge-hololens-anchor-individual},
+\myfigref{fig:appendix-hge-ios-anchor-individual}).
 
 \subsection{HYDRO}
 \label{sec:experiments-main-hydro}
@@ -439,8 +448,9 @@ split across separate clusters like HGE. It stays tight at 0.17 meters translati
 degrees rotation on average.
 
 The real per-session trajectory comparison (native odometry vs. single-session vs. multi-session
-output) is in \mysecref{sec:appendix-hydro-traj}. \mysecref{sec:appendix-hydro-anchor} shows the
-ref-anchoring itself, visualized against the real site scan.
+output) is in \mysecref{sec:appendix-hydro-traj} (\myfigref{fig:appendix-hydro-traj}).
+\mysecref{sec:appendix-hydro-anchor} shows the ref-anchoring itself, visualized against the real
+site scan.
 
 \subsection{RobotCar}
 \label{sec:experiments-main-robotcar}
@@ -522,8 +532,8 @@ weak-connectivity case, only 4 to 9 cross-session edges found for it against 20 
 other two sessions, traced to a real 2.82\% raw drift rate on this session against 0.82--0.88\%
 for the others, confirmed backbone-independent.
 
-The hard split is a different story. Swapping in a night session breaks VINS-Fusion multi-session
-mode outright, single-session is honestly the better result there (267.38 vs.\ 352.08 total), and
+\mytabref{tab:experiments-robotcar-hard} tells a different story for the hard split. Swapping in a
+night session breaks VINS-Fusion multi-session mode outright, single-session is honestly the better result there (267.38 vs.\ 352.08 total), and
 the reference session itself gets corrupted by fusion, 59.23 meters to 214.51. VO shows no such
 regression, its total stays flat at 275.32 to 274.14 meters and its own reference session stays
 protected, 34.71 to 33.34 meters. Its weaker sessions still sit further from their correct
@@ -547,7 +557,7 @@ a retrieval candidate at all. Lowering the minimum valid-point count and doublin
 budget fixed that everywhere. A further per-sequence sweep of intra-session retrieval decay found
 a clean split by route shape, dense hub-like routes with heavy appearance aliasing benefit from it
 while sparse single-loop routes are hurt by it, so it stays enabled only on the sequences it
-actually helps.
+actually helps. \mytabref{tab:experiments-vbr-vins} reports the resulting per-sequence ATE.
 
 \begin{table}[htb]
   \centering
@@ -620,7 +630,8 @@ small, high-overlap data.
   \label{tab:experiments-euroc-anchoring}
 \end{table}
 
-Atlas wins every split here, expected on data this favorable to dense mapping. Atlas also commits
+Atlas wins every split in \mytabref{tab:experiments-euroc-anchoring}, expected on data this
+favorable to dense mapping. Atlas also commits
 far more edges to reach that result, 915 on MH01--05 against our 43, since it treats every
 keyframe pair sharing map points as a candidate rather than filtering for genuinely useful ones
 first. Isolating MH01--03 into its own standalone run, rather than reading it as a subtotal of the
@@ -690,7 +701,8 @@ retrieval and pose estimation instead, on HGE, HYDRO, and KITTI, to see whether 
 per keyframe buys real accuracy or just more compute. Reports single-/multi-session ATE, intra-
 and cross-session edge counts, connected components, and (HGE/HYDRO only, since KITTI has no
 shared GT frame to anchor against) anchoring error, per camera combination. Full per-combination
-tables for all three datasets are in \mysecref{sec:appendix-ablation-cameras}.
+tables for all three datasets are in \mysecref{sec:appendix-ablation-cameras}
+(\mytabref{tab:ablation-cameras-hydro}, \mytabref{tab:ablation-cameras-kitti}).
 
 \begin{table}[htb]
   \centering
@@ -711,7 +723,7 @@ tables for all three datasets are in \mysecref{sec:appendix-ablation-cameras}.
   \label{tab:ablation-cameras-summary}
 \end{table}
 
-Here we provide a more concise table to show our findings. More cameras help most when they add genuinely new viewpoints. HYDRO's four cameras span nearly 360 degrees, and going from one to four cuts single-session ATE from 0.236 to 0.192 meters, with cross-session edges more than doubling from 1690 to 3954. HGE and KITTI barely move. HGE's multi-session ATE stays within 0.005 meters across all four camera combinations, and its anchoring error is actually worse with all four cameras than with just the baseline, 0.354 meters against 0.289 (\mysecref{sec:appendix-ablation-cameras}). KITTI's second camera is the other half of the same stereo rig, so it sees almost the same scene as the first, multi-session ATE only drops from 2.689 to 2.677 meters, and cross-session edges even drop slightly, 98 to 96. More viewpoints buy
+\mytabref{tab:ablation-cameras-summary} distills the findings. More cameras help most when they add genuinely new viewpoints. HYDRO's four cameras span nearly 360 degrees, and going from one to four cuts single-session ATE from 0.236 to 0.192 meters, with cross-session edges more than doubling from 1690 to 3954. HGE and KITTI barely move. HGE's multi-session ATE stays within 0.005 meters across all four camera combinations, and its anchoring error is actually worse with all four cameras than with just the baseline, 0.354 meters against 0.289 (\mysecref{sec:appendix-ablation-cameras}). KITTI's second camera is the other half of the same stereo rig, so it sees almost the same scene as the first, multi-session ATE only drops from 2.689 to 2.677 meters, and cross-session edges even drop slightly, 98 to 96. More viewpoints buy
 real accuracy only when they are not mostly redundant with the one already in use.
 
 \subsection{Pose Estimation Method}
@@ -754,8 +766,9 @@ three land close together once outliers are absorbed into a real pose graph.
   \label{tab:ablation-pe-summary}
 \end{table}
 
-The full pipeline erases most of the pair level differences on KITTI, HGE, and HYDRO, where
-ref-anchored error stays close across all three original methods. HGE (iOS) breaks that pattern.
+\mytabref{tab:ablation-pe-summary} shows why LightGlue stays the default. The full pipeline erases
+most of the pair level differences on KITTI, HGE, and HYDRO, where ref-anchored error stays close
+across all three original methods. HGE (iOS) breaks that pattern.
 LoFTR still lands all four sessions in one connected component there, but two of its three
 anchored sessions come out catastrophically wrong, tens of meters and around 45 degrees off, a bad
 cross-session edge that stayed locally corroborated rather than a different graph split. LightGlue
@@ -811,7 +824,8 @@ apparently competitive HYDRO wall time, 1120 seconds against LightGlue's 1213, j
 skipping most of the cross-session matching work the others still do. LightGlue+MASt3Rdepth comes
 closest to production, even edging it out on HGE (iOS) anchoring, 0.67 meters against 0.92, but it
 breaks down on HGE HoloLens the same way LoFTR does on HGE (iOS). No depth-source swap beats
-keeping Metric3D. Full per-sequence detail is in \mysecref{sec:appendix-ablation-pe}.
+keeping Metric3D. Full per-sequence detail, including real wall time per method
+(\mytabref{tab:ablation-pe-timing}), is in \mysecref{sec:appendix-ablation-pe}.
 
 \subsection{Retrieval Method}
 \label{sec:experiments-ablation-retrieval}
@@ -819,7 +833,8 @@ keeping Metric3D. Full per-sequence detail is in \mysecref{sec:appendix-ablation
 Swaps \mysecref{sec:method-cluster-matching}'s production retrieval method (MegaLoc) for BoQ, NetVLAD, or
 SALAD, everything else unchanged, across all four locations (KITTI, HGE HoloLens, HGE iOS,
 HYDRO). Reports single-/multi-session ATE and intra-/cross-session edge counts per method and
-dataset. Full detail table is in \mysecref{sec:appendix-ablation-retrieval}.
+dataset. Full detail table (\mytabref{tab:ablation-retrieval}) is in
+\mysecref{sec:appendix-ablation-retrieval}.
 
 \begin{table}[htb]
   \centering
@@ -840,8 +855,8 @@ dataset. Full detail table is in \mysecref{sec:appendix-ablation-retrieval}.
   \label{tab:ablation-retrieval-summary}
 \end{table}
 
-MegaLoc, the production default, is already at or near the best achievable ATE on three of the
-four locations. HGE HoloLens is the one place an alternative edges it out, and only barely, NetVLAD
+\mytabref{tab:ablation-retrieval-summary} shows MegaLoc, the production default, is already at or
+near the best achievable ATE on three of the four locations. HGE HoloLens is the one place an alternative edges it out, and only barely, NetVLAD
 reaches 0.651/0.279 meters against MegaLoc's 0.652/0.280, a difference well inside normal run to
 run noise. HGE (iOS) is the more interesting result. BoQ, NetVLAD, and SALAD all find real
 cross-session edges there, 14 to 22 of them, while finding almost none intra-session for NetVLAD.
@@ -883,8 +898,9 @@ Additionally, we test full 11-session KITTI on wall-clock time, both backbones, 
   \label{tab:ablation-timing-kitti}
 \end{table}
 
-Pose estimation dominates wall time on both GPUs, 48 to 62\% of the total, with retrieval and
-graph optimization together under roughly 10\% in every configuration. The RTX 4090 cuts wall time
+In \mytabref{tab:ablation-timing-kitti}, pose estimation dominates wall time on both GPUs, 48 to
+62\% of the total, with retrieval and graph optimization together under roughly 10\% in every
+configuration. The RTX 4090 cuts wall time
 by 1.35 to 1.61 times over the Quadro RTX 6000 across all four backbone and mode combinations.
 Multi-session mode adds a real cost over single-session, from a modest 8\% more wall time on
 ORB-SLAM3 (RTX 4090) up to around 31\% on VINS-Fusion (RTX 4090), from processing the extra
@@ -922,9 +938,10 @@ cross-session candidate pairs.
   \label{tab:ablation-timing-2go}
 \end{table}
 
-On 2GO's own slowest reported case, \texttt{ciampino\_train0}, we finish in 586.57 seconds against
-their 2067.31, three and a half times faster, while committing only 34 loop-closure edges against
-their 3403. The same pattern holds on KITTI-00, 236 seconds against 387.16, with 142 edges against
+\mytabref{tab:ablation-timing-2go} compares directly against 2GO's own published numbers. On its
+own slowest reported case, \texttt{ciampino\_train0}, we finish in 586.57 seconds against their
+2067.31, three and a half times faster, while committing only 34 loop-closure edges against their
+3403. The same pattern holds on KITTI-00, 236 seconds against 387.16, with 142 edges against
 517. Filtering candidate edges down to the robust ones before optimization is a large part of why
 this pipeline is faster, not just a cleaner engineering choice.
 

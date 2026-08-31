@@ -150,7 +150,8 @@ but never split, only when a cross-session edge survives verification and the ga
 \end{figure}
 
 Before the detailed, per-stage treatment in the rest of this chapter, it is worth tracing what
-actually happens to one keyframe and one cluster as they move through Polygraph, end to end.
+actually happens to one keyframe and one cluster as they move through Polygraph, end to end
+(\myfigref{fig:method-overview}).
 
 The raw odometry stream of a session is thinned to keyframes as it arrives
 (\mysecref{sec:method-odometry}). Each new keyframe is appended to that session's own
@@ -193,7 +194,8 @@ visual(-inertial) odometry backbone: ORB-SLAM3 \cite{campos2021orbslam3}, VINS-F
 odometry (a HoloLens or a Boston Dynamics Spot robot, for the indoor deployments in
 \mychapterref{chap:experiments}). This stream is locally accurate but drifts over time, and is
 expressed only in session $s$'s own local frame $\mathcal{F}_s$, with no relationship to any
-other session's frame.
+other session's frame. \myfigref{fig:method-odometry} shows this raw stream against its own
+selected keyframes for three real sessions.
 
 \begin{figure}[htb]
   \centering
@@ -221,9 +223,11 @@ $i$ becomes the next keyframe the first time
   \quad\text{or}\quad
   \angle\!\big(R_{s,k_j}^{-1} R_{s,i}\big) \;>\; \tau_{\mathrm{rot}},
 \end{equation}
-where $\angle(R)$ denotes the rotation angle of $R \in \SO{3}$. Every subsequent stage of the
-pipeline operates purely on the resulting keyframe subsequence $K_s$, never on raw per-frame
-poses.
+where $\angle(R)$ denotes the rotation angle of $R \in \SO{3}$, with production values for
+$\tau_{\mathrm{trans}}$ and $\tau_{\mathrm{rot}}$ in \mytabref{tab:method-odometry-thresholds}.
+Every subsequent stage of the pipeline operates purely on the resulting keyframe subsequence
+$K_s$, never on raw per-frame poses. \myfigref{fig:method-odometry-zoom} zooms into this trigger
+on ten consecutive raw frames of one real sequence.
 
 \begin{table}[htb]
   \centering
@@ -273,6 +277,7 @@ i.e.\ the cluster needs at least $n_{\min}$ keyframes \emph{and} either to have 
 than $d_{\max}$ from its own start pose or to have reached $n_{\max}$ keyframes outright.
 Once $C$ closes, its own last $n_{\mathrm{ov}}$ keyframes seed the next cluster's initial
 members, so consecutive clusters share keyframes and chain with no coverage gap between them.
+\mytabref{tab:method-clustering-thresholds} lists the production values for all four.
 
 \begin{table}[htb]
   \centering
@@ -460,7 +465,8 @@ place. Generic-looking scenes, repeated architectural elements, or two genuinely
 locations that simply resemble each other can all produce a high vote share without any real
 revisit behind them. Every candidate this stage proposes still has to earn its way into the
 pose graph through actual geometric verification, which is exactly what
-\mysecref{sec:method-pose-estimation} does next.
+\mysecref{sec:method-pose-estimation} does next. \myfigref{fig:method-cluster-matching} shows one
+real closed cluster and its four surviving candidates from a production HYDRO run.
 
 \begin{figure}[htb]
   \centering
@@ -659,7 +665,9 @@ independent estimate, lifted into the clusters' shared reference frame, lands wi
 $6.3$cm of the consensus mean, two orders of magnitude inside the $\tau_{\mathrm{agree}} = 1.5$m
 agreement threshold. The resulting confirmed edge places the two clusters $3.85$m apart with a
 $47.6°$ relative rotation, a genuine revisit from a different heading, not two nearly-identical
-viewpoints.
+viewpoints. \myfigref{fig:method-case-study-matching} and \myfigref{fig:method-case-study-depth}
+walk through the single highest-similarity pair of the ten step by step, sparse matching and
+essential-matrix RANSAC first, then the depth lift and scale-consistency filter.
 
 \begin{figure}[htb]
   \centering
@@ -824,6 +832,8 @@ Two solves keep the graph current, at different costs and cadences:
     median, cross-session edges against theirs, so one session's tighter loop closures
     cannot drag down the bar for everyone else's. This step also drains the pending queue
     (\mysecref{sec:method-gate}) against the freshly re-solved estimate.
+    \myfigref{fig:method-graph-outliers} shows the real residual distribution and the resulting
+    32 kept / 21 pruned split from one full update on a production KITTI session.
 \end{itemize}
 
 \subsection{End-of-Run Finalization}
@@ -854,13 +864,17 @@ complete graph:
 The end-of-run order is therefore fixed: full update (removes obvious single-edge outliers)
 $\to$ drain the pending queue (last chance for anything still waiting) $\to$ inter-cluster pair
 consensus (catches hidden, mutually self-consistent outlier groups) $\to$ final GNC-TLS solve
-(final weights for everything that survives).
-
+(final weights for everything that survives). \myfigref{fig:method-graph-solve} shows what this
+buys concretely, one real session's raw odometry against its own trajectory after the graph is
+solved.
 
 \begin{figure}[htb]
   \centering
   \includegraphics[width=0.9\textwidth]{images/03_method/07_graph/graph_solve.png}
-  \caption[Pose graph solve]{The pose graph solve itself.}
+  \caption[Real trajectory before and after one pose-graph solve]{Raw single-session odometry
+    (grey, dashed) drifts over the course of the run. After the graph is solved (green), a
+    confirmed loop-closure edge pulls the two revisited endpoints 26 meters closer together,
+    correcting the accumulated drift between them.}
   \label{fig:method-graph-solve}
 \end{figure}
 
