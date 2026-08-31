@@ -715,25 +715,19 @@ real accuracy only when they are not mostly redundant with the one already in us
 \subsection{Pose Estimation Method}
 \label{sec:experiments-ablation-pe}
 
-Swaps \mysecref{sec:method-pose-estimation}'s production matcher (LightGlue) for LoFTR or MASt3R
-(all three still lifted through the same Metric3D depth), first on a large fixed sample of real
-candidate keyframe pairs per dataset (same production thresholds as the main results, not bare
-defaults, so the accept/reject breakdown is directly meaningful), then as full single-/
-multi-session pipeline runs across all three datasets. Reports, per method and dataset: success
-rate and the breakdown of \emph{why} a pair was rejected (no match, essential-matrix stage,
-insufficient points, final PnP stage), translation/rotation error on successful pairs, matching
-plus total per-pair time, and full-pipeline ATE. The full-pipeline runs are further extended with
-two matcher/depth-source variants and one fully native MASt3R variant, six methods in total. Full
-detail tables (per-pair rejection breakdown, per-pair accuracy/timing, full-pipeline ATE for all
-six methods, ref-anchored consistency, and wall time) are in \mysecref{sec:appendix-ablation-pe}.
+Swaps \mysecref{sec:method-pose-estimation}'s production matcher (LightGlue) for LoFTR or MASt3R,
+first on a large fixed sample of real candidate keyframe pairs per dataset (production thresholds,
+not bare defaults), then as full single-/multi-session pipeline runs, further extended with two
+matcher/depth-source variants and one fully native MASt3R variant, six methods in total. Full
+detail (per-pair rejection breakdown, accuracy/timing, full-pipeline ATE, ref-anchored
+consistency, wall time) is in \mysecref{sec:appendix-ablation-pe}.
 
 Success rate does not predict accuracy. MASt3R succeeds on 91.8\% of HGE pairs against
 LightGlue's 76.8\%, but its mean translation error on those successful pairs is almost twice as
 high, 0.961 meters against 0.544. KITTI's own mean translation error, 44 to 50 meters across all
-three methods, comes from a small number of severe outliers rather than typical performance. The
-median stays under a meter for every method there. None of this changes which method wins once
-the pipeline runs end to end, all three end up close once outliers are absorbed into a real pose
-graph instead of judged pair by pair.
+three methods, comes from a small number of severe outliers, the median stays under a meter for
+every method there. None of this changes which method wins once the pipeline runs end to end, all
+three land close together once outliers are absorbed into a real pose graph.
 
 \begin{table}[htb]
   \centering
@@ -759,11 +753,11 @@ graph instead of judged pair by pair.
 \end{table}
 
 The full pipeline erases most of the pair level differences on KITTI, HGE, and HYDRO, where
-ref-anchored error stays close across all three original methods (\mysecref{sec:appendix-ablation-pe}).
-HGE (iOS) breaks that pattern. LoFTR still lands all four sessions in one connected component
-there, but two of its three anchored sessions come out catastrophically wrong, tens of meters and
-around 45 degrees off, a bad cross-session edge that stayed locally corroborated rather than a
-different graph split. LightGlue and MASt3R both anchor sanely on the same data.
+ref-anchored error stays close across all three original methods. HGE (iOS) breaks that pattern.
+LoFTR still lands all four sessions in one connected component there, but two of its three
+anchored sessions come out catastrophically wrong, tens of meters and around 45 degrees off, a bad
+cross-session edge that stayed locally corroborated rather than a different graph split. LightGlue
+and MASt3R both anchor sanely on the same data.
 
 \begin{table}[htb]
   \centering
@@ -804,23 +798,18 @@ different graph split. LightGlue and MASt3R both anchor sanely on the same data.
   \label{tab:ablation-pe-anchoring}
 \end{table}
 
-Wall time is where the methods otherwise separate. LoFTR and MASt3R take up to 3.42 and 4.08 times
-as long as LightGlue respectively, worst case on HGE (iOS), for no accuracy gain and, in LoFTR's
-case, an outright failure, which is why LightGlue stays the production default.
-
-The ablation also tested two further alternatives to Metric3D as the lifted-depth source, matching
-depth against MASt3R's own cross-view pointmap for the LightGlue and LoFTR matchers
-(\texttt{*+MASt3Rdepth}), and a fully native variant that skips the lifted-depth PnP stage
-altogether and uses MASt3R's pointmap directly (\texttt{MASt3R-native}). All three are worse almost
-everywhere. MASt3R-native barely bridges sessions at all on HGE and HGE (iOS), 5 and 4 disconnected
-components against the production pipeline's 1 to 2 (table above), so its apparently competitive
-HYDRO wall time (1120 seconds against LightGlue's 1213) is not a real speed advantage, it comes
-from skipping most of the cross-session matching work the other methods still do.
-LightGlue+MASt3Rdepth comes closest to production, even edging it out on HGE (iOS) anchoring (0.67
-meters against 0.92), but it breaks down on HGE HoloLens the same way LoFTR does on HGE (iOS),
-18.41 meters against production's 0.31. LoFTR+MASt3Rdepth inherits LoFTR+Metric3D's own iOS
-failure and adds a second one on HGE HoloLens. No depth-source swap beats keeping Metric3D. Full
-per-sequence detail is in \mysecref{sec:appendix-ablation-pe}.
+Wall time is where the original three methods otherwise separate. LoFTR and MASt3R take up to 3.42
+and 4.08 times as long as LightGlue, worst case on HGE (iOS), for no accuracy gain and, in LoFTR's
+case, an outright failure, which is why LightGlue stays the production default. The two
+depth-source variants (\texttt{*+MASt3Rdepth}, matching MASt3R's own cross-view pointmap instead
+of Metric3D) and the fully native \texttt{MASt3R-native} variant (skips the lifted-depth PnP stage
+entirely) are worse almost everywhere too. MASt3R-native barely bridges sessions at all on HGE and
+HGE (iOS), 5 and 4 disconnected components against production's 1 to 2 (table above), so its
+apparently competitive HYDRO wall time, 1120 seconds against LightGlue's 1213, just reflects
+skipping most of the cross-session matching work the others still do. LightGlue+MASt3Rdepth comes
+closest to production, even edging it out on HGE (iOS) anchoring, 0.67 meters against 0.92, but it
+breaks down on HGE HoloLens the same way LoFTR does on HGE (iOS). No depth-source swap beats
+keeping Metric3D. Full per-sequence detail is in \mysecref{sec:appendix-ablation-pe}.
 
 \subsection{Retrieval Method}
 \label{sec:experiments-ablation-retrieval}
