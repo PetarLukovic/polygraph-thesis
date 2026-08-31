@@ -534,11 +534,7 @@ once a night session is involved. Which shows limitation of learned pose estimat
 \subsection{VBR}
 \label{sec:experiments-main-vbr}
 
-VBR sequences never revisit the same physical space, no two VBR training routes share any GT
-overlap, so single-session mode is the only one that applies here (\mysecref{sec:experiments-vbr}).
-Ran against our own regenerated VINS-Fusion odometry, against 2GO's own published per-sequence
-numbers (its own VINS+PGO result, two Maplab variants, and 2GO itself). VBR's sessions are an
-order of magnitude larger than KITTI's, 56 to 478 clusters per sequence, large enough that a
+Although campus \_train0 and campus \_train1 sessions \texttt{in} \texttt{campus\_train1} this dataset have been re-visited, we will run this dataset only in single-session mode in this table (\mysecref{sec:experiments-vbr}). Ran against our own regenerated VINS-Fusion odometry, against 2GO's own published per-sequence numbers (its own VINS+PGO result, two Maplab variants, and 2GO itself). VBR's sessions are an order of magnitude larger than KITTI's, 56 to 478 clusters per sequence, large enough that a
 single blind pose-estimation threshold copied across every dataset in the repo caused real
 retrieval starvation here specifically, only 22 of 67 clusters on \texttt{pincio\_train0} ever got
 a retrieval candidate at all. Lowering the minimum valid-point count and doubling the retrieval
@@ -745,7 +741,7 @@ three land close together once outliers are absorbed into a real pose graph.
   \hline
   \end{tabular*}
   \caption[Pose-estimation-method summary, all 6 methods]{Full-pipeline total ATE (L2-norm) per
-    method and dataset, and the worst-case wall-time multiplier over LightGlue, distilled from the
+    method and dataset, and the worst case wall time multiplier over LightGlue, distilled from the
     full per-sequence/session tables in \mysecref{sec:appendix-ablation-pe}. Bold marks the best
     result per column, underline the second-best, no second place marked where the best is itself
     a tie.}
@@ -926,4 +922,4 @@ their 3403. The same pattern holds on KITTI-00, 236 seconds against 387.16, with
 517. Filtering candidate edges down to the robust ones before optimization is a large part of why
 this pipeline is faster, not just a cleaner engineering choice.
 
-The reported numbers are mean of 5 runs on KITTI-00 session over the same configuration and same odometry. We have also tested batching depth computation on KITTI-00 for different odometries but this gave us no significant speed increase over non batched computation. When using ORB-SLAM3 it even made the results slightly worse on average. The reason for this is to do with depth caching. This gives us the largest speed increase overall since most of the depth computation in later stages is cached rather than actually computed. Therefore we need not compute enough depths per cluster pair for this to make significant difference. Of course, another big factor is actual number of edges we compute, which we keep at low. 
+The reported numbers are mean of 5 runs on KITTI-00 session over the same configuration and same odometry. We have also tested batching depth computation on KITTI-00 for different odometries but this gave us no significant speed increase over non batched computation. When using ORB-SLAM3 it even made the results slightly worse on average. The reason for this is to do with depth caching. This gives us the largest speed increase overall since most of the depth computation in later stages is cached rather than actually computed. Therefore, we need not compute enough depths per cluster pair for this to make significant difference. Of course, another big factor is actual number of edges we compute, which we keep at very low. 
