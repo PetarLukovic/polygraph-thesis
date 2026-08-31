@@ -232,11 +232,8 @@ per session (\mysecref{sec:method-graph}'s own convention, no scale correction, 
 odometry backbone used here is already metric). Where a dataset is multi-session GT eligible
 (\mytabref{tab:experiments-datasets-overview}), a second, ref-anchored error is also
 reported per non-reference session, isolating how accurately a session was placed relative to the
-rest of its connected component, from ATE's own within session drift. Computed with
-\texttt{pipelines/compute\_ref\_anchored.py}: each connected component's reference session is
-Umeyama-fit to its own GT once, and that same fixed transform, not an independent per-session fit,
-is applied to every other session's estimate before comparing it to its own GT. Published
-baselines are included wherever a directly-comparable number exists in prior work.
+rest of its connected component, from ATE's own within session drift. Each connected component's reference session is Umeyama-fit to its own GT once, and that same fixed transform, not an independent per-session fit, is applied to every other session's estimate before comparing it to its own GT. Published
+baselines are included wherever a directly comparable number exists in prior work.
 
 \subsection{KITTI}
 \label{sec:experiments-main-kitti}
@@ -327,8 +324,7 @@ regenerated ORB-SLAM3/VINS-Fusion odometry failed on this dataset outright and n
 per-session baseline exists. Each session's ATE is tracked through four stages, standalone
 single-session, standalone multi-session (each device run on its own), then mixed with the other
 device once \texttt{min\_kf\_pairs} (the minimum shared keyframe pairs a cross-session edge needs
-to be trusted) is set to 3 and again to 4. Ref-anchored error is tracked the same way, standalone
-versus both mixed settings, since a shared reference frame is what actually exposes placement
+to be trusted) is set to 3 and again to 4. First three stages use exactly the same configuration file. While fourth is slightly tuned to extract better results. Ref-anchored error is tracked the same way, standalone versus both mixed settings, since a shared reference frame is what actually exposes placement
 changes that flat ATE does not.
 
 \begin{table}[htb]
@@ -350,11 +346,7 @@ changes that flat ATE does not.
   \hline
   \end{tabular*}
   \caption[HGE ATE progression, all 9 sessions]{ATE (m) through 4 stages, all 9 HGE sessions.
-    Single/Multi are each device run standalone (\texttt{hl\_split.yaml}/\texttt{ios\_split.yaml});
-    Mixed (kf3)/(kf4) are the same session's value once all 9 sessions run together at
-    \texttt{min\_kf\_pairs} 3 and 4 (\texttt{mixed\_kf3.yaml}/\texttt{mixed\_kf4.yaml}). Bold marks
-    the best result among Single/Multi/Mixed (kf3)/Mixed (kf4) per row, underline the second-best,
-    no second place marked where the best is itself a tie.}
+    Single/Multi are each device run standalone. Mixed (kf3)/(kf4) are the same session's value once all 9 sessions run together at \texttt{min\_kf\_pairs} 3 and 4. Bold marks the best result among Single/Multi/Mixed (kf3)/Mixed (kf4) per row, underline the second-best, no second place marked where the best is itself a tie.}
   \label{tab:experiments-hge-ate}
 \end{table}
 
@@ -400,9 +392,9 @@ value. Flat ATE barely shows either direction since each session's own local tra
 very little, a shared reference frame is what actually exposes it. The net average moves slightly
 worse overall, iOS-standalone mean 0.92 meters to Mixed (kf4) mean 0.96 meters across all 8
 non-reference sessions, so merging is not a clean win, it trades HoloLens's tight local consistency
-for a real improvement in iOS's absolute placement.
+for a real improvement in iOS's absolute placement and single component map.
 
-The real per-session trajectory comparison (native odometry vs. single-session vs. multi-session
+The real per session trajectory comparison (native odometry vs. single-session vs. multi-session
 output, both devices) is in \mysecref{sec:appendix-hge-traj}. \mysecref{sec:appendix-hge-anchor}
 shows the ref-anchoring itself, visualized against the real site scan.
 
@@ -537,7 +529,7 @@ regression, its total stays flat at 275.32 to 274.14 meters and its own referenc
 protected, 34.71 to 33.34 meters. Its weaker sessions still sit further from their correct
 relative position than VINS-Fusion's do, 1402.76 and 459.96 meters ref-anchored translation
 against VINS-Fusion's 1072.27 and 216.69. Neither backbone reaches usable cross-session anchoring
-once a night session is involved.
+once a night session is involved. Which shows limitation of learned pose estimation pipelines when handling mixture of night and day images. Which was the whole point of this investigation rather than tuning numbers to get the best results.
 
 \subsection{VBR}
 \label{sec:experiments-main-vbr}
@@ -651,9 +643,7 @@ small, high-overlap data.
     RMSE, mean over each split's non-reference sessions, ours vs. ORB-SLAM3's own native
     multi-session mode (Atlas), both backbones. MH01--03 is a genuine standalone run here, not a
     subtotal filtered from MH01--05. ``Ours edges'' = graph-committed cross-session cluster-pair
-    constraints; ``Atlas edges'' = cross-session covisibility edges at weight $\geq 100$. No
-    COVINS-G number exists at this per-room granularity, so no best/second marking; Atlas's own
-    numbers are highlighted directly since it wins every clean split.}
+    constraints; ``Atlas edges'' = cross-session covisibility edges at weight $\geq 100$.}
   \label{tab:experiments-euroc-anchoring}
 \end{table}
 
@@ -675,8 +665,7 @@ clean split, close to the pipeline's own typical per-pair pose estimation error 
 other four datasets, around 0.40 meters median (\mytabref{tab:ablation-pe-rejection}), even though
 EuRoC was not part of that ablation. The stereo-only backbone widens that gap substantially, up to
 0.79 meters on V101--103 against Atlas's 0.079, since dropping IMU costs this pipeline far more
-accuracy than it costs Atlas's own dense reconstruction. Maplab will be added to this table at a
-later pass.
+accuracy than it costs Atlas's own dense reconstruction. This shows that our method is slightly more robust in extracting actual anchors but cannot compete with such a dense map created in this small environment. For reference, environments usually span an area of 5x5 meters. This forms a really dense map which ATLAS uses to get very accurate loop closure edges. These results are explained by \mytabref{tab:experiments-euroc-covins}, where COVINS-G uses a similar principle for its pose estimation.
 
 \begin{table}[htb]
   \centering
@@ -708,12 +697,12 @@ later pass.
   \label{tab:experiments-euroc-covins}
 \end{table}
 
-Against COVINS-G's own published numbers the picture is mixed. Its best configuration, the
+Against COVINS-G's own published numbers, the picture is mixed. Its best configuration, the
 17-point variant on either front end, beats us clearly on both translation and rotation. Its PnP
 variant on VINS-mono is worse than us on both. Its PnP variant on ORB-SLAM3 sits close to us on
 rotation and ahead on translation. Dropping IMU costs us here too, stereo-only roughly matches
 stereo-inertial on translation but noticeably worsens rotation on every split, most on
-V101--103, 5.55 degrees against 5.19.
+V101--103, 5.55 degrees against 5.19. This shows that learned, mapless, pose estimation pipelines will have errors larger than more traditional dense map methods on average. For this reason, at locations such as this, where odometry errors are already marginal, and the map is very dense, it is very hard for our method to outperform traditional SLAM methods.
 
 \section{Ablation Studies}
 \label{sec:experiments-ablation}
@@ -753,14 +742,7 @@ tables for all three datasets are in \mysecref{sec:appendix-ablation-cameras}.
   \label{tab:ablation-cameras-summary}
 \end{table}
 
-More cameras help most when they add genuinely new viewpoints. HYDRO's four cameras span nearly
-360 degrees, and going from one to four cuts single-session ATE from 0.236 to 0.192 meters, with
-cross-session edges more than doubling from 1690 to 3954. HGE and KITTI barely move. HGE's
-multi-session ATE stays within 0.005 meters across all four camera combinations, and its anchoring
-error is actually worse with all four cameras than with just the baseline, 0.354 meters against
-0.289 (\mysecref{sec:appendix-ablation-cameras}). KITTI's second camera is the other half of the
-same stereo rig, so it sees almost the same scene as the first, multi-session ATE only drops from
-2.689 to 2.677 meters, and cross-session edges even drop slightly, 98 to 96. More viewpoints buy
+Here we provide a more concise table to show our findings. More cameras help most when they add genuinely new viewpoints. HYDRO's four cameras span nearly 360 degrees, and going from one to four cuts single-session ATE from 0.236 to 0.192 meters, with cross-session edges more than doubling from 1690 to 3954. HGE and KITTI barely move. HGE's multi-session ATE stays within 0.005 meters across all four camera combinations, and its anchoring error is actually worse with all four cameras than with just the baseline, 0.354 meters against 0.289 (\mysecref{sec:appendix-ablation-cameras}). KITTI's second camera is the other half of the same stereo rig, so it sees almost the same scene as the first, multi-session ATE only drops from 2.689 to 2.677 meters, and cross-session edges even drop slightly, 98 to 96. More viewpoints buy
 real accuracy only when they are not mostly redundant with the one already in use.
 
 \subsection{Pose Estimation Method}
@@ -914,11 +896,7 @@ turn them into edges the graph can trust, and on HGE (iOS) only MegaLoc's edges 
 \subsection{Timing}
 \label{sec:experiments-ablation-timing}
 
-Full 11-session KITTI wall-clock time, both backbones, both modes, on two GPUs (a Quadro RTX 6000
-and an RTX 4090), broken down by pipeline phase (retrieval, pose estimation, graph optimization,
-other), plus a hardware-matched runtime comparison against 2GO's own published number. The
-4090 numbers below are a 2026-08-30 rerun, a run-name mismatch in the timing harness had every
-earlier regeneration silently reading a leftover Quadro-era directory instead.
+Additionally, we test full 11-session KITTI on wall-clock time, both backbones, both modes, on two GPUs (a Quadro RTX 6000 and an RTX 4090), broken down by pipeline phase (retrieval, pose estimation, graph optimization, other), plus a hardware-matched runtime comparison against 2GO's own published number.
 
 \begin{table}[htb]
   \centering
@@ -943,8 +921,7 @@ earlier regeneration silently reading a leftover Quadro-era directory instead.
   \end{tabular*}
   \caption[KITTI wall time and phase breakdown]{All 11 KITTI sequences, single invocation each.
     Wall time is real elapsed clock time including I/O. Odom.\ gen.\ is a one-time upstream cost,
-    not re-run per invocation. Phase percentages read from each run's own \texttt{timings.json}.
-    All runs use \texttt{--fresh\_cache}, so cache-hit numbers reflect within-run reuse only.}
+    not re-run per invocation. All runs use \texttt{--fresh\_cache} flag, so cache-hit numbers reflect within-run reuse only.}
   \label{tab:ablation-timing-kitti}
 \end{table}
 
@@ -993,8 +970,4 @@ their 3403. The same pattern holds on KITTI-00, 236 seconds against 387.16, with
 517. Filtering candidate edges down to the robust ones before optimization is a large part of why
 this pipeline is faster, not just a cleaner engineering choice.
 
-A repeat 5-trial rerun of the KITTI-00 comparison also flipped which of the pipeline's two optional
-depth-batching modes is faster for each backbone since the original campaign, VINS-Fusion now
-finishes faster batched and ORB-SLAM3 faster unbatched, though only the VINS-Fusion flip is backed
-by non-overlapping trial ranges (203--212 against 227--254, ORB-SLAM3's 213--252 against 222--237
-do overlap).
+The reported numbers are mean of 5 runs on KITTI-00 session over the same configuration and same odometry. We have also tested batching depth computation on KITTI-00 for different odometries but this gave us no significant speed increase over non batched computation. When using ORB-SLAM3 it even made the results slightly worse on average. The reason for this is to do with depth caching. This gives us the largest speed increase overall since most of the depth computation in later stages is cached rather than actually computed. Therefore we need not compute enough depths per cluster pair for this to make significant difference. Of course, another big factor is actual number of edges we compute, which we keep at low. 
