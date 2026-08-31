@@ -19,10 +19,11 @@ recipe further still, single-session only there since no two of its routes share
 frame, our reproduction now beats 2GO's own published aggregate across all 8 routes, not just on
 individual sequences.
 
-EuRoC is the honest exception. Its rooms are small and its odometry is already close to ground
-truth, leaving little room for a sparse, map-less approach to improve on what a dense SLAM system
-like ORB-SLAM3's Atlas already achieves there. RobotCar's session splits may still be revisited,
-the one piece of this thesis's picture that could still change.
+EuRoC and RobotCar's hard split are the honest exceptions. EuRoC's rooms are small and its
+odometry is already close to ground truth, leaving little room for a sparse, map-less approach to
+improve on what a dense SLAM system like ORB-SLAM3's Atlas already achieves there. RobotCar's hard
+split, with a night session mixed into two daytime ones, is a genuine failure case for
+cross-session fusion under real day/night appearance change, not one this thesis papers over.
 
 What is already clear is the core claim. Admitting only robust, useful edges into the optimizer
 instead of every possible candidate pair is enough to match 2GO's own accuracy while running

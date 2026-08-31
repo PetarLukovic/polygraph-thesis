@@ -6,69 +6,6 @@
 \chapter{Method}
 \label{chap:method}
 
-% REVIEW NOTE (not rendered): this is now full prose, not a skeleton. Only one section
-% (the Two-Tier Gate, 3.6) still has no real figure -- it uses a self-contained boxed
-% placeholder (\missingfig, defined below) instead of \includegraphics, specifically so the
-% document keeps compiling cleanly in Overleaf until we sketch that one together. Every other
-% section points at real images already sitting under images/03_method/<stage>/ --
-% replace/adjust those freely, the \includegraphics paths don't need to change if you just
-% edit the files in place.
-%
-% Odometry/Keyframing (3.2) now has two real figures: a 3-up whole-trajectory raw-vs-keyframe
-% view (same three sessions as clustering) and a zoomed inset on one real KITTI keyframe
-% trigger. Generation script: /local/home/plukovic/.claude/jobs/7015ebb3/tmp/
-% make_odometry_figs.py + make_odometry_zoom2.py -- not saved anywhere permanent, so if these
-% need regenerating (different sessions, different zoom window) they'd need rewriting, though
-% the approach (parse_tum_trajectory + a LaMAR-CSV parser for iOS/HoloLens raw odometry,
-% align_to_gt's fit_gt_to_est_transform to bring raw into the keyframe frame, then
-% ground_plane_axes for consistent orientation) is straightforward to redo.
-%
-% Pose Estimation (3.5) has now been checked directly, twice, against
-% src/pose_estimation/pose_estimator.py, edge_estimator.py, and mst_selector.py -- no equation
-% in it is a docs/method.md paraphrase anymore. See the in-section REVIEW NOTE right after the
-% Per-Pair Verification list for what the second pass found and fixed (the RANSAC-stage symbol
-% mislabeling, the two-separate-depth-lifts conflation, and the "maximum clique" mischaracterization
-% of the translation-consensus vote, which is really a mode-seeking vote around a single anchor).
-%
-% 3.5 now also has a real Case Study subsection (2026-08-28) with 3 real figures: sparse
-% matching + essential-matrix RANSAC, depth + scale-consistency filter, and the
-% translation-consensus vote across all 10 real MST pairs -- one real committed HYDRO
-% cross-session cluster pair (spot_2024-05-17-16-43/cluster8 <-> spot_2024-05-17-14-39/cluster5),
-% replayed step by step with the real production PoseEstimator/matcher/depth cache, not
-% schematic. Cross-verified against the real run's own pose_estimation.log: this replay's own
-% final consensus translation matches the logged edge to 6 decimal places. Generation scripts:
-% /local/home/plukovic/.claude/jobs/7015ebb3/tmp/make_pe_case_study.py (the real run, GPU +
-% cached models needed), fix_lift_and_consensus.py (the cluster-frame lift the first pass
-% skipped -- real bug, real fix, see its own docstring), plot_pe_case_study.py (the 3 figures) --
-% none saved anywhere permanent, same caveat as the other generation scripts above.
-%
-% 3.4's own formula WAS wrong until this pass (2026-08-27): checked directly against
-% src/retrieval/cluster_index.py's real code (_match_against) plus configs/kitti/
-% kitti_orb_full.yaml's real production values. Two real corrections made: (1) top_k is
-% applied PER OTHER ELIGIBLE SESSION, not once globally -- one keyframe casts up to
-% top_k * (number of eligible sessions) votes total, not top_k; (2) the score is each
-% candidate's SHARE of that session's own vote pool (votes for C' / total votes cast in that
-% session), not "fraction of C's own keyframe count" as the old equation said -- that older
-% formula and the real per-session participation floor (min_survival_votes=1 in production,
-% far more permissive than the 0.5-fraction code default) had gotten conflated into one
-% "survival rate" concept that doesn't actually exist as a single quantity in the code. Also
-% added the two active similarity floors (kf_min_score=0.28, min_score=0.25) that production
-% actually uses and the old text never mentioned at all.
-%
-% The clustering figure (3.3) now uses three real clusters.jpg outputs (KITTI/HGE-HoloLens/
-% HGE-iOS) straight from polygraph's own src/visualization/clusters.py -- real data, not a
-% schematic, confirmed to be genuine pipeline output before copying in. The overview figure
-% (images/03_method/01_overview/pipeline_overview.png) is still reused as-is from the polygraph
-% project report -- consider a thesis-formatted redraw of its labels/fonts before submission.
-\newcommand{\missingfig}[1]{%
-  \begin{center}
-  \fbox{\parbox{0.85\textwidth}{\centering\vspace{0.3cm}
-  \textbf{[FIGURE NEEDED: sketch together]}\\[4pt]
-  \small #1
-  \vspace{0.3cm}}}
-  \end{center}
-}
-
 This chapter describes Polygraph, the multi-session trajectory optimization pipeline this thesis
 presents. \mysecref{sec:method-overview} states the problem formally and walks through, at a
 high level, what happens to one keyframe and one cluster as they move through the pipeline.
@@ -552,37 +489,6 @@ rejected outright unless it also clears three further conditions. At least $n_{\
 combined. The final, absolute-pose (PnP) RANSAC's own inlier ratio must reach at least
 $\rho_{\mathrm{abs}} = 0.80$. That same RANSAC's model score must stay at most
 $\epsilon_{\mathrm{abs}} = 0.05$.
-
-% REVIEW NOTE (not rendered, 2026-08-27, second pass): read pose_estimator.py and
-% edge_estimator.py directly again end to end for this pass, beyond the earlier scale-
-% consistency/tau_agree fixes. Three more real inaccuracies found and fixed: (1) the final
-% rejection paragraph's rho_inlier/epsilon_ransac were unlabeled generic "RANSAC" thresholds --
-% they are specifically the ABSOLUTE-POSE (PnP, step 6) RANSAC's own gate (code:
-% abs_min_inlier_ratio/abs_max_ransac_score); the essential-matrix RANSAC of step 2 has its own,
-% entirely separate and previously unmentioned gate (code: sf_min_num_matches=10,
-% sf_max_ransac_score=0.5, dataclass defaults, never overridden in any of the three main-
-% experiment configs) -- renamed the PnP-stage symbols rho_abs/epsilon_abs and added
-% n_sf/epsilon_sf for the essential-matrix stage, mirroring the code's own sf_/abs_ naming.
-% (2) Step 4/5/6 conflated "the" depth-lifted points into one set -- the code computes TWO
-% independent depth lifts (one per image, lifted0 from k's own depth, lifted1 from k''s own
-% depth); the scale-consistency filter (step 5) only ever checks lifted0 against the
-% triangulated points (both in k's frame), while the final PnP (step 6) uses lifted1 (k''s own
-% depth, in k''s frame) as its object points -- these are two different quantities, not the
-% same X_i^depth reused twice. Rewritten above to keep them distinct.
-% (3) Translation-Consensus Voting below described the consensus set as "the largest mutually
-% agreeing subset (a maximum clique in the pairwise-agreement graph)" -- checked directly
-% against edge_estimator.py's _aggregate(): it is NOT a clique search. It picks the single
-% estimate with the most agreeing neighbors as an anchor, then takes every estimate that agrees
-% with THAT anchor -- a mode-seeking vote (closer to RANSAC's own inlier counting) that never
-% checks whether two non-anchor members of the consensus set agree with each other. Rewritten
-% to describe this accurately.
-% Also: the production values in the table/prose below (k_pairs=10, n_vote=2, rho_abs=0.80,
-% epsilon_abs=0.05) are this thesis's KITTI configuration specifically, matching the scoping
-% convention already used by the odometry (3.2) and clustering (3.3) tables -- HGE and HYDRO
-% retune four of these six thresholds per dataset (see final_configs/*_main_experiment/*.yaml):
-% HGE uses top_k_pairs=5, min_kf_pairs=3, abs_min_inlier_ratio=0.55, abs_max_ransac_score=0.6;
-% HYDRO matches KITTI's top_k_pairs=10/min_kf_pairs=2 but shares HGE's looser RANSAC gate
-% (0.55/0.6). multi_edge_consensus=true, by contrast, genuinely is constant across all three.
 
 \subsection{Translation-Consensus Voting}
 

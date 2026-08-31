@@ -48,9 +48,11 @@ genuine sign that this pipeline's sparse, map-less approach has less to offer on
 already this good.
 
 RobotCar's hard split shows a related but different pattern, VINS-Fusion multi-session mode
-actually regresses there. This is not treated as a core limitation here. RobotCar's own odometry
-is unusually poor to begin with, closer to a stress test than a typical deployment, and better
-session splits are planned before drawing a firm conclusion from it. However, our test show limitations on learned pose estimation methods when dealing with mixture of night and day sequences.
+actually regresses there. This is treated as a genuine limitation, not an artifact of an
+unfavorable session split. RobotCar's own odometry is unusually poor to begin with, closer to a
+stress test than a typical deployment, and the regression itself is real evidence that learned
+pose estimation struggles with a mixture of night and day imagery specifically, not just noisier
+data in general.
 
 \section{Design Choices}
 \label{sec:discussion-design}
@@ -75,9 +77,8 @@ automatically useful ones.
 \section{Implications and Future Work}
 \label{sec:discussion-future}
 
-A few results here are not final. The EuRoC anchoring table is missing a Maplab comparison,
-planned for a later pass. RobotCar may still be re-evaluated on better session splits before its
-results are treated as settled. None of this changes the two central findings above, cross-session
+One result here is not yet final. The EuRoC anchoring table is missing a Maplab comparison,
+planned for a later pass. This does not change the two central findings above, cross-session
 fusion helps wherever sessions genuinely revisit shared space, and doing so with far fewer, more
 selective edges than 2GO or a dense map like Atlas needs is both accurate enough and substantially
 faster.
