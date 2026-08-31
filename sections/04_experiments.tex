@@ -189,10 +189,11 @@ VBR \cite{vbr}, the Vision Benchmark in Rome, is a larger multi-agent benchmark 
 handheld and multi-floor indoor captures). This thesis uses only its 8 outdoor, car-captured
 training routes (\texttt{campus}, \texttt{ciampino} $\times 2$, \texttt{colosseo},
 \texttt{diag}, \texttt{pincio}, \texttt{spagna} $\times$ variants), the same subset 2GO's own
-paper evaluates on, using the left camera of its stereo pair (\texttt{camera\_left}). Unlike
-KITTI/HGE/HYDRO/RobotCar, no two of these 8 sequences share physical space at all, so VBR is not
-multi-session-GT-eligible and every VBR result in \mysecref{sec:experiments-main-vbr} is
-single-session only.
+paper evaluates on, using the left camera of its stereo pair (\texttt{camera\_left}). Like KITTI's
+00/07 (above), \texttt{campus\_train0} and \texttt{campus\_train1} do physically revisit the same
+space, but nothing in VBR's own ground truth places them in a shared frame, so VBR is not
+multi-session-GT-eligible by the same rule, and every VBR result in
+\mysecref{sec:experiments-main-vbr} is single-session only.
 
 \subsection{EuRoC}
 \label{sec:experiments-euroc}
@@ -534,7 +535,13 @@ once a night session is involved. Which shows limitation of learned pose estimat
 \subsection{VBR}
 \label{sec:experiments-main-vbr}
 
-Although campus \_train0 and campus \_train1 sessions \texttt{in} \texttt{campus\_train1} this dataset have been re-visited, we will run this dataset only in single-session mode in this table (\mysecref{sec:experiments-vbr}). Ran against our own regenerated VINS-Fusion odometry, against 2GO's own published per-sequence numbers (its own VINS+PGO result, two Maplab variants, and 2GO itself). VBR's sessions are an order of magnitude larger than KITTI's, 56 to 478 clusters per sequence, large enough that a
+Although \texttt{campus\_train0} and \texttt{campus\_train1} do revisit the same physical space,
+VBR's own ground truth does not place them in a shared frame the way KITTI's 00/07 overlap is
+similarly unprovable (\mysecref{sec:experiments-datasets}), so this dataset is still run
+single-session only here (\mysecref{sec:experiments-vbr}). Ran against our own regenerated
+VINS-Fusion odometry, against 2GO's own published per-sequence numbers (its own VINS+PGO result,
+two Maplab variants, and 2GO itself). VBR's sessions are an order of magnitude larger than KITTI's,
+56 to 478 clusters per sequence, large enough that a
 single blind pose-estimation threshold copied across every dataset in the repo caused real
 retrieval starvation here specifically, only 22 of 67 clusters on \texttt{pincio\_train0} ever got
 a retrieval candidate at all. Lowering the minimum valid-point count and doubling the retrieval

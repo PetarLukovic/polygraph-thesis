@@ -99,13 +99,14 @@ per-sequence trajectory visualizations and other detailed breakdowns.
   \centering
   \includegraphics[width=0.85\textwidth]{images/07_appendix/hydro_anchor_combined.png}
   \caption[HYDRO ref-anchored estimates, all sessions combined]{All 5 HYDRO sessions in one
-    shared frame: dashed lines are each session's own GT, solid lines its ref-anchored estimate,
+    shared frame. Dashed lines are each session's own GT, solid lines its ref-anchored estimate,
     same color per session, same real floor-plan backdrop as \myfigref{fig:appendix-hydro-anchor-individual}.
     Visualizes the same 0.15--0.18\,m ref-anchored translation error that
     \mytabref{tab:experiments-hydro-ate} reports numerically.}
   \label{fig:appendix-hydro-anchor-combined}
 \end{figure}
 
+\clearpage
 \section{KITTI Trajectory Comparison}
 \label{sec:appendix-kitti-traj}
 
@@ -200,7 +201,7 @@ results.
   all 4 & 0.652 & \textbf{0.278} & 63 & 458 & 2 & 0.354 & 0.769 \\
   \hline
   \end{tabular*}
-  \caption[HGE camera-pairing ATE and anchoring error]{HGE camera-pairing ablation:
+  \caption[HGE camera-pairing ATE and anchoring error]{HGE camera-pairing ablation.
     \texttt{retrieval.cams} lets a session emit one keyframe per (frame, camera) instead of one
     per frame. Single ATE varies only slightly across rows (real run-to-run noise, single-session
     mode always uses the baseline camera alone). Bold/underline mark the best/second-best Multi
@@ -384,14 +385,12 @@ place is marked. Findings are discussed in \mysecref{sec:experiments-ablation-pe
   \end{tabular*}
   \caption[Full-pipeline pose-estimation-method comparison, all 6 methods]{ATE (m) with
     \texttt{pose\_estimation.method} swapped as the only change from production, multi-session
-    mode, ORB-SLAM3 backbone. LG/M3D = LightGlue/Metric3D. M3Rd = the same matcher with MASt3R's
-    own depth in place of Metric3D. MASt3R-nat skips the lifted-depth PnP stage entirely and uses
-    MASt3R's cross-view pointmap directly. Edge counts (intra+cross) in parentheses are shown for
-    the three original methods only, connectivity for all six is in
-    \mytabref{tab:ablation-pe-anchoring}'s Components column instead. The HGE iOS group uses the
-    same 4-session pool as \mytabref{tab:experiments-hge-ate}.
-    Bold/underline mark the best/second-best across all six methods per row, no second place
-    marked where the best is itself a tie.}
+    mode, ORB-SLAM3 backbone. LG/M3D = LightGlue/Metric3D, M3Rd = the same matcher with MASt3R's
+    own depth in place of Metric3D, MASt3R-nat skips the lifted-depth PnP stage entirely and uses
+    MASt3R's cross-view pointmap directly. Edge counts (intra+cross) shown for the three original
+    methods only, connectivity for all six is in \mytabref{tab:ablation-pe-anchoring}'s Components
+    column. HGE iOS uses the same 4-session pool as \mytabref{tab:experiments-hge-ate}.
+    Bold/underline mark the best/second-best per row, no second place where the best is a tie.}
   \label{tab:ablation-pe-kitti}
 \end{table}
 

@@ -14,7 +14,10 @@ revisit shared space. HGE session \texttt{hl\_568} drops from 2.09 meters raw to
 fused with the rest of its component. HYDRO's total ATE roughly halves, from 0.73 to 0.34 meters.
 On KITTI's VINS-Fusion backbone the pipeline matches or beats 2GO's own published result on five
 of seven sequences, and does so three and a half times faster on 2GO's own slowest reported case,
-while committing two orders of magnitude fewer edges.
+while committing two orders of magnitude fewer edges. VBR pushes the underlying pose-estimation
+recipe further still, single-session only there since no two of its routes share a GT-provable
+frame, our reproduction now beats 2GO's own published aggregate across all 8 routes, not just on
+individual sequences.
 
 EuRoC is the honest exception. Its rooms are small and its odometry is already close to ground
 truth, leaving little room for a sparse, map-less approach to improve on what a dense SLAM system

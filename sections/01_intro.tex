@@ -9,9 +9,22 @@
 
 \section{Motivation}
 
-Many robots, vehicles, and wearable devices do not see an environment once: they see it repeatedly. A delivery robot drives the same warehouse floor every day; a fleet of survey vehicles maps the same city over months; a person wearing an AR headset walks through the same building on many separate occasions. Each of these passes through the environment, which we call a \emph{session}, is tracked independently by the device's own onboard visual or visual-inertial odometry. Within a session, this odometry is locally accurate but accumulates drift over time, with drift growing worse as the area covered increases. In addition, every session's trajectory is expressed in its own local coordinate frame with no inherent relationship to any other session's frame. Two sessions that physically revisit the same corridor or intersection have no way, from odometry alone, of knowing that they did.
+Many robots, vehicles, and wearable devices do not see an environment once: they see it repeatedly. A delivery robot drives the same warehouse floor every day. A fleet of survey vehicles maps the same city over months. A person wearing an AR headset walks through the same building on many separate occasions. Each of these passes through the environment, which we call a \emph{session}, is tracked independently by the device's own onboard visual or visual-inertial odometry. Within a session, this odometry is locally accurate but accumulates drift over time, with drift growing worse as the area covered increases. In addition, every session's trajectory is expressed in its own local coordinate frame with no inherent relationship to any other session's frame. Two sessions that physically revisit the same corridor or intersection have no way, from odometry alone, of knowing that they did.
 
 Recovering that relationship (detecting where sessions overlap, using those overlaps to correct each session's drift, and placing every session into one shared, globally consistent frame) is the multi-session trajectory optimization problem we want to tackle. Solving it well is what turns a pile of independent, drifting trajectory logs into a single coherent map of an environment, and it is a prerequisite for any system that wants to accumulate knowledge about a place across repeated visits rather than starting from zero every time.
+
+\begin{figure}[htb]
+  \centering
+  \includegraphics[width=\textwidth]{images/01_intro/hydro_loop_closures_3d.jpg}
+  \caption[Five sessions fused into one shared frame]{Five independent HYDRO sessions (Boston
+    Dynamics Spot, indoor legged locomotion), each its own color, placed into one shared frame by
+    Polygraph and overlaid on the site's own real 3D scan. Purple lines mark confirmed
+    cross-session loop-closure edges, the corroborated evidence that pulls otherwise-independent
+    trajectories into registration with each other. No two of these trajectories start out knowing
+    they share the same building, this is what recovering that relationship looks like once
+    solved.}
+  \label{fig:intro-hydro-loop-closures}
+\end{figure}
 
 \section{Technical Gap}
 
@@ -19,7 +32,7 @@ The classical way to detect that two sessions overlap is to build and maintain a
 
 A recent line of work entirely avoids maintaining any such map. Lim et al.'s 2GO \cite{lim2025twogo} represents each session only as a sparse, keyframed pose graph where intra-session revisits are established with learned image retrieval and two-view geometry. Sparse feature matching is lifted to metric scale with a monocular depth prior, rather than any persistent map, and fused directly into the pose graph. This is substantially lighter than maintaining one and is the closest prior work to this thesis, as it is also intended as an online pipeline.
 
-However, 2GO has only single session capabilities and, therefore, does not have the ability to utilize cross-session information. This information, as we will showcase later, can be very useful, as it can improve even very good onboard odometries from agents such as Hololens or Spot.
+However, 2GO has only single-session capabilities and cannot exploit cross-session information. This information, as we show later, can be very useful, improving even strong onboard odometry from agents such as HoloLens or Spot.
 
 \section{This Work}
 
@@ -27,7 +40,7 @@ This thesis presents \textbf{Polygraph}, a multi-session trajectory optimization
 
 In short, this thesis contributes:
 \begin{itemize}
-  \item An online formulation of sparse, map-less, retrieval-based pose-graph optimization for tested on a wide spectrum of agents, scenarios, and camera setups
+  \item An online formulation of sparse, map-less, retrieval-based pose-graph optimization, tested on a wide spectrum of agents, scenarios, and camera setups
   \item Multi-session map fusion using cross-session retrieval-based edges and cross-session information sharing for single-session accuracy improvement
   \item A robust cluster-matching and joint pose-estimation pipeline using monocular depth priors in combination with different learned image-matching methods
   \item A systems level characterization of the runtime, accuracy, and loop closure recall trade offs of online multi-session fusion, including a direct, hardware-matched comparison against 2GO \cite{lim2025twogo}

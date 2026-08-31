@@ -28,10 +28,11 @@ and run online instead of offline (\mysecref{sec:relatedwork-2go}). Clustering a
 are not the contribution on their own. They exist to decide which candidate edges are even worth
 proposing to the optimizer, admitting only the robust ones instead of every possible pair. On
 KITTI's VINS-Fusion backbone the pipeline matches or beats 2GO's own published result on five of
-seven sequences. The larger difference is speed. On 2GO's own slowest reported case,
-\texttt{ciampino\_train0}, this pipeline finishes three and a half times faster while committing
-34 edges against their 3403. Filtering which edges reach the optimizer is a direct cause of that
-speedup, not an unrelated side benefit.
+seven sequences, and on VBR's single-session pose-estimation recipe it now beats 2GO's own
+published aggregate across all 8 routes. The larger difference is speed. On 2GO's own slowest
+reported case, \texttt{ciampino\_train0}, this pipeline finishes three and a half times faster
+while committing 34 edges against their 3403. Filtering which edges reach the optimizer is a
+direct cause of that speedup, not an unrelated side benefit.
 
 \section{Limitations}
 \label{sec:discussion-limitations}
@@ -54,13 +55,22 @@ session splits are planned before drawing a firm conclusion from it.
 \section{Design Choices}
 \label{sec:discussion-design}
 
-Two design choices stand out from the ablations. More cameras only help when they add genuinely
+Three design choices stand out from the ablations. More cameras only help when they add genuinely
 new viewpoints. HYDRO's rig spans nearly 360 degrees and cuts single-session ATE by nearly a
 fifth, while KITTI's second camera, the other half of the same stereo rig, moves the result by
-less than a centimeter. The choice of matcher and depth source barely matters for accuracy once
-the full pipeline runs end to end, all three methods land within a few percent of each other on
-every dataset tested. LightGlue stays the production default because it is two to five times
-faster than the alternatives for no real accuracy cost, not because it is more accurate.
+less than a centimeter. The choice of matcher and depth source barely matters for accuracy on
+KITTI, HGE, and HYDRO once the full pipeline runs end to end, the original three methods land
+within a few percent of each other on every one of those datasets. LightGlue stays the production
+default because every alternative costs real wall time, up to 4.25 times as long in the worst
+case, for no consistent accuracy gain, not because it is more accurate, and on HGE (iOS)
+specifically, swapping either the matcher or the depth source can break cross-session anchoring
+outright rather than just cost time. Retrieval method matters least of all. MegaLoc stays at or
+near the best achievable ATE on three of the four locations tested, and the one place an
+alternative edges it out (HGE HoloLens) is by a margin well inside normal run-to-run noise. HGE
+(iOS) is the interesting exception, alternative retrieval methods do propose genuine new
+cross-session candidate pairs there, yet none of it becomes a multi-session accuracy gain, only
+MegaLoc's own edges clear the pipeline's downstream trust gates. More candidate edges are not
+automatically useful ones.
 
 \section{Implications and Future Work}
 \label{sec:discussion-future}
